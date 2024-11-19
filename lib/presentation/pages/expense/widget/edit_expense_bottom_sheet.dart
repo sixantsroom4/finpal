@@ -1,44 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import '../../../../domain/entities/receipt.dart';
-import '../../../bloc/receipt/receipt_bloc.dart';
-import '../../../bloc/receipt/receipt_event.dart';
-import '../../../bloc/receipt/receipt_state.dart';
+import '../../../../domain/entities/expense.dart';
+import '../../../bloc/expense/expense_bloc.dart';
+import '../../../bloc/expense/expense_event.dart';
 
-class EditReceiptBottomSheet extends StatefulWidget {
-  final Receipt receipt;
+class EditExpenseBottomSheet extends StatefulWidget {
+  final Expense expense;
 
-  const EditReceiptBottomSheet({
+  const EditExpenseBottomSheet({
     super.key,
-    required this.receipt,
+    required this.expense,
   });
 
   @override
-  State<EditReceiptBottomSheet> createState() => _EditReceiptBottomSheetState();
+  State<EditExpenseBottomSheet> createState() => _EditExpenseBottomSheetState();
 }
 
-class _EditReceiptBottomSheetState extends State<EditReceiptBottomSheet> {
+class _EditExpenseBottomSheetState extends State<EditExpenseBottomSheet> {
   final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _merchantNameController;
-  late final TextEditingController _totalAmountController;
+  late TextEditingController _descriptionController;
+  late TextEditingController _amountController;
+  late String _selectedCategory;
   late DateTime _selectedDate;
 
   @override
   void initState() {
     super.initState();
-    _merchantNameController =
-        TextEditingController(text: widget.receipt.merchantName);
-    _totalAmountController = TextEditingController(
-      text: NumberFormat('#,###').format(widget.receipt.totalAmount),
+    _descriptionController =
+        TextEditingController(text: widget.expense.description);
+    _amountController = TextEditingController(
+      text: NumberFormat('#,###').format(widget.expense.amount),
     );
-    _selectedDate = widget.receipt.date;
+    _selectedCategory = widget.expense.category;
+    _selectedDate = widget.expense.date;
   }
 
   @override
   void dispose() {
-    _merchantNameController.dispose();
-    _totalAmountController.dispose();
+    _descriptionController.dispose();
+    _amountController.dispose();
     super.dispose();
   }
 
@@ -61,7 +62,7 @@ class _EditReceiptBottomSheetState extends State<EditReceiptBottomSheet> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '영수증 수정',
+                  '지출 수정',
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 IconButton(
@@ -72,38 +73,59 @@ class _EditReceiptBottomSheetState extends State<EditReceiptBottomSheet> {
             ),
             const SizedBox(height: 16),
             TextFormField(
-              controller: _merchantNameController,
+              controller: _descriptionController,
               decoration: const InputDecoration(
-                labelText: '상점명',
+                labelText: '내용',
                 border: OutlineInputBorder(),
               ),
               validator: (value) {
                 if (value?.isEmpty ?? true) {
-                  return '상점명을 입력해주세요';
+                  return '내용을 입력해주세요';
                 }
                 return null;
               },
             ),
             const SizedBox(height: 16),
             TextFormField(
-              controller: _totalAmountController,
+              controller: _amountController,
               decoration: const InputDecoration(
-                labelText: '총액',
+                labelText: '금액',
                 border: OutlineInputBorder(),
                 suffix: Text('원'),
               ),
               keyboardType: TextInputType.number,
               validator: (value) {
                 if (value?.isEmpty ?? true) {
-                  return '총액을 입력해주세요';
+                  return '금액을 입력해주세요';
                 }
                 return null;
               },
             ),
             const SizedBox(height: 16),
+            DropdownButtonFormField<String>(
+              value: _selectedCategory,
+              decoration: const InputDecoration(
+                labelText: '카테고리',
+                border: OutlineInputBorder(),
+              ),
+              items: ['식비', '교통', '쇼핑', '의료', '교육', '여가', '기타']
+                  .map((category) => DropdownMenuItem(
+                        value: category,
+                        child: Text(category),
+                      ))
+                  .toList(),
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() {
+                    _selectedCategory = value;
+                  });
+                }
+              },
+            ),
+            const SizedBox(height: 16),
             ListTile(
               title: const Text('날짜'),
-              subtitle: Text(_selectedDate.toString().split(' ')[0]),
+              subtitle: Text(DateFormat('yyyy년 M월 d일').format(_selectedDate)),
               trailing: const Icon(Icons.calendar_today),
               onTap: () async {
                 final picked = await showDatePicker(
@@ -133,21 +155,23 @@ class _EditReceiptBottomSheetState extends State<EditReceiptBottomSheet> {
 
   void _submit() {
     if (_formKey.currentState?.validate() ?? false) {
-      final updatedReceipt = Receipt(
-        id: widget.receipt.id,
-        imageUrl: widget.receipt.imageUrl,
+      final updatedExpense = Expense(
+        id: widget.expense.id,
+        amount: double.parse(_amountController.text.replaceAll(',', '')),
+        description: _descriptionController.text.trim(),
+        category: _selectedCategory,
         date: _selectedDate,
-        merchantName: _merchantNameController.text.trim(),
-        totalAmount:
-            double.parse(_totalAmountController.text.replaceAll(',', '')),
-        items: widget.receipt.items,
-        userId: widget.receipt.userId,
-        expenseId: widget.receipt.expenseId,
+        userId: widget.expense.userId,
+        receiptUrl: widget.expense.receiptUrl,
+        receiptId: widget.expense.receiptId,
+        isShared: widget.expense.isShared,
+        sharedWith: widget.expense.sharedWith,
+        splitAmounts: widget.expense.splitAmounts,
       );
 
-      context.read<ReceiptBloc>()
-        ..add(UpdateReceipt(updatedReceipt))
-        ..add(LoadReceipts(updatedReceipt.userId));
+      context.read<ExpenseBloc>()
+        ..add(UpdateExpense(updatedExpense))
+        ..add(LoadExpenses(updatedExpense.userId));
       Navigator.pop(context);
     }
   }

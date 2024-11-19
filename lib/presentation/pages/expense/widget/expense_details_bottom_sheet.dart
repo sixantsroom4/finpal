@@ -1,7 +1,14 @@
 // lib/presentation/pages/expense/widgets/expense_details_bottom_sheet.dart
+import 'package:finpal/presentation/bloc/expense/expense_bloc.dart';
+import 'package:finpal/presentation/bloc/expense/expense_event.dart';
+import 'package:finpal/presentation/bloc/receipt/receipt_bloc.dart';
+import 'package:finpal/presentation/bloc/receipt/receipt_state.dart';
+import 'package:finpal/presentation/pages/expense/widget/edit_expense_bottom_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../../domain/entities/expense.dart';
+import 'package:go_router/go_router.dart';
 
 class ExpenseDetailsBottomSheet extends StatelessWidget {
   final Expense expense;
@@ -57,19 +64,24 @@ class ExpenseDetailsBottomSheet extends StatelessWidget {
               title: '공유',
               value: '${expense.sharedWith?.length ?? 0}명과 공유됨',
             ),
-          if (expense.receiptUrl != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 16.0),
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  // TODO: 영수증 상세 보기 구현
-                },
-                icon: const Icon(Icons.receipt_long),
-                label: const Text('영수증 보기'),
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 45),
-                ),
-              ),
+          if (expense.receiptId != null)
+            BlocBuilder<ReceiptBloc, ReceiptState>(
+              builder: (context, state) {
+                return Padding(
+                  padding: const EdgeInsets.only(top: 16.0),
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      context.go('/receipts/${expense.receiptId}');
+                    },
+                    icon: const Icon(Icons.receipt_long),
+                    label: const Text('영수증 보기'),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 45),
+                    ),
+                  ),
+                );
+              },
             ),
           Padding(
             padding: const EdgeInsets.only(top: 16.0),
@@ -78,7 +90,8 @@ class ExpenseDetailsBottomSheet extends StatelessWidget {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () {
-                      // TODO: 지출 수정 구현
+                      Navigator.pop(context);
+                      _showEditExpenseBottomSheet(context);
                     },
                     icon: const Icon(Icons.edit),
                     label: const Text('수정'),
@@ -87,10 +100,7 @@ class ExpenseDetailsBottomSheet extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () {
-                      // TODO: 지출 삭제 구현
-                      Navigator.pop(context);
-                    },
+                    onPressed: () => _showDeleteConfirmDialog(context),
                     icon: const Icon(Icons.delete),
                     label: const Text('삭제'),
                     style: ElevatedButton.styleFrom(
@@ -103,6 +113,45 @@ class ExpenseDetailsBottomSheet extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _showDeleteConfirmDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('지출 삭제'),
+        content: const Text('이 지출을 삭제하시겠습니까?\n삭제된 지출은 복구할 수 없습니다.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              context.go('/expenses');
+              context.read<ExpenseBloc>()
+                ..add(DeleteExpense(expense.id, expense.userId));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('지출이 삭제되었습니다.')),
+              );
+            },
+            child: const Text(
+              '삭제',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditExpenseBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => EditExpenseBottomSheet(expense: expense),
     );
   }
 }

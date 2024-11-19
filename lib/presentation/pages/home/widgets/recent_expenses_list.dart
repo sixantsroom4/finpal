@@ -145,7 +145,7 @@ class _ExpenseListTile extends StatelessWidget {
                 ),
               ),
               // 영수증 아이콘 (있는 경우)
-              if (expense.receiptUrl != null) ...[
+              if (expense.receiptId != null) ...[
                 const SizedBox(width: 8),
                 const Icon(
                   Icons.receipt_outlined,
@@ -255,13 +255,13 @@ class _ExpenseDetailsBottomSheet extends StatelessWidget {
               value: '${expense.sharedWith?.length ?? 0}명과 공유됨',
             ),
           // 영수증이 있는 경우 보기 버튼
-          if (expense.receiptUrl != null)
+          if (expense.receiptId != null)
             Padding(
               padding: const EdgeInsets.only(top: 16.0),
               child: ElevatedButton.icon(
                 onPressed: () {
-                  // 영수증 상세 페이지로 이동
-                  context.go('/receipts/${expense.id}');
+                  Navigator.pop(context);
+                  context.go('/receipts/${expense.receiptId}');
                 },
                 icon: const Icon(Icons.receipt_outlined),
                 label: const Text('영수증 보기'),

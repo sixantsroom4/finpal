@@ -143,6 +143,7 @@ class ReceiptModel extends Receipt {
     );
   }
 
+  @override
   ReceiptModel copyWith({
     String? id,
     String? userId,
@@ -151,7 +152,7 @@ class ReceiptModel extends Receipt {
     double? totalAmount,
     String? imageUrl,
     String? expenseId,
-    List<ReceiptItemModel>? items,
+    List<ReceiptItem>? items,
   }) {
     return ReceiptModel(
       id: id ?? this.id,

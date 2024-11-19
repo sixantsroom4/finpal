@@ -7,8 +7,9 @@ class Expense extends Equatable {
   final String description;
   final DateTime date;
   final String category;
-  final String? receiptUrl;
   final String userId;
+  final String? receiptUrl;
+  final String? receiptId;
   final bool isShared;
   final List<String>? sharedWith;
   final Map<String, double>? splitAmounts;
@@ -21,6 +22,7 @@ class Expense extends Equatable {
     required this.category,
     required this.userId,
     this.receiptUrl,
+    this.receiptId,
     this.isShared = false,
     this.sharedWith,
     this.splitAmounts,
@@ -46,6 +48,7 @@ class Expense extends Equatable {
     required String category,
     required String userId,
     String? receiptUrl,
+    String? receiptId,
     bool isShared = false,
     List<String>? sharedWith,
     Map<String, double>? splitAmounts,
@@ -58,6 +61,7 @@ class Expense extends Equatable {
       category: category,
       userId: userId,
       receiptUrl: receiptUrl,
+      receiptId: receiptId,
       isShared: isShared,
       sharedWith: sharedWith,
       splitAmounts: splitAmounts,

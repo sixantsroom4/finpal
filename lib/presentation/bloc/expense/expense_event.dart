@@ -37,11 +37,12 @@ class UpdateExpense extends ExpenseEvent {
 
 class DeleteExpense extends ExpenseEvent {
   final String expenseId;
+  final String userId;
 
-  const DeleteExpense(this.expenseId);
+  const DeleteExpense(this.expenseId, this.userId);
 
   @override
-  List<Object> get props => [expenseId];
+  List<Object> get props => [expenseId, userId];
 }
 
 class LoadExpensesByDateRange extends ExpenseEvent {

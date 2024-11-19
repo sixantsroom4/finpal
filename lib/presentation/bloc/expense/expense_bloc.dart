@@ -91,13 +91,7 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
       (failure) => emit(ExpenseError(failure.message)),
       (_) {
         emit(const ExpenseOperationSuccess('지출이 삭제되었습니다.'));
-        // 현재 상태가 ExpenseLoaded인 경우에만 userId를 가져와 목록을 다시 로드
-        if (state is ExpenseLoaded) {
-          final userId = (state as ExpenseLoaded).expenses.firstOrNull?.userId;
-          if (userId != null) {
-            add(LoadExpenses(userId));
-          }
-        }
+        add(LoadExpenses(event.userId));
       },
     );
   }

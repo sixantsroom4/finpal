@@ -14,6 +14,7 @@ import 'widgets/scan_receipt_fab.dart';
 import 'widgets/receipt_grid_item.dart';
 import 'receipt_scan_result_page.dart';
 import 'receipt_preview_page.dart';
+import 'package:go_router/go_router.dart';
 
 class ReceiptPage extends StatefulWidget {
   const ReceiptPage({super.key});
@@ -205,12 +206,7 @@ class _ReceiptPageState extends State<ReceiptPage> {
   }
 
   void _showReceiptDetails(BuildContext context, Receipt receipt) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ReceiptDetailsPage(receipt: receipt),
-      ),
-    );
+    context.go('/receipts/${receipt.id}');
   }
 
   Future<void> _scanReceipt(BuildContext context) async {

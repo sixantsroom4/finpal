@@ -53,6 +53,41 @@ class Receipt extends Equatable {
       expenseId: expenseId,
     );
   }
+
+  Receipt copyWith({
+    String? id,
+    String? imageUrl,
+    DateTime? date,
+    String? merchantName,
+    double? totalAmount,
+    List<ReceiptItem>? items,
+    String? userId,
+    String? expenseId,
+  }) {
+    return Receipt(
+      id: id ?? this.id,
+      imageUrl: imageUrl ?? this.imageUrl,
+      date: date ?? this.date,
+      merchantName: merchantName ?? this.merchantName,
+      totalAmount: totalAmount ?? this.totalAmount,
+      items: items ?? this.items,
+      userId: userId ?? this.userId,
+      expenseId: expenseId ?? this.expenseId,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'imageUrl': imageUrl,
+      'date': date.toIso8601String(),
+      'merchantName': merchantName,
+      'totalAmount': totalAmount,
+      'items': items.map((item) => item.toJson()).toList(),
+      'userId': userId,
+      'expenseId': expenseId,
+    };
+  }
 }
 
 class ReceiptItem extends Equatable {
@@ -70,4 +105,13 @@ class ReceiptItem extends Equatable {
 
   @override
   List<Object> get props => [name, price, quantity, totalPrice];
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'price': price,
+      'quantity': quantity,
+      'totalPrice': totalPrice,
+    };
+  }
 }

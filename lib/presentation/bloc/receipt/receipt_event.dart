@@ -93,3 +93,12 @@ class ProcessReceiptEvent extends ReceiptEvent {
   @override
   List<Object> get props => [imagePath];
 }
+
+class LoadReceiptById extends ReceiptEvent {
+  final String receiptId;
+
+  const LoadReceiptById(this.receiptId);
+
+  @override
+  List<Object> get props => [receiptId];
+}

@@ -129,6 +129,9 @@ class FirebaseStorageRemoteDataSourceImpl
 
       final receiptData = receiptDoc.data()!;
       final imageUrl = receiptData['imageUrl'] as String?;
+      final expenseId = receiptData['expenseId'] as String?;
+
+      final batch = _firestore.batch();
 
       // Firebase Storage 이미지 삭제
       if (imageUrl != null &&
@@ -142,8 +145,11 @@ class FirebaseStorageRemoteDataSourceImpl
         }
       }
 
-      // Firestore 데이터 삭제
-      final batch = _firestore.batch();
+      // 연결된 지출 삭제
+      if (expenseId != null) {
+        final expenseRef = _firestore.collection('expenses').doc(expenseId);
+        batch.delete(expenseRef);
+      }
 
       // 영수증 항목 삭제
       final itemsSnapshot = await receiptRef.collection('items').get();
@@ -156,7 +162,7 @@ class FirebaseStorageRemoteDataSourceImpl
 
       // 일괄 처리 실행
       await batch.commit();
-      debugPrint('영수증 삭제 성공: $receiptId');
+      debugPrint('영수증과 연결된 지출 삭제 성공: $receiptId');
     } catch (e) {
       debugPrint('영수증 삭제 실패: $e');
       throw DatabaseException('영수증 삭제 실패: ${e.toString()}');
@@ -573,7 +579,7 @@ class FirebaseStorageRemoteDataSourceImpl
 
       // 2. Gemini로 수증 분석
       final prompt = '''
-      이 영증 이미지를 분석해서 다음 정보를 JSON 형식으로 ��출해주요:
+      이 영증 이미지를 분석해서 다음 정보를 JSON 형식으로 출해주요:
       {
         "merchant": "상점명",
         "totalAmount": 숫자로된 총액,

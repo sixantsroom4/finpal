@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:finpal/presentation/pages/receipt/widgets/create_expense_from_receipt.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../bloc/auth/auth_bloc.dart';
@@ -86,10 +87,13 @@ class ReceiptScanResultPage extends StatelessWidget {
   }
 
   Widget _buildResultState(BuildContext context, ReceiptScanSuccess state) {
+    final receipt = state.receipt;
+    final formatter = NumberFormat.currency(locale: 'ko_KR', symbol: '₩');
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Image.file(File(imagePath)),
           const SizedBox(height: 24),
@@ -100,71 +104,31 @@ class ReceiptScanResultPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '분석 결과',
+                    receipt.merchantName,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
-                  const SizedBox(height: 16),
-                  _buildInfoRow('상점명', state.receipt.merchantName),
-                  _buildInfoRow(
-                      '날짜', state.receipt.date.toString().split(' ')[0]),
-                  _buildInfoRow(
-                    '총액',
-                    NumberFormat.currency(
-                      locale: 'ko_KR',
-                      symbol: '₩',
-                    ).format(state.receipt.totalAmount),
+                  const SizedBox(height: 8),
+                  Text(
+                    '총액: ${formatter.format(receipt.totalAmount)}',
+                    style: Theme.of(context).textTheme.titleMedium,
                   ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          if (state.receipt.items.isNotEmpty)
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '구매 항목',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: state.receipt.items.length,
-                      itemBuilder: (context, index) {
-                        final item = state.receipt.items[index];
-                        return ListTile(
-                          title: Text(item.name),
-                          subtitle: Text('수량: ${item.quantity}'),
-                          trailing: Text(
-                            NumberFormat.currency(
-                              locale: 'ko_KR',
-                              symbol: '₩',
-                            ).format(item.totalPrice),
+                  const SizedBox(height: 16),
+                  if (receipt.expenseId == null)
+                    ElevatedButton(
+                      onPressed: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          builder: (context) => CreateExpenseFromReceipt(
+                            receipt: receipt,
                           ),
                         );
                       },
+                      child: const Text('지출 내역 생성'),
                     ),
-                  ],
-                ),
+                ],
               ),
             ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: () {
-              final authState = context.read<AuthBloc>().state;
-              if (authState is Authenticated) {
-                context.read<ReceiptBloc>().add(SaveReceipt(state.receipt));
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 50),
-            ),
-            child: const Text('저장하기'),
           ),
         ],
       ),

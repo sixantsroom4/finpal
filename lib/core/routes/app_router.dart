@@ -1,6 +1,7 @@
 // lib/core/routes/app_router.dart
 import 'dart:async';
 
+import 'package:finpal/presentation/pages/receipt/receipt_details_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -72,6 +73,12 @@ class AppRouter {
             GoRoute(
               path: '/receipts',
               builder: (context, state) => const ReceiptPage(),
+            ),
+            GoRoute(
+              path: '/receipts/:id',
+              builder: (context, state) => ReceiptDetailsPage(
+                receiptId: state.pathParameters['id']!,
+              ),
             ),
             GoRoute(
               path: '/subscriptions',

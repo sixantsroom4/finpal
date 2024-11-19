@@ -29,6 +29,34 @@ class ReceiptBloc extends Bloc<ReceiptEvent, ReceiptState> {
     on<LoadReceipts>(_onLoadReceipts);
     on<LoadReceiptsByDateRange>(_onLoadReceiptsByDateRange);
     on<LoadReceiptsByMerchant>(_onLoadReceiptsByMerchant);
+    on<LoadReceiptById>((event, emit) async {
+      try {
+        debugPrint('영수증 ID로 조회 시도: ${event.receiptId}');
+        final result = await _receiptRepository.getReceiptById(event.receiptId);
+
+        await result.fold(
+          (failure) async {
+            debugPrint('영수증 조회 실패: ${failure.message}');
+            emit(ReceiptError(failure.message));
+          },
+          (receipt) async {
+            debugPrint('영수증 조회 성공: $receipt');
+            if (receipt == null) {
+              emit(const ReceiptError('영수증을 찾을 수 없습니다.'));
+              return;
+            }
+            emit(ReceiptLoaded(
+              receipts: [receipt],
+              merchantTotals: _calculateMerchantTotals([receipt]),
+              totalAmount: receipt.totalAmount,
+            ));
+          },
+        );
+      } catch (e) {
+        debugPrint('영수증 조회 중 예외 발생: $e');
+        emit(ReceiptError(e.toString()));
+      }
+    });
   }
 
   Future<void> _onScanReceipt(
