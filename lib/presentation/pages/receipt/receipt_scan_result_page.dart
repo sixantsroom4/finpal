@@ -95,26 +95,105 @@ class ReceiptScanResultPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Image.file(File(imagePath)),
+          GestureDetector(
+            onTap: () => _showFullScreenImage(context, imagePath),
+            child: Hero(
+              tag: 'receipt_image',
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.file(File(imagePath)),
+              ),
+            ),
+          ),
           const SizedBox(height: 24),
           Card(
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    receipt.merchantName,
-                    style: Theme.of(context).textTheme.titleLarge,
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundColor:
+                            Theme.of(context).colorScheme.primaryContainer,
+                        child: Icon(Icons.store,
+                            color: Theme.of(context).colorScheme.primary),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              receipt.merchantName,
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                            Text(
+                              DateFormat('yyyy년 M월 d일').format(receipt.date),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(
+                                    color: Colors.grey[600],
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '총액: ${formatter.format(receipt.totalAmount)}',
-                    style: Theme.of(context).textTheme.titleMedium,
+                  const Divider(height: 32),
+                  if (receipt.items.isNotEmpty) ...[
+                    Text(
+                      '구매 항목',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 12),
+                    ...receipt.items.map((item) => Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                flex: 2,
+                                child: Text(item.name),
+                              ),
+                              Text(
+                                  '${formatter.format(item.price)} x ${item.quantity}'),
+                              const SizedBox(width: 8),
+                              Text(
+                                formatter.format(item.totalPrice),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        )),
+                    const Divider(height: 32),
+                  ],
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '총액',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      Text(
+                        formatter.format(receipt.totalAmount),
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
                   if (receipt.expenseId == null)
-                    ElevatedButton(
+                    ElevatedButton.icon(
                       onPressed: () {
                         showModalBottomSheet(
                           context: context,
@@ -124,13 +203,41 @@ class ReceiptScanResultPage extends StatelessWidget {
                           ),
                         );
                       },
-                      child: const Text('지출 내역 생성'),
+                      icon: const Icon(Icons.add_card),
+                      label: const Text('지출 내역 생성'),
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 48),
+                      ),
                     ),
                 ],
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showFullScreenImage(BuildContext context, String imagePath) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => Scaffold(
+          backgroundColor: Colors.black,
+          body: GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Center(
+              child: InteractiveViewer(
+                minScale: 0.5,
+                maxScale: 4.0,
+                child: Hero(
+                  tag: 'receipt_image',
+                  child: Image.file(File(imagePath)),
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
