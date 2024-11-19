@@ -300,11 +300,16 @@ class FirebaseStorageRemoteDataSourceImpl
           .orderBy('date', descending: true)
           .get();
 
-      return snapshot.docs
-          .map((doc) => ExpenseModel.fromJson(doc.data()))
-          .toList();
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        return ExpenseModel.fromJson({
+          ...data,
+          'id': doc.id,
+        });
+      }).toList();
     } catch (e) {
-      throw DatabaseException('Failed to fetch expenses: ${e.toString()}');
+      debugPrint('지출 목록 조회 실패: $e');
+      throw DatabaseException('지출 목록 조회 실패: ${e.toString()}');
     }
   }
 
@@ -318,19 +323,22 @@ class FirebaseStorageRemoteDataSourceImpl
       final snapshot = await _firestore
           .collection('expenses')
           .where('userId', isEqualTo: userId)
+          .where('date',
+              isGreaterThanOrEqualTo: startDate.toIso8601String(),
+              isLessThanOrEqualTo: endDate.toIso8601String())
           .orderBy('date', descending: true)
           .get();
 
-      final filteredDocs = snapshot.docs.where((doc) {
-        final expenseDate = DateTime.parse(doc.data()['date'] as String);
-        return expenseDate.isAfter(startDate) && expenseDate.isBefore(endDate);
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        return ExpenseModel.fromJson({
+          ...data,
+          'id': doc.id,
+        });
       }).toList();
-
-      return filteredDocs
-          .map((doc) => ExpenseModel.fromJson(doc.data()))
-          .toList();
     } catch (e) {
-      throw DatabaseException('지출 내역을 가져오는데 실패했습니다: ${e.toString()}');
+      debugPrint('기간별 지출 목록 조회 실패: $e');
+      throw DatabaseException('기간별 지출 목록 조회 실패: ${e.toString()}');
     }
   }
 
@@ -347,12 +355,16 @@ class FirebaseStorageRemoteDataSourceImpl
           .orderBy('date', descending: true)
           .get();
 
-      return snapshot.docs
-          .map((doc) => ExpenseModel.fromJson(doc.data()))
-          .toList();
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        return ExpenseModel.fromJson({
+          ...data,
+          'id': doc.id,
+        });
+      }).toList();
     } catch (e) {
-      throw DatabaseException(
-          'Failed to fetch expenses by category: ${e.toString()}');
+      debugPrint('카테고리별 지출 목록 조회 실패: $e');
+      throw DatabaseException('카테고리별 지출 목록 조회 실패: ${e.toString()}');
     }
   }
 
@@ -649,6 +661,33 @@ class FirebaseStorageRemoteDataSourceImpl
     } catch (e) {
       debugPrint('이미지 데이터 조회 실패: $e');
       throw DatabaseException('이미지 데이터 조회 실패: ${e.toString()}');
+    }
+  }
+
+  Future<void> createExpenseFromSubscription(
+      SubscriptionModel subscription) async {
+    try {
+      // 다음 결제일 계산
+      final nextBillingDate = subscription.calculateNextBillingDate();
+
+      // 지출 생성
+      final expenseRef = _firestore.collection('expenses').doc();
+      final expense = ExpenseModel(
+        id: expenseRef.id,
+        amount: subscription.amount,
+        description: '${subscription.name} 구독료',
+        category: subscription.category,
+        date: nextBillingDate,
+        userId: subscription.userId,
+        isSubscription: true,
+        subscriptionId: subscription.id,
+        createdAt: DateTime.now(),
+      );
+
+      await expenseRef.set(expense.toJson());
+    } catch (e) {
+      debugPrint('구독 지출 생성 실패: $e');
+      throw DatabaseException('구독 지출 생성 실패: ${e.toString()}');
     }
   }
 }

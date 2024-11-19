@@ -1,3 +1,4 @@
+import 'package:finpal/data/models/subscription_model.dart';
 import 'package:finpal/domain/entities/subscription.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../domain/repositories/subscription_repository.dart';
@@ -55,11 +56,18 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     final result =
         await _subscriptionRepository.addSubscription(event.subscription);
 
-    result.fold(
-      (failure) => emit(SubscriptionError(failure.message)),
-      (subscription) {
-        emit(const SubscriptionOperationSuccess('구독이 추가되었습니다.'));
-        add(LoadActiveSubscriptions(event.subscription.userId));
+    await result.fold(
+      (failure) async => emit(SubscriptionError(failure.message)),
+      (subscription) async {
+        try {
+          await _subscriptionRepository.createExpenseFromSubscription(
+            subscription as SubscriptionModel,
+          );
+          emit(const SubscriptionOperationSuccess('구독이 추가되었습니다.'));
+          add(LoadActiveSubscriptions(event.subscription.userId));
+        } catch (e) {
+          emit(SubscriptionError('구독 지출 생성 실패: ${e.toString()}'));
+        }
       },
     );
   }
@@ -141,8 +149,10 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     double yearlyTotal = 0;
     final categoryTotals = <String, double>{};
     final billingDaySubscriptions = <int, List<Subscription>>{};
+    final now = DateTime.now();
 
-    for (var subscription in subscriptions) {
+    for (var subscription
+        in subscriptions.where((sub) => sub.isCurrentlyActive)) {
       // 월간/연간 총액 계산
       if (subscription.billingCycle.toLowerCase() == 'monthly') {
         monthlyTotal += subscription.amount;
@@ -156,11 +166,18 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
       categoryTotals[subscription.category] =
           (categoryTotals[subscription.category] ?? 0) + subscription.amount;
 
-      // 결제일별 구독 그룹화
-      if (!billingDaySubscriptions.containsKey(subscription.billingDay)) {
-        billingDaySubscriptions[subscription.billingDay] = [];
+      // 다음 결제일 계산
+      final nextBillingDate = subscription.calculateNextBillingDate();
+
+      // 결제일별 구독 그룹화 (미래 결제 포함)
+      if (nextBillingDate.month == now.month ||
+          nextBillingDate.month == now.month + 1 ||
+          (now.month == 12 && nextBillingDate.month == 1)) {
+        if (!billingDaySubscriptions.containsKey(subscription.billingDay)) {
+          billingDaySubscriptions[subscription.billingDay] = [];
+        }
+        billingDaySubscriptions[subscription.billingDay]!.add(subscription);
       }
-      billingDaySubscriptions[subscription.billingDay]!.add(subscription);
     }
 
     return SubscriptionLoaded(

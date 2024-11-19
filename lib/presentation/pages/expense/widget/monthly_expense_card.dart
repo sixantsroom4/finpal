@@ -76,11 +76,18 @@ class _MonthlyExpenseCardState extends State<MonthlyExpenseCard> {
                 IconButton(
                   icon: const Icon(Icons.chevron_right),
                   onPressed: () {
-                    // 미래 달로는 이동 불가
-                    if (_selectedDate.isBefore(DateTime(
+                    // 다음 달로 이동 가능하도록 수정
+                    final nextMonth = DateTime(
+                      _selectedDate.year,
+                      _selectedDate.month + 1,
+                    );
+                    // 현재 달로부터 최대 3개월 후까지만 이동 가능
+                    final maxDate = DateTime(
                       DateTime.now().year,
-                      DateTime.now().month,
-                    ))) {
+                      DateTime.now().month + 3,
+                    );
+                    if (nextMonth.isBefore(maxDate) ||
+                        nextMonth.isAtSameMomentAs(maxDate)) {
                       _changeMonth(1);
                     }
                   },

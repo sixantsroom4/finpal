@@ -56,4 +56,5 @@ abstract class FirebaseStorageRemoteDataSource {
     String userId,
     int billingDay,
   );
+  Future<void> createExpenseFromSubscription(SubscriptionModel subscription);
 }

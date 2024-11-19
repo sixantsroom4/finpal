@@ -74,30 +74,29 @@ class SubscriptionModel extends Subscription {
   /// 다음 결제일 계산
   DateTime calculateNextBillingDate() {
     final now = DateTime.now();
-    final currentMonth = DateTime(now.year, now.month);
 
+    // 기본 다음 결제일 계산
     DateTime nextBilling = DateTime(
-      currentMonth.year,
-      currentMonth.month,
+      now.year,
+      now.month,
       billingDay,
     );
 
+    // 현재 날짜가 이번 달 결제일을 지났으면 다음 달로 설정
     if (nextBilling.isBefore(now)) {
-      // 이번 달 결제일이 이미 지났으면 다음 달로
-      nextBilling = DateTime(
-        currentMonth.year,
-        currentMonth.month + 1,
-        billingDay,
-      );
+      if (now.month == 12) {
+        nextBilling = DateTime(now.year + 1, 1, billingDay);
+      } else {
+        nextBilling = DateTime(now.year, now.month + 1, billingDay);
+      }
     }
 
-    // 구독 주기에 따른 날짜 조정
+    // 구독 주기에 따른 조정
     switch (billingCycle.toLowerCase()) {
       case 'monthly':
-        // 이미 월간으로 계산되어 있으므로 추가 조정 불필요
+        // 이미 계산됨
         break;
       case 'yearly':
-        // 다음 연간 결제일이 될 때까지 1년씩 더하기
         while (nextBilling.isBefore(now)) {
           nextBilling = DateTime(
             nextBilling.year + 1,
@@ -107,12 +106,10 @@ class SubscriptionModel extends Subscription {
         }
         break;
       case 'weekly':
-        // 다음 주 같은 요일로 설정
         while (nextBilling.isBefore(now)) {
           nextBilling = nextBilling.add(const Duration(days: 7));
         }
         break;
-      // 필요한 경우 다른 결제 주기 추가 가능
     }
 
     return nextBilling;

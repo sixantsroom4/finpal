@@ -23,33 +23,6 @@ class ExpensePage extends StatefulWidget {
 class _ExpensePageState extends State<ExpensePage> {
   String _selectedCategory = '전체';
   final _numberFormat = NumberFormat('#,###');
-  final DateTime _now = DateTime.now();
-  DateTime _startDate = DateTime.now().subtract(const Duration(days: 30));
-  DateTime _endDate = DateTime.now();
-
-  @override
-  void initState() {
-    super.initState();
-    _loadExpenses();
-  }
-
-  void _loadExpenses() {
-    final authState = context.read<AuthBloc>().state;
-    if (authState is Authenticated) {
-      debugPrint('지출 데이터 로드 시도');
-      debugPrint('사용자 ID: ${authState.user.id}');
-      debugPrint('시작일: $_startDate');
-      debugPrint('종료일: $_endDate');
-
-      context.read<ExpenseBloc>().add(
-            LoadExpensesByDateRange(
-              userId: authState.user.id,
-              startDate: _startDate,
-              endDate: _endDate,
-            ),
-          );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -110,7 +83,6 @@ class _ExpensePageState extends State<ExpensePage> {
                               expense.category != _selectedCategory) {
                             return const SizedBox.shrink();
                           }
-
                           return ListTile(
                             leading: CircleAvatar(
                               backgroundColor: Theme.of(context)
@@ -124,22 +96,9 @@ class _ExpensePageState extends State<ExpensePage> {
                             title: Text(expense.description),
                             subtitle: Text(
                               DateFormat('M월 d일').format(expense.date),
-                              style: Theme.of(context).textTheme.bodySmall,
                             ),
-                            trailing: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  '${_numberFormat.format(expense.amount)}원',
-                                  style:
-                                      Theme.of(context).textTheme.titleMedium,
-                                ),
-                                Text(
-                                  expense.category,
-                                  style: Theme.of(context).textTheme.bodySmall,
-                                ),
-                              ],
+                            trailing: Text(
+                              '${_numberFormat.format(expense.amount)}원',
                             ),
                             onTap: () => _showExpenseDetails(context, expense),
                           );
@@ -161,26 +120,6 @@ class _ExpensePageState extends State<ExpensePage> {
     setState(() {
       _selectedCategory = category;
     });
-  }
-
-  Future<void> _showDateRangePicker(BuildContext context) async {
-    final DateTimeRange? picked = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime(_now.year - 1),
-      lastDate: _now,
-      initialDateRange: DateTimeRange(
-        start: _startDate,
-        end: _endDate,
-      ),
-    );
-
-    if (picked != null) {
-      setState(() {
-        _startDate = picked.start;
-        _endDate = picked.end;
-      });
-      _loadExpenses();
-    }
   }
 
   IconData _getCategoryIcon(String category) {

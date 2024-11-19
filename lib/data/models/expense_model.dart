@@ -2,7 +2,7 @@
 import '../../domain/entities/expense.dart';
 
 class ExpenseModel extends Expense {
-  const ExpenseModel({
+  ExpenseModel({
     required String id,
     required double amount,
     required String description,
@@ -14,6 +14,9 @@ class ExpenseModel extends Expense {
     bool isShared = false,
     List<String>? sharedWith,
     Map<String, double>? splitAmounts,
+    bool isSubscription = false,
+    String? subscriptionId,
+    DateTime? createdAt,
   }) : super(
           id: id,
           amount: amount,
@@ -26,6 +29,9 @@ class ExpenseModel extends Expense {
           isShared: isShared,
           sharedWith: sharedWith,
           splitAmounts: splitAmounts,
+          isSubscription: isSubscription,
+          subscriptionId: subscriptionId,
+          createdAt: createdAt,
         );
 
   factory ExpenseModel.fromJson(Map<String, dynamic> json) {
@@ -45,9 +51,14 @@ class ExpenseModel extends Expense {
       splitAmounts: json['splitAmounts'] != null
           ? Map<String, double>.from(json['splitAmounts'])
           : null,
+      isSubscription: json['isSubscription'] ?? false,
+      subscriptionId: json['subscriptionId'],
+      createdAt:
+          json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
     );
   }
 
+  @override
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -61,6 +72,9 @@ class ExpenseModel extends Expense {
       'isShared': isShared,
       'sharedWith': sharedWith,
       'splitAmounts': splitAmounts,
+      'isSubscription': isSubscription,
+      'subscriptionId': subscriptionId,
+      'createdAt': createdAt?.toIso8601String(),
     };
   }
 
@@ -77,6 +91,9 @@ class ExpenseModel extends Expense {
       isShared: expense.isShared,
       sharedWith: expense.sharedWith,
       splitAmounts: expense.splitAmounts,
+      isSubscription: expense.isSubscription,
+      subscriptionId: expense.subscriptionId,
+      createdAt: expense.createdAt,
     );
   }
 }

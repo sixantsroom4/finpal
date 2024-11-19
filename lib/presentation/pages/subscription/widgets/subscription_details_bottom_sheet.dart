@@ -3,6 +3,7 @@ import 'package:finpal/presentation/bloc/subscription/subscription_event.dart';
 import 'package:finpal/presentation/pages/subscription/widgets/edit_subscription_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../domain/entities/subscription.dart';
 import '../../../bloc/subscription/subscription_bloc.dart';
@@ -112,7 +113,7 @@ class SubscriptionDetailsBottomSheet extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
-              onPressed: () => _showDeleteConfirmDialog(context),
+              onPressed: () => _showDeleteConfirmation(context),
               icon: const Icon(Icons.delete_outline, color: Colors.red),
               label: const Text('삭제'),
               style: OutlinedButton.styleFrom(
@@ -168,12 +169,12 @@ class SubscriptionDetailsBottomSheet extends StatelessWidget {
     Navigator.pop(context);
   }
 
-  void _showDeleteConfirmDialog(BuildContext context) {
+  void _showDeleteConfirmation(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('구독 삭제'),
-        content: const Text('이 구독을 삭제하시겠습니까?\n삭제된 구독은 복구할 수 없습니다.'),
+        content: const Text('이 구독을 정말 삭제하시겠습니까?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -184,8 +185,11 @@ class SubscriptionDetailsBottomSheet extends StatelessWidget {
               context.read<SubscriptionBloc>().add(
                     DeleteSubscription(subscription.id),
                   );
-              Navigator.pop(context); // 다이얼로그 닫기
-              Navigator.pop(context); // 상세 바텀시트 닫기
+              // 다이얼로그와 바텀시트를 닫고 구독 페이지로 이동
+              if (context.mounted) {
+                Navigator.pop(context); // 다이얼로그 닫기
+                context.pop(); // 바텀시트 닫기 (GoRouter 사용)
+              }
             },
             child: const Text(
               '삭제',

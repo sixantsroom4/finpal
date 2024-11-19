@@ -13,8 +13,11 @@ class Expense extends Equatable {
   final bool isShared;
   final List<String>? sharedWith;
   final Map<String, double>? splitAmounts;
+  final bool isSubscription;
+  final String? subscriptionId;
+  final DateTime createdAt;
 
-  const Expense({
+  Expense({
     required this.id,
     required this.amount,
     required this.description,
@@ -26,7 +29,10 @@ class Expense extends Equatable {
     this.isShared = false,
     this.sharedWith,
     this.splitAmounts,
-  });
+    this.isSubscription = false,
+    this.subscriptionId,
+    DateTime? createdAt,
+  }) : createdAt = createdAt ?? DateTime.now();
 
   @override
   List<Object?> get props => [
@@ -35,11 +41,15 @@ class Expense extends Equatable {
         description,
         date,
         category,
-        receiptUrl,
         userId,
+        receiptUrl,
+        receiptId,
         isShared,
         sharedWith,
         splitAmounts,
+        isSubscription,
+        subscriptionId,
+        createdAt,
       ];
 
   factory Expense.create({
@@ -52,6 +62,8 @@ class Expense extends Equatable {
     bool isShared = false,
     List<String>? sharedWith,
     Map<String, double>? splitAmounts,
+    bool isSubscription = false,
+    String? subscriptionId,
   }) {
     return Expense(
       id: const Uuid().v4(),
@@ -65,6 +77,9 @@ class Expense extends Equatable {
       isShared: isShared,
       sharedWith: sharedWith,
       splitAmounts: splitAmounts,
+      isSubscription: isSubscription,
+      subscriptionId: subscriptionId,
+      createdAt: DateTime.now(),
     );
   }
 }
