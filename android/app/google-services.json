@@ -1,0 +1,90 @@
+{
+  "project_info": {
+    "project_number": "415977829213",
+    "project_id": "finpal-82a3e",
+    "storage_bucket": "finpal-82a3e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:415977829213:android:4e0a2934885f37f281aeb4",
+        "android_client_info": {
+          "package_name": "com.example.fin"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "415977829213-7sh33td5ath89gjihe99c68pv6eo724o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBnmdbeRaoF5-GpuQPG4mojFTR_G8CIX7I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "415977829213-7sh33td5ath89gjihe99c68pv6eo724o.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "415977829213-bgeb0au8bb32ok5fvprmskgdtn2hk3o6.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.finpal"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:415977829213:android:06bc568eeca7f2ab81aeb4",
+        "android_client_info": {
+          "package_name": "com.example.finpal"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "415977829213-5b6bdjjhim2tgn0ooiq04nk95ofvcsj3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.finpal",
+            "certificate_hash": "1ca4e71e0fe21b17ed142914e4df578a78fbb46e"
+          }
+        },
+        {
+          "client_id": "415977829213-7sh33td5ath89gjihe99c68pv6eo724o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBnmdbeRaoF5-GpuQPG4mojFTR_G8CIX7I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "415977829213-7sh33td5ath89gjihe99c68pv6eo724o.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "415977829213-bgeb0au8bb32ok5fvprmskgdtn2hk3o6.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.finpal"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
