@@ -22,6 +22,7 @@ abstract class FirebaseStorageRemoteDataSource {
   );
   Future<List<ExpenseModel>> getSharedExpenses(String userId);
   Future<ExpenseModel> getExpenseById(String expenseId);
+  Future<List<ExpenseModel>> getPreviousMonthExpenses(String userId);
 
   // Receipt 관련
   Future<String> uploadReceiptImage(String imagePath, String userId);
@@ -57,4 +58,7 @@ abstract class FirebaseStorageRemoteDataSource {
     int billingDay,
   );
   Future<void> createExpenseFromSubscription(SubscriptionModel subscription);
+
+  Future<double> getMonthlyBudget(String userId);
+  Future<void> updateMonthlyBudget(String userId, double amount);
 }

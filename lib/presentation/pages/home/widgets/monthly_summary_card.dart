@@ -19,6 +19,10 @@ class MonthlySummaryCard extends StatelessWidget {
           );
         }
 
+        final monthlyBudget = state.monthlyBudget;
+        final remainingBudget = monthlyBudget - state.totalAmount;
+        final spendingRatio = state.totalAmount / monthlyBudget;
+
         return Card(
           elevation: 2,
           child: Padding(
@@ -43,15 +47,17 @@ class MonthlySummaryCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 LinearProgressIndicator(
-                  value: 0.7, // TODO: 예산 대비 지출 비율 계산
+                  value: spendingRatio.clamp(0.0, 1.0),
                   backgroundColor: Colors.grey[200],
                   valueColor: AlwaysStoppedAnimation<Color>(
-                    state.totalAmount > 1000000 ? Colors.red : Colors.blue,
+                    state.totalAmount > monthlyBudget
+                        ? Colors.red
+                        : Colors.blue,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '월 예산까지 ${300000.toStringAsFixed(0)}원 남았습니다',
+                  '월 예산까지 ${remainingBudget.toStringAsFixed(0)}원 남았습니다',
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 14,

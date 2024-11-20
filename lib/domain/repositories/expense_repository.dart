@@ -33,4 +33,10 @@ abstract class ExpenseRepository {
 
   /// 특정 지출 상세 정보 조회
   Future<Either<Failure, Expense>> getExpenseById(String expenseId);
+
+  Future<Either<Failure, List<Expense>>> getPreviousMonthExpenses(
+      String userId);
+  Future<Either<Failure, double>> getMonthlyBudget(String userId);
+  Future<Either<Failure, void>> updateMonthlyBudget(
+      String userId, double amount);
 }

@@ -142,4 +142,48 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, double>> getMonthlyBudget(String userId) async {
+    try {
+      final result = await remoteDataSource.getMonthlyBudget(userId);
+      return Right(result);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<Expense>>> getPreviousMonthExpenses(
+      String userId) async {
+    try {
+      final results = await remoteDataSource.getPreviousMonthExpenses(userId);
+      return Right(results);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> updateMonthlyBudget(
+      String userId, double amount) async {
+    try {
+      await remoteDataSource.updateMonthlyBudget(userId, amount);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }

@@ -496,7 +496,7 @@ class FirebaseStorageRemoteDataSourceImpl
         return ReceiptModel.fromJson({...doc.data(), 'items': items});
       }));
     } catch (e) {
-      throw DatabaseException('가맹점별 영수증 조회 실패: ${e.toString()}');
+      throw DatabaseException('가���점별 영수증 조회 실패: ${e.toString()}');
     }
   }
 
@@ -688,6 +688,40 @@ class FirebaseStorageRemoteDataSourceImpl
     } catch (e) {
       debugPrint('구독 지출 생성 실패: $e');
       throw DatabaseException('구독 지출 생성 실패: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<double> getMonthlyBudget(String userId) async {
+    try {
+      final doc = await _firestore.collection('users').doc(userId).get();
+      return (doc.data()?['monthlyBudget'] as num?)?.toDouble() ?? 0.0;
+    } catch (e) {
+      throw DatabaseException('월간 예산 조회 실패: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<List<ExpenseModel>> getPreviousMonthExpenses(String userId) async {
+    try {
+      final now = DateTime.now();
+      final startDate = DateTime(now.year, now.month - 1, 1);
+      final endDate = DateTime(now.year, now.month, 0);
+
+      return getExpensesByDateRange(userId, startDate, endDate);
+    } catch (e) {
+      throw DatabaseException('지난달 지출 조회 실패: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<void> updateMonthlyBudget(String userId, double amount) async {
+    try {
+      await _firestore.collection('users').doc(userId).update({
+        'monthlyBudget': amount,
+      });
+    } catch (e) {
+      throw DatabaseException('월간 예산 업데이트 실패: ${e.toString()}');
     }
   }
 }

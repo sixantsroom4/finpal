@@ -22,6 +22,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthEmailSignInRequested>(_onAuthEmailSignInRequested);
     on<AuthEmailSignUpRequested>(_onAuthEmailSignUpRequested);
     on<AuthAppleSignInRequested>(_onAuthAppleSignInRequested);
+    on<AuthProfileUpdateRequested>((event, emit) async {
+      try {
+        final result = await _authRepository.updateUserProfile(
+          displayName: event.displayName,
+          photoUrl: event.photoUrl,
+        );
+
+        result.fold(
+          (failure) => emit(AuthFailure(failure.message)),
+          (user) => emit(Authenticated(user)),
+        );
+      } catch (e) {
+        emit(AuthFailure('프로필 업데이트에 실패했습니다.'));
+      }
+    });
 
     _authStateSubscription = _authRepository.authStateChanges.listen(
       (user) {

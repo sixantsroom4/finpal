@@ -5,6 +5,7 @@ import 'package:finpal/domain/entities/user.dart';
 import 'package:finpal/presentation/bloc/auth/auth_event.dart';
 import 'package:finpal/presentation/bloc/auth/auth_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class ProfileMenuList extends StatelessWidget {
   final User user;
@@ -23,9 +24,7 @@ class ProfileMenuList extends StatelessWidget {
           leading: const Icon(Icons.settings_outlined),
           title: const Text('앱 설정'),
           trailing: const Icon(Icons.chevron_right),
-          onTap: () {
-            Navigator.pushNamed(context, '/settings');
-          },
+          onTap: () => context.go('/settings'),
         ),
 
         // 알림 설정

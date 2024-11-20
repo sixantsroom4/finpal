@@ -24,14 +24,6 @@ class ProfilePage extends StatelessWidget {
         return Scaffold(
           appBar: AppBar(
             title: const Text('프로필'),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.settings),
-                onPressed: () {
-                  Navigator.pushNamed(context, '/settings');
-                },
-              ),
-            ],
           ),
           body: RefreshIndicator(
             onRefresh: () async {

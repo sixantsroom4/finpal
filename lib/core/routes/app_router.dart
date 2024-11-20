@@ -1,6 +1,7 @@
 // lib/core/routes/app_router.dart
 import 'dart:async';
 
+import 'package:finpal/presentation/pages/expense/widget/budget_settings_page.dart';
 import 'package:finpal/presentation/pages/receipt/receipt_details_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -91,6 +92,10 @@ class AppRouter {
             GoRoute(
               path: '/settings',
               builder: (context, state) => const SettingsPage(),
+            ),
+            GoRoute(
+              path: '/settings/budget',
+              builder: (context, state) => const BudgetSettingsPage(),
             ),
           ],
         ),

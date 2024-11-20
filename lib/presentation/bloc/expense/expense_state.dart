@@ -15,16 +15,29 @@ class ExpenseLoading extends ExpenseState {}
 class ExpenseLoaded extends ExpenseState {
   final List<Expense> expenses;
   final double totalAmount;
+  final double monthlyBudget;
+  final double previousMonthTotal;
   final Map<String, double> categoryTotals;
+  final String userId;
 
-  const ExpenseLoaded({
+  ExpenseLoaded({
     required this.expenses,
     required this.totalAmount,
+    required this.monthlyBudget,
+    required this.previousMonthTotal,
     required this.categoryTotals,
+    required this.userId,
   });
 
   @override
-  List<Object> get props => [expenses, totalAmount, categoryTotals];
+  List<Object> get props => [
+        expenses,
+        totalAmount,
+        monthlyBudget,
+        previousMonthTotal,
+        categoryTotals,
+        userId
+      ];
 }
 
 class ExpenseError extends ExpenseState {

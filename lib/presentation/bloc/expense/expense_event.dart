@@ -72,3 +72,13 @@ class LoadExpensesByCategory extends ExpenseEvent {
   @override
   List<Object> get props => [userId, category];
 }
+
+class UpdateMonthlyBudget extends ExpenseEvent {
+  final String userId;
+  final double amount;
+
+  const UpdateMonthlyBudget({
+    required this.userId,
+    required this.amount,
+  });
+}
