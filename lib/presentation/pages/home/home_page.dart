@@ -1,6 +1,7 @@
 // lib/presentation/pages/home/home_page.dart
 import 'package:finpal/presentation/bloc/auth/auth_event.dart';
 import 'package:finpal/presentation/bloc/auth/auth_state.dart';
+import 'package:finpal/presentation/pages/home/widgets/expense_charts_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -80,7 +81,7 @@ class _HomePageState extends State<HomePage> {
                     const SizedBox(height: 24),
                     const MonthlySummaryCard(),
                     const SizedBox(height: 16),
-                    const ExpenseCategoryChart(),
+                    const ExpenseChartsView(),
                     const SizedBox(height: 16),
                     const UpcomingSubscriptionsCard(),
                     const SizedBox(height: 16),
