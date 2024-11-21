@@ -22,6 +22,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthEmailSignInRequested>(_onAuthEmailSignInRequested);
     on<AuthEmailSignUpRequested>(_onAuthEmailSignUpRequested);
     on<AuthAppleSignInRequested>(_onAuthAppleSignInRequested);
+    on<AuthTermsAcceptanceRequested>(_onAuthTermsAcceptanceRequested);
     on<AuthProfileUpdateRequested>((event, emit) async {
       try {
         final result = await _authRepository.updateUserProfile(
@@ -44,6 +45,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         if (user == null) {
           emit(Unauthenticated());
         } else {
+          if (state is AuthLoading) {
+            debugPrint('약관 동의 처리 중 - Auth 상태 업데이트 건너뜀');
+            return;
+          }
           emit(Authenticated(user));
         }
       },
@@ -162,6 +167,32 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     } catch (e) {
       print('예상치 못한 에러 발생: $e');
       emit(AuthFailure(e.toString()));
+    }
+  }
+
+  Future<void> _onAuthTermsAcceptanceRequested(
+    AuthTermsAcceptanceRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    try {
+      debugPrint('약관 동의 요청 처리 시작');
+      emit(AuthLoading());
+      final result =
+          await _authRepository.updateTermsAcceptance(event.accepted);
+
+      result.fold(
+        (failure) {
+          debugPrint('약관 동의 실패: ${failure.message}');
+          emit(AuthFailure(failure.message));
+        },
+        (user) {
+          debugPrint('약관 동의 성공: hasAcceptedTerms = ${user.hasAcceptedTerms}');
+          emit(Authenticated(user.copyWith(hasAcceptedTerms: true)));
+        },
+      );
+    } catch (e) {
+      debugPrint('약관 동의 처리 중 오류: $e');
+      emit(AuthFailure('약관 동의 상태 업데이트에 실패했습니다.'));
     }
   }
 }

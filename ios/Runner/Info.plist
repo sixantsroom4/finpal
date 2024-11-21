@@ -53,6 +53,7 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+				<string>com.googleusercontent.apps.415977829213-bgeb0au8bb32ok5fvprmskgdtn2hk3o6</string>
 			</array>
 		</dict>
 	</array>
@@ -64,5 +65,7 @@
 	<array>
 		<string>Default</string>
 	</array>
+	<key>GIDClientID</key>
+	<string>415977829213-bgeb0au8bb32ok5fvprmskgdtn2hk3o6.apps.googleusercontent.com</string>
 </dict>
 </plist>

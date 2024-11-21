@@ -40,6 +40,7 @@ abstract class FirebaseAuthRemoteDataSource {
   Future<UserModel> signInWithApple();
   Future<void> sendVerificationEmail(String email);
   Future<void> verifyEmailCode(String email, String code);
+  Future<UserModel> updateTermsAcceptance(bool accepted);
 }
 
 class FirebaseAuthRemoteDataSourceImpl implements FirebaseAuthRemoteDataSource {
@@ -445,6 +446,36 @@ class FirebaseAuthRemoteDataSourceImpl implements FirebaseAuthRemoteDataSource {
       await _firebaseAuth.applyActionCode(code);
     } catch (e) {
       throw AuthException(e.toString());
+    }
+  }
+
+  @override
+  Future<UserModel> updateTermsAcceptance(bool accepted) async {
+    try {
+      final firebaseUser = _firebaseAuth.currentUser;
+      if (firebaseUser == null) {
+        throw AuthException('사용자를 찾을 수 없습니다.');
+      }
+
+      // Firestore에 약관 동의 상태 저장
+      await _firestore.collection('users').doc(firebaseUser.uid).update({
+        'hasAcceptedTerms': accepted,
+        'termsAcceptedAt': DateTime.now().toIso8601String(),
+      });
+
+      // 업데이트된 사용자 정보 반환
+      final userDoc =
+          await _firestore.collection('users').doc(firebaseUser.uid).get();
+
+      return UserModel.fromJson({
+        ...userDoc.data()!,
+        'id': firebaseUser.uid,
+        'email': firebaseUser.email ?? '',
+        'displayName': firebaseUser.displayName,
+        'hasAcceptedTerms': accepted,
+      });
+    } catch (e) {
+      throw AuthException('약관 동의 상태 업데이트에 실패했습니다: ${e.toString()}');
     }
   }
 

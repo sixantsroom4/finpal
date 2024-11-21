@@ -67,3 +67,12 @@ class AuthEmailVerificationRequested extends AuthEvent {
 class AuthAppleSignInRequested extends AuthEvent {}
 
 class AuthAutoLoginRequested extends AuthEvent {}
+
+class AuthTermsAcceptanceRequested extends AuthEvent {
+  final bool accepted;
+
+  AuthTermsAcceptanceRequested({required this.accepted});
+
+  @override
+  List<Object?> get props => [accepted];
+}

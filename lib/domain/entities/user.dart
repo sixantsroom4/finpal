@@ -8,6 +8,7 @@ class User extends Equatable {
   final DateTime createdAt;
   final List<String>? sharedExpenseGroups;
   final Map<String, dynamic>? settings;
+  final bool hasAcceptedTerms;
 
   const User({
     required this.id,
@@ -17,6 +18,7 @@ class User extends Equatable {
     required this.createdAt,
     this.sharedExpenseGroups,
     this.settings,
+    this.hasAcceptedTerms = false,
   });
 
   @override
@@ -28,6 +30,7 @@ class User extends Equatable {
         createdAt,
         sharedExpenseGroups,
         settings,
+        hasAcceptedTerms,
       ];
 
   User copyWith({
@@ -35,6 +38,7 @@ class User extends Equatable {
     String? photoUrl,
     List<String>? sharedExpenseGroups,
     Map<String, dynamic>? settings,
+    bool? hasAcceptedTerms,
   }) {
     return User(
       id: id,
@@ -44,6 +48,7 @@ class User extends Equatable {
       createdAt: createdAt,
       sharedExpenseGroups: sharedExpenseGroups ?? this.sharedExpenseGroups,
       settings: settings ?? this.settings,
+      hasAcceptedTerms: hasAcceptedTerms ?? this.hasAcceptedTerms,
     );
   }
 }

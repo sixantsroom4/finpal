@@ -54,4 +54,6 @@ abstract class AuthRepository {
   Future<Either<Failure, void>> verifyEmailCode(String email, String code);
 
   Future<Either<Failure, User>> signInWithApple();
+
+  Future<Either<Failure, User>> updateTermsAcceptance(bool accepted);
 }

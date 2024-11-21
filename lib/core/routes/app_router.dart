@@ -2,6 +2,7 @@
 import 'dart:async';
 
 import 'package:finpal/presentation/pages/expense/widget/budget_settings_page.dart';
+import 'package:finpal/presentation/pages/onboarding/terms_page.dart';
 import 'package:finpal/presentation/pages/receipt/receipt_details_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -40,14 +41,24 @@ class AppRouter {
 
         final isAuthenticated = authState is Authenticated;
         final isAuthRoute = state.uri.path == '/welcome';
+        final isTermsRoute = state.uri.path == '/terms';
 
         if (!isAuthenticated) {
           debugPrint('미인증 상태 - /welcome으로 리다이렉트');
           return '/welcome';
         }
 
-        if (isAuthenticated && isAuthRoute) {
-          debugPrint('인증된 상태에서 인증 페이지 접근 - /로 리다이렉트');
+        // 인증된 상태에서 약관 동의 여부 확인
+        if (isAuthenticated && !authState.user.hasAcceptedTerms) {
+          // 이미 약관 페이지에 있다면 리다이렉트하지 않음
+          if (isTermsRoute) return null;
+          debugPrint('약관 미동의 상태 - /terms로 리다이렉트');
+          return '/terms';
+        }
+
+        // 인증 완료 및 약관 동의 상태에서 인증/약관 페이지 접근 시도
+        if (isAuthenticated && (isAuthRoute || isTermsRoute)) {
+          debugPrint('인증된 상태에서 인증/약관 페이지 접근 - /로 리다이렉트');
           return '/';
         }
 
@@ -58,6 +69,10 @@ class AppRouter {
         GoRoute(
           path: '/welcome',
           builder: (context, state) => const WelcomePage(),
+        ),
+        GoRoute(
+          path: '/terms',
+          builder: (context, state) => const TermsPage(),
         ),
         ShellRoute(
           builder: (context, state, child) =>
