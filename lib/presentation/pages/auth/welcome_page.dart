@@ -67,61 +67,61 @@ class WelcomePage extends StatelessWidget {
               const SizedBox(height: 24),
 
               // 구분선
-              Row(
-                children: [
-                  const Expanded(child: Divider()),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      '또는',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
-                  const Expanded(child: Divider()),
-                ],
-              ),
-              const SizedBox(height: 24),
+              // Row(
+              //   children: [
+              //     const Expanded(child: Divider()),
+              //     Padding(
+              //       padding: const EdgeInsets.symmetric(horizontal: 16),
+              //       child: Text(
+              //         '또는',
+              //         style: TextStyle(
+              //           color: Colors.grey[600],
+              //           fontSize: 14,
+              //         ),
+              //       ),
+              //     ),
+              //     const Expanded(child: Divider()),
+              //   ],
+              // ),
+              // const SizedBox(height: 24),
 
               // 이메일 회원가입 버튼
-              OutlinedButton(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const EmailSignupPage(),
-                  ),
-                ),
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 50),
-                ),
-                child: const Text('이메일로 계정 만들기'),
-              ),
-              const SizedBox(height: 16),
+              // OutlinedButton(
+              //   onPressed: () => Navigator.push(
+              //     context,
+              //     MaterialPageRoute(
+              //       builder: (_) => const EmailSignupPage(),
+              //     ),
+              //   ),
+              //   style: OutlinedButton.styleFrom(
+              //     minimumSize: const Size(double.infinity, 50),
+              //   ),
+              //   child: const Text('이메일로 계정 만들기'),
+              // ),
+              // const SizedBox(height: 16),
 
               // 기존 계정 로그인
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    '이미 계정이 있으신가요?',
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const EmailSignInPage(),
-                      ),
-                    ),
-                    child: const Text('로그인'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
+              // Row(
+              //   mainAxisAlignment: MainAxisAlignment.center,
+              //   children: [
+              //     Text(
+              //       '이미 계정이 있으신가요?',
+              //       style: TextStyle(
+              //         color: Colors.grey[600],
+              //       ),
+              //     ),
+              //     TextButton(
+              //       onPressed: () => Navigator.push(
+              //         context,
+              //         MaterialPageRoute(
+              //           builder: (_) => const EmailSignInPage(),
+              //         ),
+              //       ),
+              //       child: const Text('로그인'),
+              //     ),
+              //   ],
+              // ),
+              // const SizedBox(height: 16),
             ],
           ),
         ),

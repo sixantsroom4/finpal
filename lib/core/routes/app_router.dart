@@ -17,6 +17,7 @@ import '../../presentation/pages/subscription/subscription_page.dart';
 import '../../presentation/pages/profile/profile_page.dart';
 import '../../presentation/pages/settings/settings_page.dart';
 import '../../presentation/pages/common/loading_page.dart';
+import '../../presentation/pages/settings/account/account_settings_page.dart';
 
 class AppRouter {
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -107,10 +108,16 @@ class AppRouter {
             GoRoute(
               path: '/settings',
               builder: (context, state) => const SettingsPage(),
-            ),
-            GoRoute(
-              path: '/settings/budget',
-              builder: (context, state) => const BudgetSettingsPage(),
+              routes: [
+                GoRoute(
+                  path: 'budget',
+                  builder: (context, state) => const BudgetSettingsPage(),
+                ),
+                GoRoute(
+                  path: 'account',
+                  builder: (context, state) => const AccountSettingsPage(),
+                ),
+              ],
             ),
           ],
         ),

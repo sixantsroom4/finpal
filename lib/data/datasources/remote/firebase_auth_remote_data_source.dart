@@ -41,6 +41,14 @@ abstract class FirebaseAuthRemoteDataSource {
   Future<void> sendVerificationEmail(String email);
   Future<void> verifyEmailCode(String email, String code);
   Future<UserModel> updateTermsAcceptance(bool accepted);
+  Future<UserModel> updateEmail({
+    required String newEmail,
+    required String password,
+  });
+  Future<void> updatePassword({
+    required String currentPassword,
+    required String newPassword,
+  });
 }
 
 class FirebaseAuthRemoteDataSourceImpl implements FirebaseAuthRemoteDataSource {
@@ -476,6 +484,77 @@ class FirebaseAuthRemoteDataSourceImpl implements FirebaseAuthRemoteDataSource {
       });
     } catch (e) {
       throw AuthException('약관 동의 상태 업데이트에 실패했습니다: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<UserModel> updateEmail({
+    required String newEmail,
+    required String password,
+  }) async {
+    try {
+      final firebaseUser = _firebaseAuth.currentUser;
+      if (firebaseUser == null) {
+        throw AuthException('사용자를 찾을 수 없습니다.');
+      }
+
+      // 재인증
+      final credential = EmailAuthProvider.credential(
+        email: firebaseUser.email!,
+        password: password,
+      );
+      await firebaseUser.reauthenticateWithCredential(credential);
+
+      // 이메일 변경
+      await firebaseUser.verifyBeforeUpdateEmail(newEmail);
+
+      // Firestore 데이터 업데이트
+      await _firestore.collection('users').doc(firebaseUser.uid).update({
+        'email': newEmail,
+      });
+
+      final user = await getCurrentUser();
+      if (user == null) {
+        throw AuthException('사용자 정보를 가져오는데 실패했습니다.');
+      }
+      return user;
+    } catch (e) {
+      throw AuthException('이메일 변경에 실패했습니다: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<void> updatePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final firebaseUser = _firebaseAuth.currentUser;
+      if (firebaseUser == null) {
+        throw AuthException('사용자를 찾을 수 없습니다.');
+      }
+
+      // 현재 비밀번호로 재인증
+      final credential = EmailAuthProvider.credential(
+        email: firebaseUser.email!,
+        password: currentPassword,
+      );
+      await firebaseUser.reauthenticateWithCredential(credential);
+
+      // 새 비밀번호로 변경
+      await firebaseUser.updatePassword(newPassword);
+    } catch (e) {
+      if (e is FirebaseAuthException) {
+        switch (e.code) {
+          case 'wrong-password':
+            throw AuthException('현재 비밀번호가 올바르지 않습니다.');
+          case 'weak-password':
+            throw AuthException('새 비밀번호가 너무 약합니다.');
+          default:
+            throw AuthException('비밀번호 변경에 실패했습니다: ${e.message}');
+        }
+      }
+      throw AuthException('비밀번호 변경에 실패했습니다: ${e.toString()}');
     }
   }
 

@@ -28,24 +28,12 @@ class ProfileMenuList extends StatelessWidget {
           onTap: () => context.go('/settings'),
         ),
 
-        // 알림 설정
-        ListTile(
-          leading: const Icon(Icons.notifications_outlined),
-          title: const Text('알림 설정'),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () {
-            // TODO: 알림 설정 페이지로 이동
-          },
-        ),
-
         // 계정 설정
         ListTile(
           leading: const Icon(Icons.account_circle_outlined),
           title: const Text('계정 설정'),
           trailing: const Icon(Icons.chevron_right),
-          onTap: () {
-            // TODO: 계정 설정 페이지로 이동
-          },
+          onTap: () => context.push('/settings/account'),
         ),
 
         const Divider(),

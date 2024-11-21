@@ -76,3 +76,29 @@ class AuthTermsAcceptanceRequested extends AuthEvent {
   @override
   List<Object?> get props => [accepted];
 }
+
+class AuthEmailChangeRequested extends AuthEvent {
+  final String newEmail;
+  final String password;
+
+  const AuthEmailChangeRequested({
+    required this.newEmail,
+    required this.password,
+  });
+
+  @override
+  List<Object?> get props => [newEmail, password];
+}
+
+class AuthPasswordChangeRequested extends AuthEvent {
+  final String currentPassword;
+  final String newPassword;
+
+  const AuthPasswordChangeRequested({
+    required this.currentPassword,
+    required this.newPassword,
+  });
+
+  @override
+  List<Object?> get props => [currentPassword, newPassword];
+}

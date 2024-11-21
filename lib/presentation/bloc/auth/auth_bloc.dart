@@ -38,6 +38,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(AuthFailure('프로필 업데이트에 실패했습니다.'));
       }
     });
+    on<AuthEmailChangeRequested>(_onAuthEmailChangeRequested);
+    on<AuthPasswordChangeRequested>(_onAuthPasswordChangeRequested);
 
     _authStateSubscription = _authRepository.authStateChanges.listen(
       (user) {
@@ -193,6 +195,46 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     } catch (e) {
       debugPrint('약관 동의 처리 중 오류: $e');
       emit(AuthFailure('약관 동의 상태 업데이트에 실패했습니다.'));
+    }
+  }
+
+  Future<void> _onAuthEmailChangeRequested(
+    AuthEmailChangeRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    try {
+      emit(AuthLoading());
+      final result = await _authRepository.updateEmail(
+        newEmail: event.newEmail,
+        password: event.password,
+      );
+
+      result.fold(
+        (failure) => emit(AuthFailure(failure.message)),
+        (user) => emit(Authenticated(user)),
+      );
+    } catch (e) {
+      emit(AuthFailure(e.toString()));
+    }
+  }
+
+  Future<void> _onAuthPasswordChangeRequested(
+    AuthPasswordChangeRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    try {
+      emit(AuthLoading());
+      final result = await _authRepository.updatePassword(
+        currentPassword: event.currentPassword,
+        newPassword: event.newPassword,
+      );
+
+      result.fold(
+        (failure) => emit(AuthFailure(failure.message)),
+        (_) => emit(state), // 비밀번호 변경은 인증 상태를 변경하지 않습니다
+      );
+    } catch (e) {
+      emit(AuthFailure('비밀번호 변경에 실패했습니다: ${e.toString()}'));
     }
   }
 }

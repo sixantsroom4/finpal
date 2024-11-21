@@ -56,4 +56,16 @@ abstract class AuthRepository {
   Future<Either<Failure, User>> signInWithApple();
 
   Future<Either<Failure, User>> updateTermsAcceptance(bool accepted);
+
+  /// 이메일 주소 변경
+  Future<Either<Failure, User>> updateEmail({
+    required String newEmail,
+    required String password,
+  });
+
+  /// 비밀번호 변경
+  Future<Either<Failure, void>> updatePassword({
+    required String currentPassword,
+    required String newPassword,
+  });
 }
