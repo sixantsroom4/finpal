@@ -10,6 +10,9 @@ import 'widgets/monthly_summary_card.dart';
 import 'widgets/recent_expenses_list.dart';
 import 'widgets/upcoming_subscriptions_card.dart';
 import 'widgets/expense_category_chart.dart';
+import '../../bloc/expense/expense_bloc.dart';
+import '../../bloc/expense/expense_event.dart';
+import '../../bloc/expense/expense_state.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -28,7 +31,15 @@ class _HomePageState extends State<HomePage> {
   void _loadData() {
     final authState = context.read<AuthBloc>().state;
     if (authState is Authenticated) {
-      // Load data...
+      final userId = authState.user.id;
+
+      // 예산과 지출 데이터를 함께 로드
+      context.read<ExpenseBloc>()
+        ..add(LoadExpenses(userId))
+        ..add(UpdateMonthlyBudget(
+          userId: userId,
+          amount: 0.0, // 이 값은 무시되고 Firebase에서 실제 값을 가져옵니다
+        ));
     }
   }
 

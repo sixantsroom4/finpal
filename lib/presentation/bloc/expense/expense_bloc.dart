@@ -114,7 +114,7 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
     result.fold(
       (failure) => emit(ExpenseError(failure.message)),
       (_) {
-        emit(const ExpenseOperationSuccess('���출이 삭제되었습니다.'));
+        emit(const ExpenseOperationSuccess('출이 삭제되었습니다.'));
         add(LoadExpenses(event.userId));
       },
     );
@@ -126,11 +126,9 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
   ) async {
     emit(ExpenseLoading());
 
-    // 현재 예산 값 보존
-    double currentBudget = 0.0;
-    if (state is ExpenseLoaded) {
-      currentBudget = (state as ExpenseLoaded).monthlyBudget;
-    }
+    // 현재 예산 값 가져오기
+    final budgetResult =
+        await _expenseRepository.getMonthlyBudget(event.userId);
 
     final result = await _expenseRepository.getExpensesByDateRange(
       event.userId,
@@ -141,22 +139,24 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
     result.fold(
       (failure) => emit(ExpenseError(failure.message)),
       (expenses) {
-        final totalAmount = expenses.fold(
-          0.0,
-          (sum, expense) => sum + expense.amount,
-        );
-
+        final totalAmount = expenses.fold(0.0, (sum, exp) => sum + exp.amount);
         final categoryTotals = <String, double>{};
-        for (var expense in expenses) {
+
+        for (final expense in expenses) {
           categoryTotals[expense.category] =
-              (categoryTotals[expense.category] ?? 0.0) + expense.amount;
+              (categoryTotals[expense.category] ?? 0) + expense.amount;
         }
 
         emit(ExpenseLoaded(
           expenses: expenses,
           totalAmount: totalAmount,
           categoryTotals: categoryTotals,
-          monthlyBudget: currentBudget,
+          monthlyBudget: budgetResult.fold(
+            (failure) => state is ExpenseLoaded
+                ? (state as ExpenseLoaded).monthlyBudget
+                : 0.0,
+            (budget) => budget,
+          ),
           previousMonthTotal: state is ExpenseLoaded
               ? (state as ExpenseLoaded).previousMonthTotal
               : 0.0,
