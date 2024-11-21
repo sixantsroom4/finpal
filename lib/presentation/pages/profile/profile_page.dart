@@ -34,7 +34,7 @@ class ProfilePage extends StatelessWidget {
                 ProfileHeader(user: user),
                 const SizedBox(height: 16),
                 const Divider(),
-                ProfileMenuList(user: user),
+                const ProfileMenuList(),
               ],
             ),
           ),

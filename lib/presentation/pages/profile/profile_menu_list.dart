@@ -1,6 +1,8 @@
 // lib/presentation/pages/profile/widgets/profile_menu_list.dart
+import 'package:finpal/core/constants/app_languages.dart';
 import 'package:finpal/presentation/bloc/auth/auth_bloc.dart';
 import 'package:finpal/presentation/pages/onboarding/widgets/terms_content.dart';
+import 'package:finpal/presentation/services/terms_service.dart';
 import 'package:flutter/material.dart';
 import 'package:finpal/domain/entities/user.dart';
 import 'package:finpal/presentation/bloc/auth/auth_event.dart';
@@ -8,13 +10,21 @@ import 'package:finpal/presentation/bloc/auth/auth_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-class ProfileMenuList extends StatelessWidget {
-  final User user;
+class ProfileMenuList extends StatefulWidget {
+  const ProfileMenuList({super.key});
 
-  const ProfileMenuList({
-    super.key,
-    required this.user,
-  });
+  @override
+  State<ProfileMenuList> createState() => _ProfileMenuListState();
+}
+
+class _ProfileMenuListState extends State<ProfileMenuList> {
+  late List<Map<String, String>> _terms;
+
+  @override
+  void initState() {
+    super.initState();
+    _terms = TermsService.getTermsByLanguage(AppLanguage.korean);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -86,9 +96,11 @@ class ProfileMenuList extends StatelessWidget {
                       Expanded(
                         child: ListView(
                           controller: scrollController,
-                          children: const [
+                          children: [
                             TermsContent(
-                              expandedItems: {},
+                              expandedItems: const {},
+                              terms: _terms,
+                              onItemTap: (_) {},
                               readOnly: true,
                             ),
                           ],
