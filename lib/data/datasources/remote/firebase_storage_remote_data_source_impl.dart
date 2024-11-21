@@ -496,7 +496,7 @@ class FirebaseStorageRemoteDataSourceImpl
         return ReceiptModel.fromJson({...doc.data(), 'items': items});
       }));
     } catch (e) {
-      throw DatabaseException('가���점별 영수증 조회 실패: ${e.toString()}');
+      throw DatabaseException('가점별 영수증 조회 실패: ${e.toString()}');
     }
   }
 
@@ -723,5 +723,21 @@ class FirebaseStorageRemoteDataSourceImpl
     } catch (e) {
       throw DatabaseException('월간 예산 업데이트 실패: ${e.toString()}');
     }
+  }
+
+  @override
+  Stream<List<ExpenseModel>> watchExpenses(String userId) {
+    return _firestore
+        .collection('expenses')
+        .where('userId', isEqualTo: userId)
+        .orderBy('date', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) {
+              final data = doc.data();
+              return ExpenseModel.fromJson({
+                ...data,
+                'id': doc.id,
+              });
+            }).toList());
   }
 }

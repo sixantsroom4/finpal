@@ -169,9 +169,7 @@ class _EditExpenseBottomSheetState extends State<EditExpenseBottomSheet> {
         splitAmounts: widget.expense.splitAmounts,
       );
 
-      context.read<ExpenseBloc>()
-        ..add(UpdateExpense(updatedExpense))
-        ..add(LoadExpenses(updatedExpense.userId));
+      context.read<ExpenseBloc>().add(UpdateExpense(updatedExpense));
       Navigator.pop(context);
     }
   }

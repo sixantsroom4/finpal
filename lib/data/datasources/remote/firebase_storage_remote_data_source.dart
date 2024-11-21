@@ -23,6 +23,7 @@ abstract class FirebaseStorageRemoteDataSource {
   Future<List<ExpenseModel>> getSharedExpenses(String userId);
   Future<ExpenseModel> getExpenseById(String expenseId);
   Future<List<ExpenseModel>> getPreviousMonthExpenses(String userId);
+  Stream<List<ExpenseModel>> watchExpenses(String userId);
 
   // Receipt 관련
   Future<String> uploadReceiptImage(String imagePath, String userId);

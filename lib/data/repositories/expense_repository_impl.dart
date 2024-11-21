@@ -186,4 +186,16 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Stream<List<Expense>> watchExpenses(String userId) {
+    try {
+      return remoteDataSource.watchExpenses(userId).map((expenses) {
+        return expenses.map((expense) => expense as Expense).toList();
+      });
+    } catch (e) {
+      // 스트림 에러 처리
+      return Stream.error(ServerFailure(e.toString()));
+    }
+  }
 }

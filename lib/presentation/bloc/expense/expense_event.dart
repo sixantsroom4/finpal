@@ -82,3 +82,12 @@ class UpdateMonthlyBudget extends ExpenseEvent {
     required this.amount,
   });
 }
+
+class UpdateExpenseList extends ExpenseEvent {
+  final List<Expense> expenses;
+
+  const UpdateExpenseList(this.expenses);
+
+  @override
+  List<Object> get props => [expenses];
+}

@@ -39,4 +39,6 @@ abstract class ExpenseRepository {
   Future<Either<Failure, double>> getMonthlyBudget(String userId);
   Future<Either<Failure, void>> updateMonthlyBudget(
       String userId, double amount);
+
+  Stream<List<Expense>> watchExpenses(String userId);
 }

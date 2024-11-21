@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:finpal/domain/entities/expense.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../domain/repositories/expense_repository.dart';
 import 'expense_event.dart';
@@ -5,6 +8,7 @@ import 'expense_state.dart';
 
 class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
   final ExpenseRepository _expenseRepository;
+  StreamSubscription<List<Expense>>? _expenseSubscription;
 
   ExpenseBloc({
     required ExpenseRepository expenseRepository,
@@ -17,6 +21,7 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
     on<LoadExpensesByDateRange>(_onLoadExpensesByDateRange);
     on<LoadExpensesByCategory>(_onLoadExpensesByCategory);
     on<UpdateMonthlyBudget>(_onUpdateMonthlyBudget);
+    on<UpdateExpenseList>(_onUpdateExpenseList);
   }
 
   Future<void> _onLoadExpenses(
@@ -92,16 +97,42 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
     UpdateExpense event,
     Emitter<ExpenseState> emit,
   ) async {
-    emit(ExpenseLoading());
+    final currentState = state;
+    if (currentState is ExpenseLoaded) {
+      // 현재 expenses 목록에서 업데이트할 expense를 찾아 수정
+      final updatedExpenses = currentState.expenses.map((expense) {
+        return expense.id == event.expense.id ? event.expense : expense;
+      }).toList();
+
+      // 즉시 상태 업데이트
+      emit(ExpenseLoaded(
+        expenses: updatedExpenses,
+        totalAmount: updatedExpenses.fold(0.0, (sum, exp) => sum + exp.amount),
+        monthlyBudget: currentState.monthlyBudget,
+        previousMonthTotal: currentState.previousMonthTotal,
+        categoryTotals: _calculateCategoryTotals(updatedExpenses),
+        previousMonthCategoryTotals: currentState.previousMonthCategoryTotals,
+        userId: currentState.userId,
+        monthlyTotals: currentState.monthlyTotals,
+      ));
+    }
+
+    // Firebase 업데이트 수행
     final result = await _expenseRepository.updateExpense(event.expense);
 
     result.fold(
       (failure) => emit(ExpenseError(failure.message)),
-      (expense) {
-        emit(const ExpenseOperationSuccess('지출이 수정되었습니다.'));
-        add(LoadExpenses(event.expense.userId));
-      },
+      (expense) => emit(const ExpenseOperationSuccess('지출이 수정되었습니다.')),
     );
+  }
+
+  Map<String, double> _calculateCategoryTotals(List<Expense> expenses) {
+    final totals = <String, double>{};
+    for (final expense in expenses) {
+      totals[expense.category] =
+          (totals[expense.category] ?? 0.0) + expense.amount;
+    }
+    return totals;
   }
 
   Future<void> _onDeleteExpense(
@@ -240,5 +271,39 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
         )),
       );
     }
+  }
+
+  Future<void> _onUpdateExpenseList(
+    UpdateExpenseList event,
+    Emitter<ExpenseState> emit,
+  ) async {
+    if (state is ExpenseLoaded) {
+      final currentState = state as ExpenseLoaded;
+
+      emit(ExpenseLoaded(
+        expenses: event.expenses,
+        totalAmount: event.expenses.fold(0.0, (sum, exp) => sum + exp.amount),
+        monthlyBudget: currentState.monthlyBudget,
+        previousMonthTotal: currentState.previousMonthTotal,
+        categoryTotals: _calculateCategoryTotals(event.expenses),
+        previousMonthCategoryTotals: currentState.previousMonthCategoryTotals,
+        userId: currentState.userId,
+        monthlyTotals: currentState.monthlyTotals,
+      ));
+    }
+  }
+
+  @override
+  Future<void> close() {
+    _expenseSubscription?.cancel();
+    return super.close();
+  }
+
+  void _subscribeToExpenses(String userId) {
+    _expenseSubscription?.cancel();
+    _expenseSubscription =
+        _expenseRepository.watchExpenses(userId).listen((expenses) {
+      add(UpdateExpenseList(expenses));
+    });
   }
 }
