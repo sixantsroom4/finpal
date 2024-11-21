@@ -5,14 +5,14 @@ class TermsItem extends StatelessWidget {
   final String title;
   final String content;
   final bool isExpanded;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   const TermsItem({
     super.key,
     required this.title,
     required this.content,
     required this.isExpanded,
-    required this.onTap,
+    this.onTap,
   });
 
   @override
@@ -21,7 +21,7 @@ class TermsItem extends StatelessWidget {
       child: ExpansionTile(
         title: Text(title),
         initiallyExpanded: isExpanded,
-        onExpansionChanged: (_) => onTap(),
+        onExpansionChanged: onTap != null ? (_) => onTap!() : null,
         children: [
           Padding(
             padding: const EdgeInsets.all(16.0),

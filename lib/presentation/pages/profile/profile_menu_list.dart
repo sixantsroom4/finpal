@@ -1,5 +1,6 @@
 // lib/presentation/pages/profile/widgets/profile_menu_list.dart
 import 'package:finpal/presentation/bloc/auth/auth_bloc.dart';
+import 'package:finpal/presentation/pages/onboarding/widgets/terms_content.dart';
 import 'package:flutter/material.dart';
 import 'package:finpal/domain/entities/user.dart';
 import 'package:finpal/presentation/bloc/auth/auth_event.dart';
@@ -65,7 +66,51 @@ class ProfileMenuList extends StatelessWidget {
           title: const Text('약관 및 정책'),
           trailing: const Icon(Icons.chevron_right),
           onTap: () {
-            // TODO: 약관 페이지로 이동
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              builder: (context) => DraggableScrollableSheet(
+                initialChildSize: 0.9,
+                minChildSize: 0.5,
+                maxChildSize: 0.9,
+                builder: (_, scrollController) => Container(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            '약관 및 정책',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                        ],
+                      ),
+                      const Divider(),
+                      Expanded(
+                        child: ListView(
+                          controller: scrollController,
+                          children: const [
+                            TermsContent(
+                              expandedItems: {},
+                              readOnly: true,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
           },
         ),
 

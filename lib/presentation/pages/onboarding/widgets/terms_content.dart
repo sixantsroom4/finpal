@@ -10,12 +10,14 @@ import 'terms_item.dart';
 
 class TermsContent extends StatelessWidget {
   final Set<int> expandedItems;
-  final Function(int) onItemTap;
+  final Function(int)? onItemTap;
+  final bool readOnly;
 
   const TermsContent({
     super.key,
     required this.expandedItems,
-    required this.onItemTap,
+    this.onItemTap,
+    this.readOnly = false,
   });
 
   @override
@@ -30,17 +32,15 @@ class TermsContent extends StatelessWidget {
     ];
 
     return Column(
-      children: [
-        for (int i = 0; i < terms.length; i++) ...[
-          TermsItem(
-            title: terms[i].$1,
-            content: terms[i].$2,
-            isExpanded: expandedItems.contains(i),
-            onTap: () => onItemTap(i),
-          ),
-          if (i < terms.length - 1) const SizedBox(height: 8),
-        ],
-      ],
+      children: List.generate(
+        terms.length,
+        (index) => TermsItem(
+          title: terms[index].$1,
+          content: terms[index].$2,
+          isExpanded: expandedItems.contains(index),
+          onTap: readOnly ? null : () => onItemTap?.call(index),
+        ),
+      ),
     );
   }
 }
