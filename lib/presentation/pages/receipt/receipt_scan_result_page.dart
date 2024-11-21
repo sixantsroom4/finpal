@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:finpal/domain/entities/receipt.dart';
 import 'package:finpal/presentation/pages/receipt/widgets/create_expense_from_receipt.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -51,8 +52,17 @@ class ReceiptScanResultPage extends StatelessWidget {
             return _buildLoadingState();
           }
 
-          if (state is ReceiptScanSuccess) {
-            return _buildResultState(context, state);
+          if (state is ReceiptScanSuccess || state is ReceiptLoaded) {
+            final receipt = state is ReceiptScanSuccess
+                ? state.receipt
+                : (state as ReceiptLoaded).receipts.first;
+            return _buildResultState(context, receipt);
+          }
+
+          if (state is ReceiptError) {
+            return Center(
+              child: Text(state.message),
+            );
           }
 
           return const Center(
@@ -87,8 +97,7 @@ class ReceiptScanResultPage extends StatelessWidget {
     );
   }
 
-  Widget _buildResultState(BuildContext context, ReceiptScanSuccess state) {
-    final receipt = state.receipt;
+  Widget _buildResultState(BuildContext context, Receipt receipt) {
     final formatter = NumberFormat.currency(locale: 'ko_KR', symbol: '₩');
 
     return SingleChildScrollView(
