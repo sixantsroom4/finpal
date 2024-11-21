@@ -9,6 +9,7 @@ import '../../bloc/receipt/receipt_event.dart';
 import '../../bloc/receipt/receipt_state.dart';
 import 'receipt_page.dart';
 import 'package:intl/intl.dart';
+import 'widgets/edit_receipt_info_bottom_sheet.dart';
 
 class ReceiptScanResultPage extends StatelessWidget {
   final String imagePath;
@@ -192,7 +193,7 @@ class ReceiptScanResultPage extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 24),
-                  if (receipt.expenseId == null)
+                  if (receipt.expenseId == null) ...[
                     ElevatedButton.icon(
                       onPressed: () {
                         showModalBottomSheet(
@@ -209,6 +210,33 @@ class ReceiptScanResultPage extends StatelessWidget {
                         minimumSize: const Size(double.infinity, 48),
                       ),
                     ),
+                    const SizedBox(height: 16),
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          builder: (context) => EditReceiptInfoBottomSheet(
+                            receipt: receipt,
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.edit),
+                      label: const Text('영수증 정보 수정'),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 48),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    OutlinedButton.icon(
+                      onPressed: () => _retakeReceipt(context),
+                      icon: const Icon(Icons.camera_alt),
+                      label: const Text('영수증 재촬영'),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 48),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -263,6 +291,16 @@ class ReceiptScanResultPage extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _retakeReceipt(BuildContext context) {
+    Navigator.pop(context);
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const ReceiptPage(),
       ),
     );
   }

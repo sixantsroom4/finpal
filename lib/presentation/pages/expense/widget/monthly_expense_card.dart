@@ -125,17 +125,6 @@ class _MonthlyExpenseCardState extends State<MonthlyExpenseCard> {
               },
             ),
             const SizedBox(height: 16),
-
-            // 상세 버튼
-            SizedBox(
-              height: 40,
-              child: TextButton(
-                onPressed: () {
-                  // TODO: 해당 월의 상세 내역 페이지로 이동
-                },
-                child: const Text('상세'),
-              ),
-            ),
           ],
         ),
       ),

@@ -114,4 +114,18 @@ class ReceiptItem extends Equatable {
       'totalPrice': totalPrice,
     };
   }
+
+  ReceiptItem copyWith({
+    String? name,
+    double? price,
+    int? quantity,
+    double? totalPrice,
+  }) {
+    return ReceiptItem(
+      name: name ?? this.name,
+      price: price ?? this.price,
+      quantity: quantity ?? this.quantity,
+      totalPrice: totalPrice ?? this.totalPrice,
+    );
+  }
 }
