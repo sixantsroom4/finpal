@@ -33,12 +33,23 @@ class _TermsPageState extends State<TermsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(_getLocalizedTitle()),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: Text(
+          _getLocalizedTitle(),
+          style: const TextStyle(
+            color: Color(0xFF1C2833),
+            fontSize: 24,
+            fontWeight: FontWeight.w600,
+            letterSpacing: -0.5,
+          ),
+        ),
         automaticallyImplyLeading: false,
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 8.0),
+            padding: const EdgeInsets.only(right: 16.0),
             child: LanguageSelector(
               selectedLanguage: _selectedLanguage,
               onLanguageChanged: (AppLanguage newValue) {
@@ -60,9 +71,13 @@ class _TermsPageState extends State<TermsPage> {
                 Text(
                   _getLocalizedDescription(),
                   style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.bold),
+                    fontSize: 18,
+                    color: Color(0xFF34495E),
+                    fontWeight: FontWeight.w500,
+                    height: 1.5,
+                  ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
                 TermsContent(
                   terms: _terms,
                   expandedItems: _expandedItems,
@@ -79,18 +94,36 @@ class _TermsPageState extends State<TermsPage> {
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, -2),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.all(24.0),
             child: Column(
               children: [
                 CheckboxListTile(
-                  title: Text(_getLocalizedAgreement()),
+                  title: Text(
+                    _getLocalizedAgreement(),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Color(0xFF2C3E50),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                   value: _isAgreed,
                   onChanged: (value) {
                     setState(() {
                       _isAgreed = value ?? false;
                     });
                   },
+                  activeColor: const Color(0xFF2C3E50),
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
@@ -102,9 +135,22 @@ class _TermsPageState extends State<TermsPage> {
                         }
                       : null,
                   style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 50),
+                    backgroundColor: const Color(0xFF2C3E50),
+                    minimumSize: const Size(double.infinity, 54),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    elevation: 0,
                   ),
-                  child: Text(_getLocalizedButton()),
+                  child: Text(
+                    _getLocalizedButton(),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.5,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
               ],
             ),
