@@ -16,6 +16,7 @@ import 'core/routes/app_router.dart';
 import 'firebase_options.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,6 +47,12 @@ Future<void> main() async {
 
   authBloc.add(AuthCheckRequested());
   debugPrint('AuthCheckRequested event added');
+
+  // 카카오 SDK 초기화
+  KakaoSdk.init(
+    nativeAppKey: dotenv.env['KAKAO_NATIVE_APP_KEY']!,
+  );
+  debugPrint('Kakao SDK initialized');
 
   runApp(MyApp(authBloc: authBloc));
 }
@@ -83,7 +90,7 @@ class MyApp extends StatelessWidget {
             return BlocBuilder<AuthBloc, AuthState>(
               builder: (context, state) {
                 debugPrint('현재 인증 상태: $state');
-                return child ?? const Center(child: Text('화면을 불러올 수 없습니다.'));
+                return child ?? const Center(child: Text('화면을 불러��� 수 없습니다.'));
               },
             );
           },

@@ -102,3 +102,8 @@ class AuthPasswordChangeRequested extends AuthEvent {
   @override
   List<Object?> get props => [currentPassword, newPassword];
 }
+
+class AuthKakaoSignInRequested extends AuthEvent {
+  @override
+  List<Object?> get props => [];
+}

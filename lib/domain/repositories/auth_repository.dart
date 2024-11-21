@@ -68,4 +68,7 @@ abstract class AuthRepository {
     required String currentPassword,
     required String newPassword,
   });
+
+  /// 카카오 계정으로 로그인
+  Future<Either<Failure, User>> signInWithKakao();
 }

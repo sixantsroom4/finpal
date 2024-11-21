@@ -40,6 +40,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     });
     on<AuthEmailChangeRequested>(_onAuthEmailChangeRequested);
     on<AuthPasswordChangeRequested>(_onAuthPasswordChangeRequested);
+    on<AuthKakaoSignInRequested>(_onAuthKakaoSignInRequested);
 
     _authStateSubscription = _authRepository.authStateChanges.listen(
       (user) {
@@ -235,6 +236,31 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
     } catch (e) {
       emit(AuthFailure('비밀번호 변경에 실패했습니다: ${e.toString()}'));
+    }
+  }
+
+  Future<void> _onAuthKakaoSignInRequested(
+    AuthKakaoSignInRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    try {
+      emit(AuthLoading());
+      print('카카오 로그인 시도 중...');
+
+      final result = await _authRepository.signInWithKakao();
+      result.fold(
+        (failure) {
+          print('카카오 로그인 실패: ${failure.message}');
+          emit(AuthFailure(failure.message));
+        },
+        (user) {
+          print('카카오 로그인 성공: ${user.email}');
+          emit(Authenticated(user));
+        },
+      );
+    } catch (e) {
+      print('예상치 못한 에러 발생: $e');
+      emit(AuthFailure('카카오 로그인 중 오류가 발생했습니다: ${e.toString()}'));
     }
   }
 }

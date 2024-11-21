@@ -12,6 +12,8 @@ import '../../../core/errors/exceptions.dart';
 import '../../models/user_model.dart';
 import 'package:crypto/crypto.dart';
 import 'package:convert/convert.dart';
+import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
+import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 
 abstract class FirebaseAuthRemoteDataSource {
   Stream<UserModel?> get authStateChanges;
@@ -49,6 +51,7 @@ abstract class FirebaseAuthRemoteDataSource {
     required String currentPassword,
     required String newPassword,
   });
+  Future<UserModel> signInWithKakao();
 }
 
 class FirebaseAuthRemoteDataSourceImpl implements FirebaseAuthRemoteDataSource {
@@ -243,9 +246,10 @@ class FirebaseAuthRemoteDataSourceImpl implements FirebaseAuthRemoteDataSource {
       await Future.wait([
         _firebaseAuth.signOut(),
         _googleSignIn.signOut(),
+        UserApi.instance.logout(),
       ]);
     } catch (e) {
-      throw AuthException('Failed to sign out: ${e.toString()}');
+      throw AuthException('로그아웃에 실패했습니다: ${e.toString()}');
     }
   }
 
@@ -495,7 +499,7 @@ class FirebaseAuthRemoteDataSourceImpl implements FirebaseAuthRemoteDataSource {
     try {
       final firebaseUser = _firebaseAuth.currentUser;
       if (firebaseUser == null) {
-        throw AuthException('사용자를 찾을 수 없습니다.');
+        throw AuthException('사용 찾을 수 없습니다.');
       }
 
       // 재인증
@@ -547,14 +551,118 @@ class FirebaseAuthRemoteDataSourceImpl implements FirebaseAuthRemoteDataSource {
       if (e is FirebaseAuthException) {
         switch (e.code) {
           case 'wrong-password':
-            throw AuthException('현재 비밀번호가 올바르지 않습니다.');
+            throw AuthException('현재 비밀번호가 올바르지 않습다.');
           case 'weak-password':
-            throw AuthException('새 비밀번호가 너무 약합니다.');
+            throw AuthException('새 비밀번호가 무 약합니다.');
           default:
             throw AuthException('비밀번호 변경에 실패했습니다: ${e.message}');
         }
       }
       throw AuthException('비밀번호 변경에 실패했습니다: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<UserModel> signInWithKakao() async {
+    try {
+      print('카카오 로그인 시도...');
+
+      // 카카오 로그인
+      OAuthToken? kakaoToken;
+      if (await isKakaoTalkInstalled()) {
+        try {
+          kakaoToken = await UserApi.instance.loginWithKakaoTalk();
+          print('카카오톡으로 로그인 성공');
+        } catch (e) {
+          print('카카오톡 로그인 실패, 카카오 계정으로 로그인 시도');
+          kakaoToken = await UserApi.instance.loginWithKakaoAccount();
+        }
+      } else {
+        print('카카오톡 미설치, 카카오 계정으로 로그인 시도');
+        kakaoToken = await UserApi.instance.loginWithKakaoAccount();
+      }
+
+      if (kakaoToken == null) {
+        throw AuthException('카카오 로그인 토큰을 받지 못했습니다.');
+      }
+
+      // 카카오 사용자 정보 가져오기
+      final kakaoUser = await UserApi.instance.me();
+      print('카카오 로그인 성공: ${kakaoUser.kakaoAccount?.email}');
+
+      // Firebase 커스텀 토큰으로 로그인
+      final authCredential = OAuthProvider('kakao.com').credential(
+        accessToken: kakaoToken.accessToken,
+      );
+
+      final userCredential =
+          await _firebaseAuth.signInWithCredential(authCredential);
+      final firebaseUser = userCredential.user;
+
+      if (firebaseUser == null) {
+        throw AuthException('Firebase 사용자 정보를 받지 못했습니다.');
+      }
+
+      // 사용자 정보 구성
+      String email = firebaseUser.email ??
+          kakaoUser.kakaoAccount?.email ??
+          '${firebaseUser.uid}@kakao.finpal.com';
+
+      String displayName = firebaseUser.displayName ??
+          kakaoUser.kakaoAccount?.profile?.nickname ??
+          'User${firebaseUser.uid.substring(0, 6)}';
+
+      // Firestore 문서 확인
+      final userDoc =
+          await _firestore.collection('users').doc(firebaseUser.uid).get();
+      late UserModel userModel;
+
+      if (!userDoc.exists) {
+        // 새 사용자
+        userModel = UserModel(
+          id: firebaseUser.uid,
+          email: email,
+          displayName: displayName,
+          photoUrl: kakaoUser.kakaoAccount?.profile?.profileImageUrl,
+          createdAt: DateTime.now(),
+          settings: const {
+            'theme': 'system',
+            'notifications': {
+              'expenses': true,
+              'subscriptions': true,
+              'shared': true,
+            },
+            'currency': 'KRW',
+            'language': 'ko',
+          },
+        );
+
+        await _firestore
+            .collection('users')
+            .doc(firebaseUser.uid)
+            .set(userModel.toJson(), SetOptions(merge: true));
+      } else {
+        // 기존 사용자
+        userModel = UserModel.fromJson({
+          ...userDoc.data()!,
+          'id': firebaseUser.uid,
+          'email': email,
+          'displayName': displayName,
+          'photoUrl': kakaoUser.kakaoAccount?.profile?.profileImageUrl,
+        });
+      }
+
+      print('카카오 로그인 완료: ${userModel.email}');
+      return userModel;
+    } on KakaoException catch (e) {
+      print('카카오 인증 에러: ${e.message}');
+      throw AuthException('카카오 로그인이 취소되었습니다.');
+    } on FirebaseAuthException catch (e) {
+      print('Firebase 인증 에러: ${e.code} - ${e.message}');
+      throw AuthException(e.message ?? 'Firebase 인증 중 오류가 발생했습니다.');
+    } catch (e) {
+      print('예상치 못한 에러: $e');
+      throw AuthException('로그인 중 오류가 발생했습니다: ${e.toString()}');
     }
   }
 
