@@ -1,14 +1,28 @@
 // lib/presentation/pages/auth/welcome_page.dart
 import 'package:finpal/presentation/bloc/auth/auth_event.dart';
+import 'package:finpal/presentation/pages/auth/animated_welcome_text_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../bloc/auth/auth_bloc.dart';
 import 'email_signup_page.dart';
 import 'package:finpal/presentation/pages/auth/email_signin_page.dart';
+import 'package:finpal/core/constants/app_languages.dart';
+import 'package:finpal/presentation/widgets/language_selector.dart';
 
-class WelcomePage extends StatelessWidget {
+class WelcomePage extends StatefulWidget {
   const WelcomePage({super.key});
+
+  @override
+  State<WelcomePage> createState() => _WelcomePageState();
+}
+
+class _WelcomePageState extends State<WelcomePage> {
+  AppLanguage _selectedLanguage = AppLanguage.korean;
+
+  String getLocalizedString(String key) {
+    return LocalizedStrings.translations[_selectedLanguage]?[key] ?? '';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,6 +33,18 @@ class WelcomePage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // 언어 선택기를 우측 상단으로 이동
+              Align(
+                alignment: Alignment.topRight,
+                child: LanguageSelector(
+                  selectedLanguage: _selectedLanguage,
+                  onLanguageChanged: (AppLanguage newValue) {
+                    setState(() {
+                      _selectedLanguage = newValue;
+                    });
+                  },
+                ),
+              ),
               const Spacer(flex: 4),
               // 로고 및 앱 이름
               Center(
@@ -35,20 +61,11 @@ class WelcomePage extends StatelessWidget {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 12),
-                    Text(
-                      '똑똑한 가계부의 시작',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: Colors.grey[800],
-                            fontWeight: FontWeight.w600,
-                            fontSize: 24,
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
+                    const AnimatedWelcomeText(),
                   ],
                 ),
               ),
               const Spacer(flex: 3),
-
               // 소셜 로그인 버튼들
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -61,7 +78,7 @@ class WelcomePage extends StatelessWidget {
                             .add(AuthGoogleSignInRequested());
                       },
                       icon: 'assets/icons/google.svg',
-                      label: 'Google로 계속하기',
+                      label: getLocalizedString('continueWithGoogle'),
                     ),
                     if (Theme.of(context).platform == TargetPlatform.iOS) ...[
                       const SizedBox(height: 16),
@@ -72,11 +89,12 @@ class WelcomePage extends StatelessWidget {
                               .add(AuthAppleSignInRequested());
                         },
                         icon: 'assets/icons/apple.svg',
-                        label: 'Apple로 계속하기',
+                        label: getLocalizedString('continueWithApple'),
                         backgroundColor: Colors.white,
                         textColor: Colors.black,
                       ),
                     ],
+                    const SizedBox(height: 24),
                   ],
                 ),
               ),
