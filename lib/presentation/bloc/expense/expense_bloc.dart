@@ -27,62 +27,49 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
 
     final result = await _expenseRepository.getExpenses(event.userId);
 
+    final previousMonthResult =
+        await _expenseRepository.getPreviousMonthExpenses(event.userId);
+
     result.fold(
       (failure) => emit(ExpenseError(failure.message)),
       (expenses) {
-        final totalAmount =
-            expenses.fold(0.0, (sum, expense) => sum + expense.amount);
-
         final categoryTotals = <String, double>{};
         for (var expense in expenses) {
           categoryTotals[expense.category] =
               (categoryTotals[expense.category] ?? 0.0) + expense.amount;
         }
 
+        final previousMonthCategoryTotals = <String, double>{};
+        previousMonthResult.fold(
+          (failure) => {},
+          (previousExpenses) {
+            for (var expense in previousExpenses) {
+              previousMonthCategoryTotals[expense.category] =
+                  (previousMonthCategoryTotals[expense.category] ?? 0.0) +
+                      expense.amount;
+            }
+          },
+        );
+
         emit(ExpenseLoaded(
           expenses: expenses,
-          totalAmount: totalAmount,
-          monthlyBudget: 1000000.0, // 임시로 100만원 설정
-          previousMonthTotal: 0.0, // 임시로 0원 설정
+          totalAmount: expenses.fold(0.0, (sum, exp) => sum + exp.amount),
+          monthlyBudget: state is ExpenseLoaded
+              ? (state as ExpenseLoaded).monthlyBudget
+              : 0.0,
+          previousMonthTotal: previousMonthResult.fold(
+            (failure) => 0.0,
+            (expenses) => expenses.fold(0.0, (sum, exp) => sum + exp.amount),
+          ),
           categoryTotals: categoryTotals,
+          previousMonthCategoryTotals: previousMonthCategoryTotals,
           userId: event.userId,
+          monthlyTotals: state is ExpenseLoaded
+              ? (state as ExpenseLoaded).monthlyTotals
+              : {},
         ));
-
-        // 추가 데이터 로드
-        _loadAdditionalData(event.userId, emit);
       },
     );
-  }
-
-  Future<void> _loadAdditionalData(
-      String userId, Emitter<ExpenseState> emit) async {
-    if (state is ExpenseLoaded) {
-      final currentState = state as ExpenseLoaded;
-
-      final previousMonthResult =
-          await _expenseRepository.getPreviousMonthExpenses(userId);
-      final budgetResult = await _expenseRepository.getMonthlyBudget(userId);
-
-      final previousMonthTotal = previousMonthResult.fold(
-        (failure) => 0.0,
-        (expenses) =>
-            expenses.fold(0.0, (sum, expense) => sum + expense.amount),
-      );
-
-      final monthlyBudget = budgetResult.fold(
-        (failure) => 1000000.0,
-        (budget) => budget,
-      );
-
-      emit(ExpenseLoaded(
-        expenses: currentState.expenses,
-        totalAmount: currentState.totalAmount,
-        monthlyBudget: monthlyBudget,
-        previousMonthTotal: previousMonthTotal,
-        categoryTotals: currentState.categoryTotals,
-        userId: userId,
-      ));
-    }
   }
 
   Future<void> _onAddExpense(
@@ -127,7 +114,7 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
     result.fold(
       (failure) => emit(ExpenseError(failure.message)),
       (_) {
-        emit(const ExpenseOperationSuccess('지출이 삭제되었습니다.'));
+        emit(const ExpenseOperationSuccess('���출이 삭제되었습니다.'));
         add(LoadExpenses(event.userId));
       },
     );
@@ -169,11 +156,17 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
           expenses: expenses,
           totalAmount: totalAmount,
           categoryTotals: categoryTotals,
-          monthlyBudget: currentBudget, // 보존된 예산 값 사용
+          monthlyBudget: currentBudget,
           previousMonthTotal: state is ExpenseLoaded
               ? (state as ExpenseLoaded).previousMonthTotal
               : 0.0,
+          previousMonthCategoryTotals: state is ExpenseLoaded
+              ? (state as ExpenseLoaded).previousMonthCategoryTotals
+              : {},
           userId: event.userId,
+          monthlyTotals: state is ExpenseLoaded
+              ? (state as ExpenseLoaded).monthlyTotals
+              : {},
         ));
       },
     );
@@ -203,10 +196,20 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
         emit(ExpenseLoaded(
           expenses: expenses,
           totalAmount: totalAmount,
+          monthlyBudget: state is ExpenseLoaded
+              ? (state as ExpenseLoaded).monthlyBudget
+              : 0.0,
+          previousMonthTotal: state is ExpenseLoaded
+              ? (state as ExpenseLoaded).previousMonthTotal
+              : 0.0,
           categoryTotals: categoryTotals,
-          monthlyBudget: 0.0,
-          previousMonthTotal: 0.0,
+          previousMonthCategoryTotals: state is ExpenseLoaded
+              ? (state as ExpenseLoaded).previousMonthCategoryTotals
+              : {},
           userId: event.userId,
+          monthlyTotals: state is ExpenseLoaded
+              ? (state as ExpenseLoaded).monthlyTotals
+              : {},
         ));
       },
     );
@@ -231,6 +234,8 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
           monthlyBudget: event.amount,
           previousMonthTotal: currentState.previousMonthTotal,
           categoryTotals: currentState.categoryTotals,
+          previousMonthCategoryTotals: currentState.previousMonthCategoryTotals,
+          monthlyTotals: currentState.monthlyTotals,
           userId: event.userId,
         )),
       );

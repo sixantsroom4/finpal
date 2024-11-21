@@ -18,14 +18,18 @@ class ExpenseLoaded extends ExpenseState {
   final double monthlyBudget;
   final double previousMonthTotal;
   final Map<String, double> categoryTotals;
+  final Map<String, double> previousMonthCategoryTotals;
+  final Map<String, double> monthlyTotals;
   final String userId;
 
-  ExpenseLoaded({
+  const ExpenseLoaded({
     required this.expenses,
     required this.totalAmount,
     required this.monthlyBudget,
     required this.previousMonthTotal,
     required this.categoryTotals,
+    required this.previousMonthCategoryTotals,
+    required this.monthlyTotals,
     required this.userId,
   });
 
@@ -36,6 +40,8 @@ class ExpenseLoaded extends ExpenseState {
         monthlyBudget,
         previousMonthTotal,
         categoryTotals,
+        previousMonthCategoryTotals,
+        monthlyTotals,
         userId
       ];
 }
