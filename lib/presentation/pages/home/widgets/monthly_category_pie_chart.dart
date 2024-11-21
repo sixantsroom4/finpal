@@ -15,10 +15,28 @@ class MonthlyCategoryPieChart extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
 
+        // 현재 월의 카테고리별 지출 합계 계산
+        final now = DateTime.now();
+        final currentMonthCategoryTotals = <String, double>{};
+
+        for (final expense in state.expenses) {
+          if (expense.date.year == now.year &&
+              expense.date.month == now.month) {
+            currentMonthCategoryTotals[expense.category] =
+                (currentMonthCategoryTotals[expense.category] ?? 0) +
+                    expense.amount;
+          }
+        }
+
+        if (currentMonthCategoryTotals.isEmpty) {
+          return const Center(
+            child: Text('이번 달 지출 내역이 없습니다.'),
+          );
+        }
+
         return Column(
           children: [
             const SizedBox(height: 24),
-            // 원형 차트 (중앙 배치)
             Center(
               child: SizedBox(
                 height: 200,
@@ -27,19 +45,20 @@ class MonthlyCategoryPieChart extends StatelessWidget {
                   PieChartData(
                     sectionsSpace: 2,
                     centerSpaceRadius: 40,
-                    sections: _createPieChartSections(state.categoryTotals),
+                    sections:
+                        _createPieChartSections(currentMonthCategoryTotals),
                     borderData: FlBorderData(show: false),
                   ),
                 ),
               ),
             ),
             const SizedBox(height: 32),
-            // 범례 (아래에 배치)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: _buildLegend(
-                state.categoryTotals,
-                state.totalAmount,
+                currentMonthCategoryTotals,
+                currentMonthCategoryTotals.values
+                    .fold(0.0, (sum, amount) => sum + amount),
               ),
             ),
           ],

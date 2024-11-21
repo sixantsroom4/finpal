@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dartz/dartz.dart';
 import 'package:finpal/domain/entities/expense.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../domain/repositories/expense_repository.dart';
@@ -30,8 +31,9 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
   ) async {
     emit(ExpenseLoading());
 
+    final budgetResult =
+        await _expenseRepository.getMonthlyBudget(event.userId);
     final result = await _expenseRepository.getExpenses(event.userId);
-
     final previousMonthResult =
         await _expenseRepository.getPreviousMonthExpenses(event.userId);
 
@@ -59,9 +61,12 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
         emit(ExpenseLoaded(
           expenses: expenses,
           totalAmount: expenses.fold(0.0, (sum, exp) => sum + exp.amount),
-          monthlyBudget: state is ExpenseLoaded
-              ? (state as ExpenseLoaded).monthlyBudget
-              : 0.0,
+          monthlyBudget: budgetResult.fold(
+            (failure) => state is ExpenseLoaded
+                ? (state as ExpenseLoaded).monthlyBudget
+                : 0.0,
+            (budget) => budget,
+          ),
           previousMonthTotal: previousMonthResult.fold(
             (failure) => 0.0,
             (expenses) => expenses.fold(0.0, (sum, exp) => sum + exp.amount),
@@ -97,32 +102,26 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
     UpdateExpense event,
     Emitter<ExpenseState> emit,
   ) async {
-    final currentState = state;
-    if (currentState is ExpenseLoaded) {
-      // 현재 expenses 목록에서 업데이트할 expense를 찾아 수정
-      final updatedExpenses = currentState.expenses.map((expense) {
-        return expense.id == event.expense.id ? event.expense : expense;
-      }).toList();
-
-      // 즉시 상태 업데이트
-      emit(ExpenseLoaded(
-        expenses: updatedExpenses,
-        totalAmount: updatedExpenses.fold(0.0, (sum, exp) => sum + exp.amount),
-        monthlyBudget: currentState.monthlyBudget,
-        previousMonthTotal: currentState.previousMonthTotal,
-        categoryTotals: _calculateCategoryTotals(updatedExpenses),
-        previousMonthCategoryTotals: currentState.previousMonthCategoryTotals,
-        userId: currentState.userId,
-        monthlyTotals: currentState.monthlyTotals,
-      ));
-    }
-
-    // Firebase 업데이트 수행
+    emit(ExpenseLoading());
     final result = await _expenseRepository.updateExpense(event.expense);
 
     result.fold(
       (failure) => emit(ExpenseError(failure.message)),
-      (expense) => emit(const ExpenseOperationSuccess('지출이 수정되었습니다.')),
+      (expense) {
+        emit(const ExpenseOperationSuccess('지출이 수정되었습니다.'));
+
+        // 현재 월의 시작일과 종료일 계산
+        final now = DateTime.now();
+        final startDate = DateTime(now.year, now.month, 1);
+        final endDate = DateTime(now.year, now.month + 1, 0);
+
+        // 날짜 범위를 지정하 데이터 로드
+        add(LoadExpensesByDateRange(
+          userId: event.expense.userId,
+          startDate: startDate,
+          endDate: endDate,
+        ));
+      },
     );
   }
 
@@ -252,24 +251,49 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
   ) async {
     if (state is ExpenseLoaded) {
       final currentState = state as ExpenseLoaded;
-      final result = await _expenseRepository.updateMonthlyBudget(
-        event.userId,
-        event.amount,
-      );
 
-      result.fold(
-        (failure) => emit(ExpenseError(failure.message)),
-        (_) => emit(ExpenseLoaded(
-          expenses: currentState.expenses,
-          totalAmount: currentState.totalAmount,
-          monthlyBudget: event.amount,
-          previousMonthTotal: currentState.previousMonthTotal,
-          categoryTotals: currentState.categoryTotals,
-          previousMonthCategoryTotals: currentState.previousMonthCategoryTotals,
-          monthlyTotals: currentState.monthlyTotals,
-          userId: event.userId,
-        )),
-      );
+      // Firebase에서 현재 예산 값을 가져옴
+      final budgetResult =
+          await _expenseRepository.getMonthlyBudget(event.userId);
+
+      if (event.amount > 0) {
+        // 새로운 예산 값이 있는 경우에만 업데이트
+        final result = await _expenseRepository.updateMonthlyBudget(
+          event.userId,
+          event.amount,
+        );
+
+        result.fold(
+          (failure) => emit(ExpenseError(failure.message)),
+          (_) => emit(ExpenseLoaded(
+            expenses: currentState.expenses,
+            totalAmount: currentState.totalAmount,
+            monthlyBudget: event.amount,
+            previousMonthTotal: currentState.previousMonthTotal,
+            categoryTotals: currentState.categoryTotals,
+            previousMonthCategoryTotals:
+                currentState.previousMonthCategoryTotals,
+            userId: currentState.userId,
+            monthlyTotals: currentState.monthlyTotals,
+          )),
+        );
+      } else {
+        // 예산 값이 0이거나 없는 경우 Firebase에서 가져온 값 사용
+        budgetResult.fold(
+          (failure) => emit(ExpenseError(failure.message)),
+          (budget) => emit(ExpenseLoaded(
+            expenses: currentState.expenses,
+            totalAmount: currentState.totalAmount,
+            monthlyBudget: budget,
+            previousMonthTotal: currentState.previousMonthTotal,
+            categoryTotals: currentState.categoryTotals,
+            previousMonthCategoryTotals:
+                currentState.previousMonthCategoryTotals,
+            userId: currentState.userId,
+            monthlyTotals: currentState.monthlyTotals,
+          )),
+        );
+      }
     }
   }
 

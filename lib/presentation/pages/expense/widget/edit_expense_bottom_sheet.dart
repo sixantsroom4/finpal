@@ -169,7 +169,18 @@ class _EditExpenseBottomSheetState extends State<EditExpenseBottomSheet> {
         splitAmounts: widget.expense.splitAmounts,
       );
 
-      context.read<ExpenseBloc>().add(UpdateExpense(updatedExpense));
+      final now = DateTime.now();
+      final startDate = DateTime(now.year, now.month, 1);
+      final endDate = DateTime(now.year, now.month + 1, 0);
+
+      context.read<ExpenseBloc>()
+        ..add(UpdateExpense(updatedExpense))
+        ..add(LoadExpensesByDateRange(
+          userId: updatedExpense.userId,
+          startDate: startDate,
+          endDate: endDate,
+        ));
+
       Navigator.pop(context);
     }
   }
