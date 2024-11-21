@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
 import '../../../bloc/expense/expense_bloc.dart';
 import '../../../bloc/auth/auth_bloc.dart';
+import 'package:intl/intl.dart';
 
 class AddExpenseFab extends StatelessWidget {
   const AddExpenseFab({super.key});
@@ -42,6 +43,21 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
   final _descriptionController = TextEditingController();
   final _amountController = TextEditingController();
   String _selectedCategory = '식비';
+  DateTime _selectedDate = DateTime.now();
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -121,6 +137,19 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
               },
             ),
             const SizedBox(height: 16),
+            InkWell(
+              onTap: () => _selectDate(context),
+              child: InputDecorator(
+                decoration: const InputDecoration(
+                  labelText: '날짜',
+                  border: OutlineInputBorder(),
+                ),
+                child: Text(
+                  DateFormat('yyyy년 M월 d일').format(_selectedDate),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _submit,
               child: const Text('저장'),
@@ -139,12 +168,6 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
         final amount =
             double.tryParse(_amountController.text.replaceAll(',', '')) ?? 0;
 
-        debugPrint('=== 지출 추가 시도 ===');
-        debugPrint('내용: ${_descriptionController.text}');
-        debugPrint('금액: $amount');
-        debugPrint('카테고리: $_selectedCategory');
-        debugPrint('유저 ID: ${authState.user.id}');
-
         context.read<ExpenseBloc>().add(
               AddExpense(
                 Expense(
@@ -153,25 +176,16 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
                   amount: amount,
                   description: _descriptionController.text,
                   category: _selectedCategory,
-                  date: DateTime.now(),
+                  date: _selectedDate,
                 ),
               ),
             );
 
         Navigator.pop(context);
-
-        // 스낵바 추가
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('지출이 추가되었습니다.'),
-            duration: Duration(seconds: 2),
-          ),
+          const SnackBar(content: Text('지출이 추가되었습니다.')),
         );
-      } else {
-        debugPrint('=== 오류: 인증되지 않은 사용자 ===');
       }
-    } else {
-      debugPrint('=== 오류: 폼 검증 실패 ===');
     }
   }
 }

@@ -132,7 +132,7 @@ class _EditExpenseBottomSheetState extends State<EditExpenseBottomSheet> {
                   context: context,
                   initialDate: _selectedDate,
                   firstDate: DateTime(2000),
-                  lastDate: DateTime.now(),
+                  lastDate: DateTime(2100),
                 );
                 if (picked != null) {
                   setState(() {
