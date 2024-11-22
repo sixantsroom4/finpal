@@ -1,5 +1,6 @@
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/presentation/bloc/auth/auth_bloc.dart';
+import 'package:finpal/presentation/bloc/auth/auth_event.dart';
 import 'package:finpal/presentation/bloc/auth/auth_state.dart';
 import 'package:finpal/presentation/bloc/user_registration/user_registration_event.dart';
 import 'package:finpal/presentation/bloc/user_registration/user_registration_state.dart';
@@ -40,7 +41,12 @@ class UserRegistrationPage extends StatelessWidget {
       body: BlocConsumer<UserRegistrationBloc, UserRegistrationState>(
         listener: (context, state) {
           if (state is UserRegistrationSuccess) {
-            context.go('/home');
+            context.read<AuthBloc>().add(const AuthUserRegistrationCompleted());
+            context.go('/');
+          } else if (state is UserRegistrationFailure) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message)),
+            );
           }
         },
         builder: (context, state) {
