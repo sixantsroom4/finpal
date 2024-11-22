@@ -1,5 +1,7 @@
 // lib/core/services/injection_container.main.dart
 import 'package:finpal/data/datasources/remote/firebase_storage_remote_data_source_impl.dart';
+import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
+import 'package:finpal/presentation/bloc/user_registration/user_registration_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../presentation/bloc/auth/auth_bloc.dart';
 import '../../presentation/bloc/expense/expense_bloc.dart';
@@ -69,4 +71,11 @@ Future<void> initMain() async {
   sl.registerFactory(() => SubscriptionBloc(
         subscriptionRepository: sl(),
       ));
+
+  sl.registerFactory(() => UserRegistrationBloc(
+        authRepository: sl(),
+        appLanguageBloc: sl(),
+      ));
+
+  sl.registerLazySingleton(() => AppLanguageBloc(sl()));
 }

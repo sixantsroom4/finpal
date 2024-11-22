@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:finpal/core/constants/app_languages.dart';
 import 'package:finpal/core/constants/app_locations.dart';
+import 'package:finpal/presentation/bloc/auth/auth_bloc.dart';
 
 abstract class UserRegistrationEvent extends Equatable {
   const UserRegistrationEvent();
@@ -56,8 +57,13 @@ class BirthYearChanged extends UserRegistrationEvent {
 
 class UserRegistrationCompleted extends UserRegistrationEvent {
   final String userId;
-  const UserRegistrationCompleted({required this.userId});
+  final AuthBloc authBloc;
+
+  const UserRegistrationCompleted({
+    required this.userId,
+    required this.authBloc,
+  });
 
   @override
-  List<Object> get props => [userId];
+  List<Object> get props => [userId, authBloc];
 }

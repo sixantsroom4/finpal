@@ -18,6 +18,7 @@ import '../../presentation/pages/profile/profile_page.dart';
 import '../../presentation/pages/settings/settings_page.dart';
 import '../../presentation/pages/common/loading_page.dart';
 import '../../presentation/pages/settings/account/account_settings_page.dart';
+import '../../presentation/pages/user_registration/user_registration_page.dart';
 
 class AppRouter {
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -28,44 +29,6 @@ class AppRouter {
       debugLogDiagnostics: true,
       initialLocation: '/',
       refreshListenable: GoRouterRefreshStream(authBloc.stream),
-      redirect: (context, state) {
-        final authState = authBloc.state;
-        debugPrint('라우팅 리다이렉트 시도:');
-        debugPrint('현재 경로: ${state.uri.path}');
-        debugPrint('인증 상태: $authState');
-
-        // 로딩 상태일 때는 리다이렉트하지 않음
-        if (authState is AuthLoading) {
-          debugPrint('로딩 중 - 리다이렉트 없음');
-          return null;
-        }
-
-        final isAuthenticated = authState is Authenticated;
-        final isAuthRoute = state.uri.path == '/welcome';
-        final isTermsRoute = state.uri.path == '/terms';
-
-        if (!isAuthenticated) {
-          debugPrint('미인증 상태 - /welcome으로 리다이렉트');
-          return '/welcome';
-        }
-
-        // 인증된 상태에서 약관 동의 여부 확인
-        if (isAuthenticated && !authState.user.hasAcceptedTerms) {
-          // 이미 약관 페이지에 있다면 리다이렉트하지 않음
-          if (isTermsRoute) return null;
-          debugPrint('약관 미동의 상태 - /terms로 리다이렉트');
-          return '/terms';
-        }
-
-        // 인증 완료 및 약관 동의 상태에서 인증/약관 페이지 접근 시도
-        if (isAuthenticated && (isAuthRoute || isTermsRoute)) {
-          debugPrint('인증된 상태에서 인증/약관 페이지 접근 - /로 리다이렉트');
-          return '/';
-        }
-
-        debugPrint('리다이렉트 없음');
-        return null;
-      },
       routes: [
         GoRoute(
           path: '/welcome',
@@ -74,6 +37,10 @@ class AppRouter {
         GoRoute(
           path: '/terms',
           builder: (context, state) => const TermsPage(),
+        ),
+        GoRoute(
+          path: '/registration',
+          builder: (context, state) => const UserRegistrationPage(),
         ),
         ShellRoute(
           builder: (context, state, child) =>
@@ -122,6 +89,57 @@ class AppRouter {
           ],
         ),
       ],
+      redirect: (context, state) {
+        if (state.uri.path == '/home') {
+          return '/';
+        }
+
+        final authState = authBloc.state;
+        debugPrint('라우팅 리다이렉트 시도:');
+        debugPrint('현재 경로: ${state.uri.path}');
+        debugPrint('인증 상태: $authState');
+
+        final isWelcomeRoute = state.uri.path == '/welcome';
+        final isTermsRoute = state.uri.path == '/terms';
+        final isRegistrationRoute = state.uri.path == '/registration';
+
+        // 인증되지 않은 사용자는 welcome 페이지로
+        if (authState is Unauthenticated) {
+          if (!isWelcomeRoute) {
+            debugPrint('미인증 상태 - /welcome으로 리다이렉트');
+            return '/welcome';
+          }
+          return null;
+        }
+
+        // 인증된 사용자의 약관 동의 여부 확인
+        if (authState is Authenticated && !authState.user.hasAcceptedTerms) {
+          if (!isTermsRoute) {
+            debugPrint('약관 동의 필요 - /terms로 리다이렉트');
+            return '/terms';
+          }
+          return null;
+        }
+
+        // 사용자 등록이 필요한 경우
+        if (authState is AuthRequiresRegistration) {
+          if (!isRegistrationRoute) {
+            debugPrint('유저 등록 필요 - /registration으로 리다이렉트');
+            return '/registration';
+          }
+          return null;
+        }
+
+        // 인증이 완료된 사용자가 welcome, terms, registration 페이지에 접근하려고 할 때
+        if (authState is Authenticated && authState.user.hasAcceptedTerms) {
+          if (isWelcomeRoute || isTermsRoute || isRegistrationRoute) {
+            debugPrint('인증 완료된 사용자 - 홈으로 리다이렉트');
+            return '/';
+          }
+        }
+
+        return null;
+      },
     );
   }
 }

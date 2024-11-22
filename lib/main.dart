@@ -6,6 +6,7 @@ import 'package:finpal/presentation/bloc/auth/auth_state.dart';
 import 'package:finpal/presentation/bloc/expense/expense_bloc.dart';
 import 'package:finpal/presentation/bloc/receipt/receipt_bloc.dart';
 import 'package:finpal/presentation/bloc/subscription/subscription_bloc.dart';
+import 'package:finpal/presentation/bloc/user_registration/user_registration_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -38,7 +39,7 @@ Future<void> main() async {
   debugPrint('Firebase Storage initialized');
 
   final prefs = await SharedPreferences.getInstance();
-  final appLanguageBloc = AppLanguageBloc(prefs);
+  di.sl.registerLazySingleton(() => prefs);
   debugPrint('SharedPreferences initialized');
 
   await di.init();
@@ -60,7 +61,9 @@ Future<void> main() async {
     MultiBlocProvider(
       providers: [
         BlocProvider<AuthBloc>(create: (_) => authBloc),
-        BlocProvider<AppLanguageBloc>(create: (_) => appLanguageBloc),
+        BlocProvider<AppLanguageBloc>(create: (_) => di.sl<AppLanguageBloc>()),
+        BlocProvider<UserRegistrationBloc>(
+            create: (_) => di.sl<UserRegistrationBloc>()),
       ],
       child: MyApp(authBloc: authBloc),
     ),
@@ -83,6 +86,8 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (_) => di.sl<ExpenseBloc>()),
         BlocProvider(create: (_) => di.sl<SubscriptionBloc>()),
         BlocProvider(create: (_) => di.sl<ReceiptBloc>()),
+        BlocProvider<UserRegistrationBloc>(
+            create: (_) => di.sl<UserRegistrationBloc>()),
       ],
       child: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {

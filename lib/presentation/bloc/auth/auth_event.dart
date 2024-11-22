@@ -107,3 +107,10 @@ class AuthKakaoSignInRequested extends AuthEvent {
   @override
   List<Object?> get props => [];
 }
+
+class AuthUserRegistrationCompleted extends AuthEvent {
+  const AuthUserRegistrationCompleted();
+
+  @override
+  List<Object?> get props => [];
+}

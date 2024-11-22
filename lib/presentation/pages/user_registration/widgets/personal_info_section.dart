@@ -18,45 +18,81 @@ class PersonalInfoSection extends StatelessWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const Row(
+                  children: [
+                    Text(
+                      '개인정보',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF0C2340),
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Icon(Icons.person, color: Color(0xFF0C2340)),
+                  ],
+                ),
+                const SizedBox(height: 8),
                 const Text(
-                  '개인정보',
+                  '서비스 이용을 위한 마지막 단계입니다! 🎉',
                   style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF0C2340),
+                    fontSize: 14,
+                    color: Color(0xFF6B7280),
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 24),
                 // 성별 선택
                 Container(
                   decoration: BoxDecoration(
                     border: Border.all(color: const Color(0xFFE5E8EC)),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: DropdownButtonFormField<String>(
                     value: state is UserRegistrationInProgress
                         ? state.gender
                         : null,
                     decoration: const InputDecoration(
-                      labelText: '성별',
+                      labelText: '성별 선택 👤',
                       border: InputBorder.none,
                       contentPadding: EdgeInsets.symmetric(horizontal: 16),
                     ),
                     items: [
                       DropdownMenuItem(
                         value: 'male',
-                        child:
+                        child: Row(
+                          children: [
+                            const Text('👨 '),
                             Text(getGenderText('male', languageState.language)),
+                          ],
+                        ),
                       ),
                       DropdownMenuItem(
                         value: 'female',
-                        child: Text(
-                            getGenderText('female', languageState.language)),
+                        child: Row(
+                          children: [
+                            const Text('👩 '),
+                            Text(getGenderText(
+                                'female', languageState.language)),
+                          ],
+                        ),
                       ),
                       DropdownMenuItem(
                         value: 'other',
-                        child: Text(
-                            getGenderText('other', languageState.language)),
+                        child: Row(
+                          children: [
+                            const Text('🧑 '),
+                            Text(
+                                getGenderText('other', languageState.language)),
+                          ],
+                        ),
                       ),
                     ],
                     onChanged: (newValue) {
@@ -68,47 +104,79 @@ class PersonalInfoSection extends StatelessWidget {
                     },
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
                 // 출생년도 선택
-                Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(color: const Color(0xFFE5E8EC)),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: TextFormField(
-                    decoration: const InputDecoration(
-                      labelText: '출생년도 (예: 1990)',
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                      helperText: '4자리 숫자로 입력해주세요',
-                      errorStyle: TextStyle(color: Colors.red),
+                GestureDetector(
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text('출생년도 선택 🎉'),
+                          content: SizedBox(
+                            height: 300,
+                            width: 300,
+                            child: YearPicker(
+                              firstDate: DateTime(1900),
+                              lastDate: DateTime.now(),
+                              selectedDate:
+                                  state is UserRegistrationInProgress &&
+                                          state.birthYear != null
+                                      ? DateTime(state.birthYear!)
+                                      : DateTime.now(),
+                              onChanged: (DateTime dateTime) {
+                                context.read<UserRegistrationBloc>().add(
+                                      BirthYearChanged(dateTime.year),
+                                    );
+                                Navigator.pop(context);
+                              },
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: const Color(0xFFE5E8EC)),
+                      borderRadius: BorderRadius.circular(12),
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
-                    keyboardType: TextInputType.number,
-                    maxLength: 4,
-                    onChanged: (value) {
-                      if (value.length == 4) {
-                        final year = int.tryParse(value);
-                        if (year != null &&
-                            year >= 1900 &&
-                            year <= DateTime.now().year) {
-                          context.read<UserRegistrationBloc>().add(
-                                BirthYearChanged(year),
-                              );
-                        }
-                      }
-                    },
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return '출생년도를 입력해주세요';
-                      }
-                      final year = int.tryParse(value);
-                      if (year == null ||
-                          year < 1900 ||
-                          year > DateTime.now().year) {
-                        return '올바른 출생년도를 입력해주세요';
-                      }
-                      return null;
-                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          state is UserRegistrationInProgress &&
+                                  state.birthYear != null
+                              ? '${state.birthYear}년'
+                              : '출생년도를 선택해주세요',
+                          style: TextStyle(
+                            color: state is UserRegistrationInProgress &&
+                                    state.birthYear != null
+                                ? Colors.black
+                                : Colors.grey,
+                          ),
+                        ),
+                        const Icon(Icons.calendar_today, color: Colors.grey),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  '* 입력하신 정보는 서비스 개선을 위서만 사용됩니다 🔒',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF6B7280),
+                    fontStyle: FontStyle.italic,
                   ),
                 ),
               ],

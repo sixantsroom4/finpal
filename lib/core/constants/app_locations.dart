@@ -2,7 +2,7 @@ enum AppLocation {
   korea,
   japan,
   usa,
-  eu,
+  europe,
 }
 
 extension AppLocationExtension on AppLocation {
@@ -14,8 +14,8 @@ extension AppLocationExtension on AppLocation {
         return '日本';
       case AppLocation.usa:
         return 'USA';
-      case AppLocation.eu:
-        return 'EU';
+      case AppLocation.europe:
+        return 'Europe';
     }
   }
 
@@ -27,7 +27,7 @@ extension AppLocationExtension on AppLocation {
         return 'JPY';
       case AppLocation.usa:
         return 'USD';
-      case AppLocation.eu:
+      case AppLocation.europe:
         return 'EUR';
     }
   }

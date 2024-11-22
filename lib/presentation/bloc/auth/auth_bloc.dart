@@ -41,6 +41,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthEmailChangeRequested>(_onAuthEmailChangeRequested);
     on<AuthPasswordChangeRequested>(_onAuthPasswordChangeRequested);
     on<AuthKakaoSignInRequested>(_onAuthKakaoSignInRequested);
+    on<AuthUserRegistrationCompleted>(_onAuthUserRegistrationCompleted);
 
     _authStateSubscription = _authRepository.authStateChanges.listen(
       (user) {
@@ -48,8 +49,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         if (user == null) {
           emit(Unauthenticated());
         } else {
-          if (state is AuthLoading) {
-            debugPrint('약관 동의 처리 중 - Auth 상태 업데이트 건너뜀');
+          if (state is AuthLoading ||
+              state is AuthRequiresRegistration ||
+              state is Authenticated) {
+            // Authenticated 상태도 건너뛰도록 추가
+            debugPrint('Auth 상태 업데이트 건너뜀: ${state.runtimeType}');
             return;
           }
           emit(Authenticated(user));
@@ -109,12 +113,22 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthGoogleSignInRequested event,
     Emitter<AuthState> emit,
   ) async {
-    emit(AuthLoading());
-    final result = await _authRepository.signInWithGoogle();
-    result.fold(
-      (failure) => emit(AuthFailure(failure.message)),
-      (user) => emit(Authenticated(user)),
-    );
+    try {
+      emit(AuthLoading());
+      final result = await _authRepository.signInWithGoogle();
+      result.fold(
+        (failure) => emit(AuthFailure(failure.message)),
+        (user) {
+          if (!user.hasAcceptedTerms) {
+            emit(Authenticated(user)); // 약관 동의가 필요한 상태
+          } else {
+            emit(Authenticated(user)); // 이미 약관에 동의한 상태
+          }
+        },
+      );
+    } catch (e) {
+      emit(AuthFailure(e.toString()));
+    }
   }
 
   Future<void> _onAuthEmailSignInRequested(
@@ -190,7 +204,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         },
         (user) {
           debugPrint('약관 동의 성공: hasAcceptedTerms = ${user.hasAcceptedTerms}');
-          emit(Authenticated(user.copyWith(hasAcceptedTerms: true)));
+          emit(AuthRequiresRegistration(user));
         },
       );
     } catch (e) {
@@ -235,7 +249,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         (_) => emit(state), // 비밀번호 변경은 인증 상태를 변경하지 않습니다
       );
     } catch (e) {
-      emit(AuthFailure('비밀번호 변경에 실패했습니다: ${e.toString()}'));
+      emit(AuthFailure('비밀번호  ���습니다: ${e.toString()}'));
     }
   }
 
@@ -261,6 +275,44 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     } catch (e) {
       print('예상치 못한 에러 발생: $e');
       emit(AuthFailure('카카오 로그인 중 오류가 발생했습니다: ${e.toString()}'));
+    }
+  }
+
+  Future<void> _onAuthUserRegistrationCompleted(
+    AuthUserRegistrationCompleted event,
+    Emitter<AuthState> emit,
+  ) async {
+    try {
+      emit(AuthLoading());
+
+      // 약관 동의 상태 업데이트
+      final termsResult = await _authRepository.updateTermsAcceptance(true);
+
+      if (termsResult.isLeft()) {
+        emit(AuthFailure(termsResult.fold(
+          (failure) => failure.message,
+          (_) => '',
+        )));
+        return;
+      }
+
+      // 새로운 사용자 정보를 가져오기 전에 잠시 대기
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      final userResult = await _authRepository.getCurrentUser();
+      userResult.fold(
+        (failure) => emit(AuthFailure(failure.message)),
+        (user) {
+          if (user != null) {
+            // hasAcceptedTerms가 true인 상태로 Authenticated 상태로 변경
+            emit(Authenticated(user.copyWith(hasAcceptedTerms: true)));
+          } else {
+            emit(const AuthFailure('사용자 정보를 찾을 수 없습니다.'));
+          }
+        },
+      );
+    } catch (e) {
+      emit(const AuthFailure('사용자 등록 상태 업데이트에 실패했습니다.'));
     }
   }
 }
