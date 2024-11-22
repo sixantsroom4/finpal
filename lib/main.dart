@@ -17,6 +17,7 @@ import 'firebase_options.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
+import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,6 +38,7 @@ Future<void> main() async {
   debugPrint('Firebase Storage initialized');
 
   final prefs = await SharedPreferences.getInstance();
+  final appLanguageBloc = AppLanguageBloc(prefs);
   debugPrint('SharedPreferences initialized');
 
   await di.init();
@@ -54,7 +56,15 @@ Future<void> main() async {
   );
   debugPrint('Kakao SDK initialized');
 
-  runApp(MyApp(authBloc: authBloc));
+  runApp(
+    MultiBlocProvider(
+      providers: [
+        BlocProvider<AuthBloc>(create: (_) => authBloc),
+        BlocProvider<AppLanguageBloc>(create: (_) => appLanguageBloc),
+      ],
+      child: MyApp(authBloc: authBloc),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -90,7 +100,7 @@ class MyApp extends StatelessWidget {
             return BlocBuilder<AuthBloc, AuthState>(
               builder: (context, state) {
                 debugPrint('현재 인증 상태: $state');
-                return child ?? const Center(child: Text('화면을 불러��� 수 없습니다.'));
+                return child ?? const Center(child: Text('화면을 불러 수 없습니다.'));
               },
             );
           },

@@ -1,4 +1,5 @@
 // lib/presentation/pages/auth/welcome_page.dart
+import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/presentation/bloc/auth/auth_event.dart';
 import 'package:finpal/presentation/pages/auth/animated_welcome_text_widget.dart';
 import 'package:flutter/material.dart';
@@ -18,91 +19,97 @@ class WelcomePage extends StatefulWidget {
 }
 
 class _WelcomePageState extends State<WelcomePage> {
-  AppLanguage _selectedLanguage = AppLanguage.korean;
-
   String getLocalizedString(String key) {
-    return LocalizedStrings.translations[_selectedLanguage]?[key] ?? '';
+    final language = context.read<AppLanguageBloc>().state.language;
+    return LocalizedStrings.translations[language]?[key] ?? '';
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // 언어 선택기를 우측 상단으로 이동
-              Align(
-                alignment: Alignment.topRight,
-                child: LanguageSelector(
-                  selectedLanguage: _selectedLanguage,
-                  onLanguageChanged: (AppLanguage newValue) {
-                    setState(() {
-                      _selectedLanguage = newValue;
-                    });
-                  },
-                ),
-              ),
-              const Spacer(flex: 4),
-              // 로고 및 앱 이름
-              Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'FinPal',
-                      style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                            color: Theme.of(context).colorScheme.primary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 74,
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 12),
-                    const AnimatedWelcomeText(),
-                  ],
-                ),
-              ),
-              const Spacer(flex: 3),
-              // 소셜 로그인 버튼들
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  children: [
-                    _SocialSignInButton(
-                      onPressed: () {
+    return BlocBuilder<AppLanguageBloc, AppLanguageState>(
+      builder: (context, state) {
+        return Scaffold(
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: LanguageSelector(
+                      selectedLanguage: state.language,
+                      onLanguageChanged: (AppLanguage newValue) {
                         context
-                            .read<AuthBloc>()
-                            .add(AuthGoogleSignInRequested());
+                            .read<AppLanguageBloc>()
+                            .add(AppLanguageChanged(newValue));
                       },
-                      icon: 'assets/icons/google.svg',
-                      label: getLocalizedString('continueWithGoogle'),
                     ),
-                    if (Theme.of(context).platform == TargetPlatform.iOS) ...[
-                      const SizedBox(height: 16),
-                      _SocialSignInButton(
-                        onPressed: () {
-                          context
-                              .read<AuthBloc>()
-                              .add(AuthAppleSignInRequested());
-                        },
-                        icon: 'assets/icons/apple.svg',
-                        label: getLocalizedString('continueWithApple'),
-                        backgroundColor: Colors.white,
-                        textColor: Colors.black,
-                      ),
-                    ],
-                    const SizedBox(height: 24),
-                  ],
-                ),
+                  ),
+                  const Spacer(flex: 4),
+                  // 로고 및 앱 이름
+                  Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'FinPal',
+                          style: Theme.of(context)
+                              .textTheme
+                              .displayLarge
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 74,
+                              ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 12),
+                        const AnimatedWelcomeText(),
+                      ],
+                    ),
+                  ),
+                  const Spacer(flex: 3),
+                  // 소셜 로그인 버튼들
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      children: [
+                        _SocialSignInButton(
+                          onPressed: () {
+                            context
+                                .read<AuthBloc>()
+                                .add(AuthGoogleSignInRequested());
+                          },
+                          icon: 'assets/icons/google.svg',
+                          label: getLocalizedString('continueWithGoogle'),
+                        ),
+                        if (Theme.of(context).platform ==
+                            TargetPlatform.iOS) ...[
+                          const SizedBox(height: 16),
+                          _SocialSignInButton(
+                            onPressed: () {
+                              context
+                                  .read<AuthBloc>()
+                                  .add(AuthAppleSignInRequested());
+                            },
+                            icon: 'assets/icons/apple.svg',
+                            label: getLocalizedString('continueWithApple'),
+                            backgroundColor: Colors.white,
+                            textColor: Colors.black,
+                          ),
+                        ],
+                        const SizedBox(height: 24),
+                      ],
+                    ),
+                  ),
+                  const Spacer(flex: 5),
+                ],
               ),
-              const Spacer(flex: 5),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
