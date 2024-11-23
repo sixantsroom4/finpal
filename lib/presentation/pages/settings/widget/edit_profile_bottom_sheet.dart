@@ -5,6 +5,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../domain/entities/user.dart';
 import '../../../bloc/auth/auth_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
+import 'package:finpal/core/constants/app_languages.dart';
 
 class EditProfileBottomSheet extends StatefulWidget {
   final User user;
@@ -56,7 +58,7 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '프로필 수정',
+                  _getLocalizedLabel(context, 'edit_profile'),
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 IconButton(
@@ -101,13 +103,13 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> {
             // 이름 입력 필드
             TextFormField(
               controller: _displayNameController,
-              decoration: const InputDecoration(
-                labelText: '이름',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: _getLocalizedLabel(context, 'name'),
+                border: const OutlineInputBorder(),
               ),
               validator: (value) {
                 if (value?.isEmpty ?? true) {
-                  return '이름을 입력해주세요';
+                  return _getLocalizedLabel(context, 'name_required');
                 }
                 return null;
               },
@@ -117,7 +119,7 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> {
             // 저장 버튼
             ElevatedButton(
               onPressed: _submit,
-              child: const Text('저장'),
+              child: Text(_getLocalizedLabel(context, 'save')),
             ),
             const SizedBox(height: 16),
           ],
@@ -155,5 +157,32 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> {
 
       Navigator.pop(context);
     }
+  }
+
+  String _getLocalizedLabel(BuildContext context, String key) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    final Map<String, Map<AppLanguage, String>> labels = {
+      'edit_profile': {
+        AppLanguage.english: 'Edit Profile',
+        AppLanguage.korean: '프로필 수정',
+        AppLanguage.japanese: 'プロフィール編集',
+      },
+      'name': {
+        AppLanguage.english: 'Name',
+        AppLanguage.korean: '이름',
+        AppLanguage.japanese: '名前',
+      },
+      'name_required': {
+        AppLanguage.english: 'Please enter your name',
+        AppLanguage.korean: '이름을 입력해주세요',
+        AppLanguage.japanese: '名前を入力してください',
+      },
+      'save': {
+        AppLanguage.english: 'Save',
+        AppLanguage.korean: '저장',
+        AppLanguage.japanese: '保存',
+      },
+    };
+    return labels[key]?[language] ?? labels[key]?[AppLanguage.korean] ?? key;
   }
 }

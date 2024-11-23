@@ -1,5 +1,8 @@
+import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
+import 'package:finpal/core/constants/app_languages.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'monthly_category_pie_chart.dart';
 import 'monthly_comparison_bar_chart.dart';
 import 'monthly_trend_line_chart.dart';
@@ -27,7 +30,7 @@ class _ExpenseChartsViewState extends State<ExpenseChartsView> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '지출 분석',
+                  _getLocalizedTitle(context),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -68,5 +71,15 @@ class _ExpenseChartsViewState extends State<ExpenseChartsView> {
         ],
       ),
     );
+  }
+
+  String _getLocalizedTitle(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    const Map<AppLanguage, String> titles = {
+      AppLanguage.english: 'Expense Analysis',
+      AppLanguage.korean: '지출 분석',
+      AppLanguage.japanese: '支出分析',
+    };
+    return titles[language] ?? titles[AppLanguage.korean]!;
   }
 }

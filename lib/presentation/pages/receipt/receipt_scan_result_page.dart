@@ -11,6 +11,8 @@ import '../../bloc/receipt/receipt_state.dart';
 import 'receipt_page.dart';
 import 'package:intl/intl.dart';
 import 'widgets/edit_receipt_info_bottom_sheet.dart';
+import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
+import 'package:finpal/core/constants/app_languages.dart';
 
 class ReceiptScanResultPage extends StatelessWidget {
   final String imagePath;
@@ -24,7 +26,7 @@ class ReceiptScanResultPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('영수증 분석 결과'),
+        title: Text(_getLocalizedTitle(context)),
       ),
       body: BlocConsumer<ReceiptBloc, ReceiptState>(
         listener: (context, state) {
@@ -32,7 +34,7 @@ class ReceiptScanResultPage extends StatelessWidget {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.message)),
             );
-            if (state.message == '영수증이 저장되었습니다.') {
+            if (state.message == _getLocalizedSuccessMessage(context)) {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
@@ -49,7 +51,7 @@ class ReceiptScanResultPage extends StatelessWidget {
         },
         builder: (context, state) {
           if (state is ReceiptScanInProgress) {
-            return _buildLoadingState();
+            return _buildLoadingState(context);
           }
 
           if (state is ReceiptScanSuccess || state is ReceiptLoaded) {
@@ -61,32 +63,32 @@ class ReceiptScanResultPage extends StatelessWidget {
 
           if (state is ReceiptError) {
             return Center(
-              child: Text(state.message),
+              child: Text(_getLocalizedError(context, state.message)),
             );
           }
 
-          return const Center(
-            child: Text('영수증 분석 중 오류가 발생했습니다.'),
+          return Center(
+            child: Text(_getLocalizedDefaultError(context)),
           );
         },
       ),
     );
   }
 
-  Widget _buildLoadingState() {
+  Widget _buildLoadingState(BuildContext context) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const CircularProgressIndicator(),
           const SizedBox(height: 24),
-          const Text(
-            'AI가 영수증을 분석하고 있습니다',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          Text(
+            _getLocalizedLabel(context, 'analyzing'),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           Text(
-            '잠시만 기다려주세요...',
+            _getLocalizedLabel(context, 'please_wait'),
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey[600],
@@ -97,8 +99,60 @@ class ReceiptScanResultPage extends StatelessWidget {
     );
   }
 
+  String _getLocalizedTitle(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    const Map<AppLanguage, String> titles = {
+      AppLanguage.english: 'Receipt Analysis Result',
+      AppLanguage.korean: '영수증 분석 결과',
+      AppLanguage.japanese: 'レシート分析結果',
+    };
+    return titles[language] ?? titles[AppLanguage.korean]!;
+  }
+
+  String _getLocalizedLabel(BuildContext context, String key) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    final Map<String, Map<AppLanguage, String>> labels = {
+      'analyzing': {
+        AppLanguage.english: 'AI is analyzing your receipt',
+        AppLanguage.korean: 'AI가 영수증을 분석하고 있습니다',
+        AppLanguage.japanese: 'AIがレシートを分析しています',
+      },
+      'please_wait': {
+        AppLanguage.english: 'Please wait...',
+        AppLanguage.korean: '잠시만 기다려주세요...',
+        AppLanguage.japanese: 'お待ちください...',
+      },
+      'items': {
+        AppLanguage.english: 'Items',
+        AppLanguage.korean: '구매 항목',
+        AppLanguage.japanese: '購入項目',
+      },
+      'total': {
+        AppLanguage.english: 'Total',
+        AppLanguage.korean: '총액',
+        AppLanguage.japanese: '合計',
+      },
+      'create_expense': {
+        AppLanguage.english: 'Create Expense',
+        AppLanguage.korean: '지출 내역 생성',
+        AppLanguage.japanese: '支出を作成',
+      },
+      'edit_receipt': {
+        AppLanguage.english: 'Edit Receipt Info',
+        AppLanguage.korean: '영수증 정보 수정',
+        AppLanguage.japanese: 'レシート情報を編集',
+      },
+      'retake_receipt': {
+        AppLanguage.english: 'Retake Receipt',
+        AppLanguage.korean: '영수증 재촬영',
+        AppLanguage.japanese: 'レシートを撮り直す',
+      },
+    };
+    return labels[key]?[language] ?? labels[key]?[AppLanguage.korean] ?? key;
+  }
+
   Widget _buildResultState(BuildContext context, Receipt receipt) {
-    final formatter = NumberFormat.currency(locale: 'ko_KR', symbol: '₩');
+    final formatter = _getCurrencyFormatter(context);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -144,7 +198,7 @@ class ReceiptScanResultPage extends StatelessWidget {
                               style: Theme.of(context).textTheme.titleLarge,
                             ),
                             Text(
-                              DateFormat('yyyy년 M월 d일').format(receipt.date),
+                              _getLocalizedDate(context, receipt.date),
                               style: Theme.of(context)
                                   .textTheme
                                   .bodyMedium
@@ -160,7 +214,7 @@ class ReceiptScanResultPage extends StatelessWidget {
                   const Divider(height: 32),
                   if (receipt.items.isNotEmpty) ...[
                     Text(
-                      '구매 항목',
+                      _getLocalizedLabel(context, 'items'),
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 12),
@@ -189,7 +243,7 @@ class ReceiptScanResultPage extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '총액',
+                        _getLocalizedLabel(context, 'total'),
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       Text(
@@ -214,7 +268,8 @@ class ReceiptScanResultPage extends StatelessWidget {
                         );
                       },
                       icon: const Icon(Icons.add_card),
-                      label: const Text('지출 내역 생성'),
+                      label:
+                          Text(_getLocalizedLabel(context, 'create_expense')),
                       style: ElevatedButton.styleFrom(
                         minimumSize: const Size(double.infinity, 48),
                       ),
@@ -231,7 +286,7 @@ class ReceiptScanResultPage extends StatelessWidget {
                         );
                       },
                       icon: const Icon(Icons.edit),
-                      label: const Text('영수증 정보 수정'),
+                      label: Text(_getLocalizedLabel(context, 'edit_receipt')),
                       style: OutlinedButton.styleFrom(
                         minimumSize: const Size(double.infinity, 48),
                       ),
@@ -240,7 +295,8 @@ class ReceiptScanResultPage extends StatelessWidget {
                     OutlinedButton.icon(
                       onPressed: () => _retakeReceipt(context),
                       icon: const Icon(Icons.camera_alt),
-                      label: const Text('영수증 재촬영'),
+                      label:
+                          Text(_getLocalizedLabel(context, 'retake_receipt')),
                       style: OutlinedButton.styleFrom(
                         minimumSize: const Size(double.infinity, 48),
                       ),
@@ -312,5 +368,62 @@ class ReceiptScanResultPage extends StatelessWidget {
         builder: (context) => const ReceiptPage(),
       ),
     );
+  }
+
+  String _getLocalizedError(BuildContext context, String message) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    Map<AppLanguage, String Function(String)> errors = {
+      AppLanguage.english: (msg) => 'Error: $msg',
+      AppLanguage.korean: (msg) => '오류: $msg',
+      AppLanguage.japanese: (msg) => 'エラー: $msg',
+    };
+    return errors[language]?.call(message) ??
+        errors[AppLanguage.korean]!(message);
+  }
+
+  String _getLocalizedDefaultError(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    const Map<AppLanguage, String> errors = {
+      AppLanguage.english: 'An error occurred while analyzing the receipt.',
+      AppLanguage.korean: '영수증 분석 중 오류가 발생했습니다.',
+      AppLanguage.japanese: 'レシートの分析中にエラーが発生しました。',
+    };
+    return errors[language] ?? errors[AppLanguage.korean]!;
+  }
+
+  String _getLocalizedDate(BuildContext context, DateTime date) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    switch (language) {
+      case AppLanguage.english:
+        return DateFormat('MMM d, yyyy').format(date);
+      case AppLanguage.japanese:
+        return DateFormat('yyyy年 M月 d日').format(date);
+      case AppLanguage.korean:
+      default:
+        return DateFormat('yyyy년 M월 d일').format(date);
+    }
+  }
+
+  String _getLocalizedSuccessMessage(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    const Map<AppLanguage, String> messages = {
+      AppLanguage.english: 'Receipt has been saved.',
+      AppLanguage.korean: '영수증이 저장되었습니다.',
+      AppLanguage.japanese: 'レシートが保存されました。',
+    };
+    return messages[language] ?? messages[AppLanguage.korean]!;
+  }
+
+  NumberFormat _getCurrencyFormatter(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    switch (language) {
+      case AppLanguage.english:
+        return NumberFormat.currency(locale: 'en_US', symbol: '\$');
+      case AppLanguage.japanese:
+        return NumberFormat.currency(locale: 'ja_JP', symbol: '¥');
+      case AppLanguage.korean:
+      default:
+        return NumberFormat.currency(locale: 'ko_KR', symbol: '₩');
+    }
   }
 }

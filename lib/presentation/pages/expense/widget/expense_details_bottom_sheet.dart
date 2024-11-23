@@ -1,4 +1,6 @@
 // lib/presentation/pages/expense/widgets/expense_details_bottom_sheet.dart
+import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
+import 'package:finpal/core/constants/app_languages.dart';
 import 'package:finpal/presentation/bloc/expense/expense_bloc.dart';
 import 'package:finpal/presentation/bloc/expense/expense_event.dart';
 import 'package:finpal/presentation/bloc/receipt/receipt_bloc.dart';
@@ -29,9 +31,9 @@ class ExpenseDetailsBottomSheet extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                '지출 상세',
-                style: TextStyle(
+              Text(
+                _getLocalizedTitle(context),
+                style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
@@ -44,25 +46,26 @@ class ExpenseDetailsBottomSheet extends StatelessWidget {
           ),
           const Divider(),
           _DetailItem(
-            title: '금액',
-            value: '${NumberFormat('#,###').format(expense.amount)}원',
+            title: _getLocalizedLabel(context, 'amount'),
+            value: _getLocalizedAmount(context, expense.amount),
           ),
           _DetailItem(
-            title: '내용',
+            title: _getLocalizedLabel(context, 'description'),
             value: expense.description,
           ),
           _DetailItem(
-            title: '카테고리',
-            value: expense.category,
+            title: _getLocalizedLabel(context, 'category'),
+            value: _getLocalizedCategory(context, expense.category),
           ),
           _DetailItem(
-            title: '날짜',
-            value: DateFormat('yyyy년 M월 d일').format(expense.date),
+            title: _getLocalizedLabel(context, 'date'),
+            value: _getLocalizedDate(context, expense.date),
           ),
           if (expense.isShared)
             _DetailItem(
-              title: '공유',
-              value: '${expense.sharedWith?.length ?? 0}명과 공유됨',
+              title: _getLocalizedLabel(context, 'shared'),
+              value: _getLocalizedSharedText(
+                  context, expense.sharedWith?.length ?? 0),
             ),
           if (expense.receiptId != null)
             BlocBuilder<ReceiptBloc, ReceiptState>(
@@ -75,7 +78,7 @@ class ExpenseDetailsBottomSheet extends StatelessWidget {
                       context.go('/receipts/${expense.receiptId}');
                     },
                     icon: const Icon(Icons.receipt_long),
-                    label: const Text('영수증 보기'),
+                    label: Text(_getLocalizedLabel(context, 'view_receipt')),
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 45),
                     ),
@@ -94,7 +97,7 @@ class ExpenseDetailsBottomSheet extends StatelessWidget {
                       _showEditExpenseBottomSheet(context);
                     },
                     icon: const Icon(Icons.edit),
-                    label: const Text('수정'),
+                    label: Text(_getLocalizedLabel(context, 'edit')),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -102,7 +105,7 @@ class ExpenseDetailsBottomSheet extends StatelessWidget {
                   child: ElevatedButton.icon(
                     onPressed: () => _showDeleteConfirmDialog(context),
                     icon: const Icon(Icons.delete),
-                    label: const Text('삭제'),
+                    label: Text(_getLocalizedLabel(context, 'delete')),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
                     ),
@@ -116,16 +119,145 @@ class ExpenseDetailsBottomSheet extends StatelessWidget {
     );
   }
 
+  String _getLocalizedTitle(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    const Map<AppLanguage, String> titles = {
+      AppLanguage.english: 'Expense Details',
+      AppLanguage.korean: '지출 상세',
+      AppLanguage.japanese: '支出詳細',
+    };
+    return titles[language] ?? titles[AppLanguage.korean]!;
+  }
+
+  String _getLocalizedLabel(BuildContext context, String key) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    final Map<String, Map<AppLanguage, String>> labels = {
+      'amount': {
+        AppLanguage.english: 'Amount',
+        AppLanguage.korean: '금액',
+        AppLanguage.japanese: '金額',
+      },
+      'description': {
+        AppLanguage.english: 'Description',
+        AppLanguage.korean: '내용',
+        AppLanguage.japanese: '内容',
+      },
+      'category': {
+        AppLanguage.english: 'Category',
+        AppLanguage.korean: '카테고리',
+        AppLanguage.japanese: 'カテゴリー',
+      },
+      'date': {
+        AppLanguage.english: 'Date',
+        AppLanguage.korean: '날짜',
+        AppLanguage.japanese: '日付',
+      },
+      'shared': {
+        AppLanguage.english: 'Shared',
+        AppLanguage.korean: '공유',
+        AppLanguage.japanese: '共有',
+      },
+      'view_receipt': {
+        AppLanguage.english: 'View Receipt',
+        AppLanguage.korean: '영수증 보기',
+        AppLanguage.japanese: 'レシートを見る',
+      },
+      'edit': {
+        AppLanguage.english: 'Edit',
+        AppLanguage.korean: '수정',
+        AppLanguage.japanese: '編集',
+      },
+      'delete': {
+        AppLanguage.english: 'Delete',
+        AppLanguage.korean: '삭제',
+        AppLanguage.japanese: '削除',
+      },
+    };
+    return labels[key]?[language] ?? labels[key]?[AppLanguage.korean] ?? key;
+  }
+
+  String _getLocalizedAmount(BuildContext context, double amount) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    final formattedAmount = NumberFormat('#,###').format(amount);
+    switch (language) {
+      case AppLanguage.english:
+        return '\$$formattedAmount';
+      case AppLanguage.japanese:
+        return '¥$formattedAmount';
+      case AppLanguage.korean:
+      default:
+        return '${formattedAmount}원';
+    }
+  }
+
+  String _getLocalizedDate(BuildContext context, DateTime date) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    switch (language) {
+      case AppLanguage.english:
+        return DateFormat('MMM d, yyyy').format(date);
+      case AppLanguage.japanese:
+        return DateFormat('yyyy年 M月 d日').format(date);
+      case AppLanguage.korean:
+      default:
+        return DateFormat('yyyy년 M월 d일').format(date);
+    }
+  }
+
+  String _getLocalizedSharedText(BuildContext context, int count) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    switch (language) {
+      case AppLanguage.english:
+        return 'Shared with $count people';
+      case AppLanguage.japanese:
+        return '$count人と共有中';
+      case AppLanguage.korean:
+      default:
+        return '${count}명과 공유됨';
+    }
+  }
+
+  String _getLocalizedCategory(BuildContext context, String category) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    final Map<String, Map<AppLanguage, String>> categories = {
+      'food': {
+        AppLanguage.english: 'Food',
+        AppLanguage.korean: '식비',
+        AppLanguage.japanese: '食費',
+      },
+      'transport': {
+        AppLanguage.english: 'Transport',
+        AppLanguage.korean: '교통',
+        AppLanguage.japanese: '交通',
+      },
+      'shopping': {
+        AppLanguage.english: 'Shopping',
+        AppLanguage.korean: '쇼핑',
+        AppLanguage.japanese: '買物',
+      },
+      'entertainment': {
+        AppLanguage.english: 'Entertainment',
+        AppLanguage.korean: '여가',
+        AppLanguage.japanese: '娯楽',
+      },
+      'health': {
+        AppLanguage.english: 'Health',
+        AppLanguage.korean: '의료',
+        AppLanguage.japanese: '医療',
+      },
+    };
+    return categories[category.toLowerCase()]?[language] ?? category;
+  }
+
   void _showDeleteConfirmDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('지출 삭제'),
-        content: const Text('이 지출을 삭제하시겠습니까?\n삭제된 지출은 복구할 수 없습니다.'),
+        title: Text(_getLocalizedLabel(context, 'delete_expense')),
+        content: Text(_getLocalizedDeleteConfirmMessage(context)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+            child: Text(_getLocalizedLabel(context, 'cancel')),
           ),
           TextButton(
             onPressed: () {
@@ -134,17 +266,39 @@ class ExpenseDetailsBottomSheet extends StatelessWidget {
               context.read<ExpenseBloc>()
                 ..add(DeleteExpense(expense.id, expense.userId));
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('지출이 삭제되었습니다.')),
+                SnackBar(
+                    content: Text(_getLocalizedDeleteSuccessMessage(context))),
               );
             },
-            child: const Text(
-              '삭제',
-              style: TextStyle(color: Colors.red),
+            child: Text(
+              _getLocalizedLabel(context, 'delete'),
+              style: const TextStyle(color: Colors.red),
             ),
           ),
         ],
       ),
     );
+  }
+
+  String _getLocalizedDeleteConfirmMessage(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    const Map<AppLanguage, String> messages = {
+      AppLanguage.english:
+          'Are you sure you want to delete this expense?\nDeleted expenses cannot be recovered.',
+      AppLanguage.korean: '이 지출을 삭제하시겠습니까?\n삭제된 지출은 복구할 수 없습니다.',
+      AppLanguage.japanese: 'この支出を削除しますか？\n削除された支出は復元できません。',
+    };
+    return messages[language] ?? messages[AppLanguage.korean]!;
+  }
+
+  String _getLocalizedDeleteSuccessMessage(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    const Map<AppLanguage, String> messages = {
+      AppLanguage.english: 'Expense has been deleted.',
+      AppLanguage.korean: '지출이 삭제되었습니다.',
+      AppLanguage.japanese: '支出が削除されました。',
+    };
+    return messages[language] ?? messages[AppLanguage.korean]!;
   }
 
   void _showEditExpenseBottomSheet(BuildContext context) {

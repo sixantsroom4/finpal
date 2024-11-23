@@ -9,6 +9,7 @@ import 'package:finpal/presentation/bloc/auth/auth_event.dart';
 import 'package:finpal/presentation/bloc/auth/auth_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 
 class ProfileMenuList extends StatefulWidget {
   const ProfileMenuList({super.key});
@@ -23,130 +24,182 @@ class _ProfileMenuListState extends State<ProfileMenuList> {
   @override
   void initState() {
     super.initState();
-    _terms = TermsService.getTermsByLanguage(AppLanguage.korean);
+    _loadTerms();
+  }
+
+  void _loadTerms() {
+    final language = context.read<AppLanguageBloc>().state.language;
+    setState(() {
+      _terms = TermsService.getTermsByLanguage(language);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // 앱 설정
         ListTile(
           leading: const Icon(Icons.settings_outlined),
-          title: const Text('앱 설정'),
+          title: Text(_getLocalizedLabel(context, 'app_settings')),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => context.go('/settings'),
         ),
-
-        // 계정 설정
         ListTile(
           leading: const Icon(Icons.account_circle_outlined),
-          title: const Text('계정 설정'),
+          title: Text(_getLocalizedLabel(context, 'account_settings')),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => context.push('/settings/account'),
         ),
-
         const Divider(),
-
-        // 고객 센터
         ListTile(
           leading: const Icon(Icons.help_outline),
-          title: const Text('고객 센터'),
+          title: Text(_getLocalizedLabel(context, 'customer_service')),
           trailing: const Icon(Icons.chevron_right),
           onTap: () {
             // TODO: 고객 센터 페이지로 이동
           },
         ),
-
-        // 약관 및 정책
         ListTile(
           leading: const Icon(Icons.description_outlined),
-          title: const Text('약관 및 정책'),
+          title: Text(_getLocalizedLabel(context, 'terms_and_policies')),
           trailing: const Icon(Icons.chevron_right),
-          onTap: () {
-            showModalBottomSheet(
-              context: context,
-              isScrollControlled: true,
-              builder: (context) => DraggableScrollableSheet(
-                initialChildSize: 0.9,
-                minChildSize: 0.5,
-                maxChildSize: 0.9,
-                builder: (_, scrollController) => Container(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            '약관 및 정책',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.close),
-                            onPressed: () => Navigator.pop(context),
-                          ),
-                        ],
-                      ),
-                      const Divider(),
-                      Expanded(
-                        child: ListView(
-                          controller: scrollController,
-                          children: [
-                            TermsContent(
-                              expandedItems: const {},
-                              terms: _terms,
-                              onItemTap: (_) {},
-                              readOnly: true,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
+          onTap: () => _showTermsBottomSheet(context),
         ),
-
         const Divider(),
-
-        // 로그아웃
         ListTile(
           leading: const Icon(Icons.logout, color: Colors.red),
-          title: const Text(
-            '로그아웃',
-            style: TextStyle(color: Colors.red),
+          title: Text(
+            _getLocalizedLabel(context, 'logout'),
+            style: const TextStyle(color: Colors.red),
           ),
-          onTap: () {
-            showDialog(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: const Text('로그아웃'),
-                content: const Text('정말 로그아웃 하시겠습니까?'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('취소'),
+          onTap: () => _showLogoutDialog(context),
+        ),
+      ],
+    );
+  }
+
+  String _getLocalizedLabel(BuildContext context, String key) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    final Map<String, Map<AppLanguage, String>> labels = {
+      'app_settings': {
+        AppLanguage.english: 'App Settings',
+        AppLanguage.korean: '앱 설정',
+        AppLanguage.japanese: 'アプリ設定',
+      },
+      'account_settings': {
+        AppLanguage.english: 'Account Settings',
+        AppLanguage.korean: '계정 설정',
+        AppLanguage.japanese: 'アカウント設定',
+      },
+      'customer_service': {
+        AppLanguage.english: 'Customer Service',
+        AppLanguage.korean: '고객 센터',
+        AppLanguage.japanese: 'カスタマーサービス',
+      },
+      'terms_and_policies': {
+        AppLanguage.english: 'Terms and Policies',
+        AppLanguage.korean: '약관 및 정책',
+        AppLanguage.japanese: '利用規約とポリシー',
+      },
+      'logout': {
+        AppLanguage.english: 'Logout',
+        AppLanguage.korean: '로그아웃',
+        AppLanguage.japanese: 'ログアウト',
+      },
+      'terms_title': {
+        AppLanguage.english: 'Terms and Policies',
+        AppLanguage.korean: '약관 및 정책',
+        AppLanguage.japanese: '利用規約とポリシー',
+      },
+      'logout_title': {
+        AppLanguage.english: 'Logout',
+        AppLanguage.korean: '로그아웃',
+        AppLanguage.japanese: 'ログアウト',
+      },
+      'logout_message': {
+        AppLanguage.english: 'Are you sure you want to logout?',
+        AppLanguage.korean: '정말 로그아웃 하시겠습니까?',
+        AppLanguage.japanese: '本当にログアウトしますか？',
+      },
+      'cancel': {
+        AppLanguage.english: 'Cancel',
+        AppLanguage.korean: '취소',
+        AppLanguage.japanese: 'キャンセル',
+      },
+    };
+    return labels[key]?[language] ?? labels[key]?[AppLanguage.korean] ?? key;
+  }
+
+  void _showTermsBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.9,
+        minChildSize: 0.5,
+        maxChildSize: 0.9,
+        builder: (_, scrollController) => Container(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    _getLocalizedLabel(context, 'terms_title'),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  TextButton(
-                    onPressed: () {
-                      context.read<AuthBloc>().add(AuthSignedOut());
-                      Navigator.pop(context);
-                    },
-                    child: const Text('로그아웃'),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
                   ),
                 ],
               ),
-            );
-          },
+              const Divider(),
+              Expanded(
+                child: ListView(
+                  controller: scrollController,
+                  children: [
+                    TermsContent(
+                      expandedItems: const {},
+                      terms: _terms,
+                      onItemTap: (_) {},
+                      readOnly: true,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
-      ],
+      ),
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(_getLocalizedLabel(context, 'logout_title')),
+        content: Text(_getLocalizedLabel(context, 'logout_message')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(_getLocalizedLabel(context, 'cancel')),
+          ),
+          TextButton(
+            onPressed: () {
+              context.read<AuthBloc>().add(AuthSignedOut());
+              Navigator.pop(context);
+            },
+            child: Text(_getLocalizedLabel(context, 'logout')),
+          ),
+        ],
+      ),
     );
   }
 }

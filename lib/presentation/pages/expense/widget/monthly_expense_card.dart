@@ -1,4 +1,6 @@
 // lib/presentation/pages/expense/widget/monthly_expense_card.dart
+import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
+import 'package:finpal/core/constants/app_languages.dart';
 import 'package:finpal/presentation/bloc/auth/auth_state.dart';
 import 'package:finpal/presentation/bloc/expense/expense_event.dart';
 import 'package:finpal/presentation/bloc/expense/expense_state.dart';
@@ -61,7 +63,6 @@ class _MonthlyExpenseCardState extends State<MonthlyExpenseCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 월 선택 헤더
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -70,18 +71,16 @@ class _MonthlyExpenseCardState extends State<MonthlyExpenseCard> {
                   onPressed: () => _changeMonth(-1),
                 ),
                 Text(
-                  DateFormat('yyyy년 M월').format(_selectedDate),
+                  _getLocalizedDate(context, _selectedDate),
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 IconButton(
                   icon: const Icon(Icons.chevron_right),
                   onPressed: () {
-                    // 다음 달로 이동 가능하도록 수정
                     final nextMonth = DateTime(
                       _selectedDate.year,
                       _selectedDate.month + 1,
                     );
-                    // 현재 달로부터 최대 3개월 후까지만 이동 가능
                     final maxDate = DateTime(
                       DateTime.now().year,
                       DateTime.now().month + 3,
@@ -95,8 +94,6 @@ class _MonthlyExpenseCardState extends State<MonthlyExpenseCard> {
               ],
             ),
             const SizedBox(height: 16),
-
-            // 지출 금액
             BlocBuilder<ExpenseBloc, ExpenseState>(
               builder: (context, state) {
                 if (state is ExpenseLoading) {
@@ -105,16 +102,16 @@ class _MonthlyExpenseCardState extends State<MonthlyExpenseCard> {
                   );
                 }
 
-                // ExpenseLoaded 상태이거나 다른 상태일 때 모두 금액 표시
                 return Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      '지출 금액',
+                      _getLocalizedExpenseLabel(context),
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     Text(
-                      '${_numberFormat.format(state is ExpenseLoaded ? state.totalAmount : 0)}원',
+                      _getLocalizedAmount(context,
+                          state is ExpenseLoaded ? state.totalAmount : 0),
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: Theme.of(context).colorScheme.primary,
@@ -129,5 +126,42 @@ class _MonthlyExpenseCardState extends State<MonthlyExpenseCard> {
         ),
       ),
     );
+  }
+
+  String _getLocalizedDate(BuildContext context, DateTime date) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    switch (language) {
+      case AppLanguage.english:
+        return DateFormat('MMMM yyyy').format(date);
+      case AppLanguage.japanese:
+        return DateFormat('yyyy年 M月').format(date);
+      case AppLanguage.korean:
+      default:
+        return DateFormat('yyyy년 M월').format(date);
+    }
+  }
+
+  String _getLocalizedExpenseLabel(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    const Map<AppLanguage, String> labels = {
+      AppLanguage.english: 'Total Expenses',
+      AppLanguage.korean: '지출 금액',
+      AppLanguage.japanese: '支出金額',
+    };
+    return labels[language] ?? labels[AppLanguage.korean]!;
+  }
+
+  String _getLocalizedAmount(BuildContext context, double amount) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    final formattedAmount = _numberFormat.format(amount);
+    switch (language) {
+      case AppLanguage.english:
+        return '\$$formattedAmount';
+      case AppLanguage.japanese:
+        return '¥$formattedAmount';
+      case AppLanguage.korean:
+      default:
+        return '${formattedAmount}원';
+    }
   }
 }

@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
+import 'package:finpal/core/constants/app_languages.dart';
 
 class EditReceiptInfoBottomSheet extends StatefulWidget {
   final Receipt receipt;
@@ -38,6 +40,73 @@ class _EditReceiptInfoBottomSheetState
     _items = List.from(widget.receipt.items);
   }
 
+  String _getLocalizedLabel(BuildContext context, String key) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    final Map<String, Map<AppLanguage, String>> labels = {
+      'edit_receipt': {
+        AppLanguage.english: 'Edit Receipt',
+        AppLanguage.korean: '영수증 정보 수정',
+        AppLanguage.japanese: 'レシート情報を編集',
+      },
+      'store_name': {
+        AppLanguage.english: 'Store Name',
+        AppLanguage.korean: '가게명',
+        AppLanguage.japanese: '店舗名',
+      },
+      'store_name_required': {
+        AppLanguage.english: 'Please enter store name',
+        AppLanguage.korean: '가게명을 입력해주세요',
+        AppLanguage.japanese: '店舗名を入力してください',
+      },
+      'items': {
+        AppLanguage.english: 'Items',
+        AppLanguage.korean: '구매 항목',
+        AppLanguage.japanese: '購入項目',
+      },
+      'item_name': {
+        AppLanguage.english: 'Item Name',
+        AppLanguage.korean: '품목명',
+        AppLanguage.japanese: '品目名',
+      },
+      'unit_price': {
+        AppLanguage.english: 'Unit Price',
+        AppLanguage.korean: '단가',
+        AppLanguage.japanese: '単価',
+      },
+      'quantity': {
+        AppLanguage.english: 'Quantity',
+        AppLanguage.korean: '수량',
+        AppLanguage.japanese: '数量',
+      },
+      'add_item': {
+        AppLanguage.english: 'Add Item',
+        AppLanguage.korean: '품목 추가',
+        AppLanguage.japanese: '品目を追加',
+      },
+      'total': {
+        AppLanguage.english: 'Total',
+        AppLanguage.korean: '총액',
+        AppLanguage.japanese: '合計',
+      },
+      'total_required': {
+        AppLanguage.english: 'Please enter total amount',
+        AppLanguage.korean: '총액을 입력해주세요',
+        AppLanguage.japanese: '合計金額を入力してください',
+      },
+      'cancel': {
+        AppLanguage.english: 'Cancel',
+        AppLanguage.korean: '취소',
+        AppLanguage.japanese: 'キャンセル',
+      },
+      'save': {
+        AppLanguage.english: 'Save',
+        AppLanguage.korean: '저장',
+        AppLanguage.japanese: '保存',
+      },
+    };
+    return labels[key]?[language] ?? labels[key]?[AppLanguage.korean] ?? key;
+  }
+
   @override
   Widget build(BuildContext context) {
     return DraggableScrollableSheet(
@@ -60,7 +129,7 @@ class _EditReceiptInfoBottomSheetState
           child: Column(
             children: [
               Text(
-                '영수증 정보 수정',
+                _getLocalizedLabel(context, 'edit_receipt'),
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 16),
@@ -70,15 +139,16 @@ class _EditReceiptInfoBottomSheetState
                   children: [
                     TextFormField(
                       controller: _merchantNameController,
-                      decoration: const InputDecoration(
-                        labelText: '가게명',
+                      decoration: InputDecoration(
+                        labelText: _getLocalizedLabel(context, 'store_name'),
                       ),
-                      validator: (value) =>
-                          value?.isEmpty ?? true ? '가게명을 입력해주세요' : null,
+                      validator: (value) => value?.isEmpty ?? true
+                          ? _getLocalizedLabel(context, 'store_name_required')
+                          : null,
                     ),
                     const SizedBox(height: 24),
                     Text(
-                      '구매 항목',
+                      _getLocalizedLabel(context, 'items'),
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 8),
@@ -94,8 +164,9 @@ class _EditReceiptInfoBottomSheetState
                                 flex: 2,
                                 child: TextFormField(
                                   initialValue: item.name,
-                                  decoration: const InputDecoration(
-                                    labelText: '품목명',
+                                  decoration: InputDecoration(
+                                    labelText: _getLocalizedLabel(
+                                        context, 'item_name'),
                                   ),
                                   onChanged: (value) {
                                     setState(() {
@@ -109,8 +180,9 @@ class _EditReceiptInfoBottomSheetState
                               Expanded(
                                 child: TextFormField(
                                   initialValue: item.price.toString(),
-                                  decoration: const InputDecoration(
-                                    labelText: '단가',
+                                  decoration: InputDecoration(
+                                    labelText: _getLocalizedLabel(
+                                        context, 'unit_price'),
                                   ),
                                   keyboardType: TextInputType.number,
                                   inputFormatters: [
@@ -131,8 +203,9 @@ class _EditReceiptInfoBottomSheetState
                                 width: 60,
                                 child: TextFormField(
                                   initialValue: item.quantity.toString(),
-                                  decoration: const InputDecoration(
-                                    labelText: '수량',
+                                  decoration: InputDecoration(
+                                    labelText:
+                                        _getLocalizedLabel(context, 'quantity'),
                                   ),
                                   keyboardType: TextInputType.number,
                                   inputFormatters: [
@@ -165,13 +238,13 @@ class _EditReceiptInfoBottomSheetState
                     OutlinedButton.icon(
                       onPressed: _addNewItem,
                       icon: const Icon(Icons.add),
-                      label: const Text('품목 추가'),
+                      label: Text(_getLocalizedLabel(context, 'add_item')),
                     ),
                     const SizedBox(height: 24),
                     TextFormField(
                       controller: _totalAmountController,
-                      decoration: const InputDecoration(
-                        labelText: '총액',
+                      decoration: InputDecoration(
+                        labelText: _getLocalizedLabel(context, 'total'),
                       ),
                       keyboardType: TextInputType.number,
                       inputFormatters: [
@@ -188,8 +261,9 @@ class _EditReceiptInfoBottomSheetState
                           );
                         }),
                       ],
-                      validator: (value) =>
-                          value?.isEmpty ?? true ? '총액을 입력해주세요' : null,
+                      validator: (value) => value?.isEmpty ?? true
+                          ? _getLocalizedLabel(context, 'total_required')
+                          : null,
                     ),
                   ],
                 ),
@@ -201,12 +275,12 @@ class _EditReceiptInfoBottomSheetState
                   children: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text('취소'),
+                      child: Text(_getLocalizedLabel(context, 'cancel')),
                     ),
                     const SizedBox(width: 16),
                     ElevatedButton(
                       onPressed: _updateReceipt,
-                      child: const Text('저장'),
+                      child: Text(_getLocalizedLabel(context, 'save')),
                     ),
                   ],
                 ),

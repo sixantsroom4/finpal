@@ -10,6 +10,8 @@ import '../../bloc/subscription/subscription_bloc.dart';
 import '../../bloc/auth/auth_bloc.dart';
 import 'widgets/subscription_card.dart';
 import 'widgets/subscription_statistics_card.dart';
+import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
+import 'package:finpal/core/constants/app_languages.dart';
 
 class SubscriptionPage extends StatefulWidget {
   const SubscriptionPage({super.key});
@@ -44,16 +46,63 @@ class _SubscriptionPageState extends State<SubscriptionPage>
     }
   }
 
+  String _getLocalizedLabel(BuildContext context, String key) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    final Map<String, Map<AppLanguage, String>> labels = {
+      'subscription_management': {
+        AppLanguage.english: 'Subscription Management',
+        AppLanguage.korean: '구독 관리',
+        AppLanguage.japanese: 'サブスク管理',
+      },
+      'all_subscriptions': {
+        AppLanguage.english: 'All Subscriptions',
+        AppLanguage.korean: '전체 구독',
+        AppLanguage.japanese: '全てのサブスク',
+      },
+      'upcoming_payments': {
+        AppLanguage.english: 'Upcoming Payments',
+        AppLanguage.korean: '결제 예정',
+        AppLanguage.japanese: '支払い予定',
+      },
+      'no_subscriptions': {
+        AppLanguage.english: 'No subscriptions registered',
+        AppLanguage.korean: '등록된 구독이 없습니다',
+        AppLanguage.japanese: '登録されたサブスクはありません',
+      },
+      'no_subscriptions_description': {
+        AppLanguage.english: 'Register and manage your recurring subscriptions',
+        AppLanguage.korean: '정기적으로 결제되는 구독을 등록하고 관리해보세요',
+        AppLanguage.japanese: '定期的に支払うサブスクを登録して管理しましょう',
+      },
+      'payment_today': {
+        AppLanguage.english: 'Payment due today',
+        AppLanguage.korean: '오늘 결제 예정',
+        AppLanguage.japanese: '今日支払い予定',
+      },
+      'days_until_payment': {
+        AppLanguage.english: 'days until payment',
+        AppLanguage.korean: '일 후 결제',
+        AppLanguage.japanese: '日後に支払い',
+      },
+      'monthly_payment_day': {
+        AppLanguage.english: 'Monthly payment on day',
+        AppLanguage.korean: '매월',
+        AppLanguage.japanese: '毎月',
+      },
+    };
+    return labels[key]?[language] ?? labels[key]?[AppLanguage.korean] ?? key;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('구독 관리'),
+        title: Text(_getLocalizedLabel(context, 'subscription_management')),
         bottom: TabBar(
           controller: _tabController,
-          tabs: const [
-            Tab(text: '전체 구독'),
-            Tab(text: '결제 예정'),
+          tabs: [
+            Tab(text: _getLocalizedLabel(context, 'all_subscriptions')),
+            Tab(text: _getLocalizedLabel(context, 'upcoming_payments')),
           ],
         ),
       ),
@@ -81,12 +130,12 @@ class _SubscriptionPageState extends State<SubscriptionPage>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    '등록된 구독이 없습니다',
+                    _getLocalizedLabel(context, 'no_subscriptions'),
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    '정기적으로 결제되는 구독을 등록하고 관리해보세요',
+                    _getLocalizedLabel(context, 'no_subscriptions_description'),
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Colors.grey,
                         ),

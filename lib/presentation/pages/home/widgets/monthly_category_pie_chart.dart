@@ -2,10 +2,64 @@ import 'package:finpal/presentation/bloc/expense/expense_state.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import '../../../bloc/expense/expense_bloc.dart';
+import '../../../bloc/app_language/app_language_bloc.dart';
+import '../../../../core/constants/app_languages.dart';
 
 class MonthlyCategoryPieChart extends StatelessWidget {
   const MonthlyCategoryPieChart({super.key});
+
+  String _getLocalizedLabel(BuildContext context, String key) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    final Map<String, Map<AppLanguage, String>> labels = {
+      'no_expenses': {
+        AppLanguage.english: 'No expenses this month',
+        AppLanguage.korean: '이번 달 지출 내역이 없습니다.',
+        AppLanguage.japanese: '今月の支出履歴がありません',
+      },
+      'ott': {
+        AppLanguage.english: 'OTT',
+        AppLanguage.korean: 'OTT',
+        AppLanguage.japanese: 'OTT',
+      },
+      'music': {
+        AppLanguage.english: 'Music',
+        AppLanguage.korean: '음악',
+        AppLanguage.japanese: '音楽',
+      },
+      'game': {
+        AppLanguage.english: 'Game',
+        AppLanguage.korean: '게임',
+        AppLanguage.japanese: 'ゲーム',
+      },
+      'fitness': {
+        AppLanguage.english: 'Fitness',
+        AppLanguage.korean: '피트니스',
+        AppLanguage.japanese: 'フィットネス',
+      },
+      'other': {
+        AppLanguage.english: 'Other',
+        AppLanguage.korean: '기타',
+        AppLanguage.japanese: 'その他',
+      },
+    };
+    return labels[key]?[language] ?? labels[key]?[AppLanguage.korean] ?? key;
+  }
+
+  String _getLocalizedAmount(BuildContext context, double amount) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    final formattedAmount = NumberFormat('#,###').format(amount);
+    switch (language) {
+      case AppLanguage.english:
+        return '\$$formattedAmount';
+      case AppLanguage.japanese:
+        return '¥$formattedAmount';
+      case AppLanguage.korean:
+      default:
+        return '${formattedAmount}원';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +69,6 @@ class MonthlyCategoryPieChart extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
 
-        // 현재 월의 카테고리별 지출 합계 계산
         final now = DateTime.now();
         final currentMonthCategoryTotals = <String, double>{};
 
@@ -29,8 +82,8 @@ class MonthlyCategoryPieChart extends StatelessWidget {
         }
 
         if (currentMonthCategoryTotals.isEmpty) {
-          return const Center(
-            child: Text('이번 달 지출 내역이 없습니다.'),
+          return Center(
+            child: Text(_getLocalizedLabel(context, 'no_expenses')),
           );
         }
 
@@ -45,8 +98,8 @@ class MonthlyCategoryPieChart extends StatelessWidget {
                   PieChartData(
                     sectionsSpace: 2,
                     centerSpaceRadius: 40,
-                    sections:
-                        _createPieChartSections(currentMonthCategoryTotals),
+                    sections: _createPieChartSections(
+                        context, currentMonthCategoryTotals),
                     borderData: FlBorderData(show: false),
                   ),
                 ),
@@ -56,6 +109,7 @@ class MonthlyCategoryPieChart extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: _buildLegend(
+                context,
                 currentMonthCategoryTotals,
                 currentMonthCategoryTotals.values
                     .fold(0.0, (sum, amount) => sum + amount),
@@ -68,7 +122,7 @@ class MonthlyCategoryPieChart extends StatelessWidget {
   }
 
   List<PieChartSectionData> _createPieChartSections(
-      Map<String, double> categoryTotals) {
+      BuildContext context, Map<String, double> categoryTotals) {
     final total =
         categoryTotals.values.fold(0.0, (sum, amount) => sum + amount);
     final colors = [
@@ -101,7 +155,8 @@ class MonthlyCategoryPieChart extends StatelessWidget {
     }).toList();
   }
 
-  Widget _buildLegend(Map<String, double> categoryTotals, double totalAmount) {
+  Widget _buildLegend(BuildContext context, Map<String, double> categoryTotals,
+      double totalAmount) {
     final colors = [
       const Color(0xFF5C6BC0),
       Colors.red,
@@ -142,7 +197,7 @@ class MonthlyCategoryPieChart extends StatelessWidget {
                 ),
               ),
               Text(
-                '${amount.toStringAsFixed(0)}원',
+                _getLocalizedAmount(context, amount),
                 style: const TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w500,

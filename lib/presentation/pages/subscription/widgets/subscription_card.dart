@@ -3,6 +3,9 @@ import 'package:finpal/domain/entities/subscription.dart';
 import 'package:finpal/presentation/pages/subscription/widgets/add_subscription_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
+import 'package:finpal/core/constants/app_languages.dart';
 
 class SubscriptionCard extends StatelessWidget {
   final Subscription subscription;
@@ -15,6 +18,42 @@ class SubscriptionCard extends StatelessWidget {
     this.daysUntilBilling,
     required this.onTap,
   });
+
+  String _getLocalizedLabel(BuildContext context, String key) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    final Map<String, Map<AppLanguage, String>> labels = {
+      'billing_day_format': {
+        AppLanguage.english: 'Day ${subscription.billingDay} of every month',
+        AppLanguage.korean: '매월 ${subscription.billingDay}일',
+        AppLanguage.japanese: '毎月${subscription.billingDay}日',
+      },
+      'billing_today': {
+        AppLanguage.english: 'Payment due today',
+        AppLanguage.korean: '오늘 결제 예정',
+        AppLanguage.japanese: '本日支払い予定',
+      },
+      'billing_days_left': {
+        AppLanguage.english: 'Payment in $daysUntilBilling days',
+        AppLanguage.korean: '$daysUntilBilling일 후 결제',
+        AppLanguage.japanese: '支払いまで残り$daysUntilBilling日',
+      },
+    };
+    return labels[key]?[language] ?? labels[key]?[AppLanguage.korean] ?? key;
+  }
+
+  String _getLocalizedAmount(BuildContext context, double amount) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    final formattedAmount = NumberFormat('#,###').format(amount);
+    switch (language) {
+      case AppLanguage.english:
+        return '\$$formattedAmount';
+      case AppLanguage.japanese:
+        return '¥$formattedAmount';
+      case AppLanguage.korean:
+      default:
+        return '${formattedAmount}원';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,12 +72,14 @@ class SubscriptionCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '매월 ${subscription.billingDay}일',
+              _getLocalizedLabel(context, 'billing_day_format'),
               style: Theme.of(context).textTheme.bodySmall,
             ),
             if (daysUntilBilling != null)
               Text(
-                daysUntilBilling == 0 ? '오늘 결제 예정' : '$daysUntilBilling일 후 결제',
+                daysUntilBilling == 0
+                    ? _getLocalizedLabel(context, 'billing_today')
+                    : _getLocalizedLabel(context, 'billing_days_left'),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: daysUntilBilling == 0
                           ? Theme.of(context).colorScheme.error
@@ -48,7 +89,7 @@ class SubscriptionCard extends StatelessWidget {
           ],
         ),
         trailing: Text(
-          '${NumberFormat('#,###').format(subscription.amount)}원',
+          _getLocalizedAmount(context, subscription.amount),
           style: Theme.of(context).textTheme.titleMedium,
         ),
         onTap: onTap,

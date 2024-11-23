@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:dartz/dartz.dart';
+import 'package:finpal/core/constants/app_languages.dart';
 import 'package:finpal/domain/entities/expense.dart';
+import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../domain/repositories/expense_repository.dart';
 import 'expense_event.dart';
@@ -9,11 +11,14 @@ import 'expense_state.dart';
 
 class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
   final ExpenseRepository _expenseRepository;
+  final AppLanguageBloc _appLanguageBloc;
   StreamSubscription<List<Expense>>? _expenseSubscription;
 
   ExpenseBloc({
     required ExpenseRepository expenseRepository,
+    required AppLanguageBloc appLanguageBloc,
   })  : _expenseRepository = expenseRepository,
+        _appLanguageBloc = appLanguageBloc,
         super(ExpenseInitial()) {
     on<LoadExpenses>(_onLoadExpenses);
     on<AddExpense>(_onAddExpense);
@@ -144,7 +149,7 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
     result.fold(
       (failure) => emit(ExpenseError(failure.message)),
       (_) {
-        emit(const ExpenseOperationSuccess('출이 삭제되었습니다.'));
+        emit(ExpenseOperationSuccess(_getLocalizedMessage('expense_deleted')));
         add(LoadExpenses(event.userId));
       },
     );
@@ -329,5 +334,29 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
         _expenseRepository.watchExpenses(userId).listen((expenses) {
       add(UpdateExpenseList(expenses));
     });
+  }
+
+  String _getLocalizedMessage(String key) {
+    final language = _appLanguageBloc.state.language;
+    final Map<String, Map<AppLanguage, String>> messages = {
+      'expense_added': {
+        AppLanguage.english: 'Expense has been added',
+        AppLanguage.korean: '지출이 추가되었습니다',
+        AppLanguage.japanese: '支出が追加されました',
+      },
+      'expense_updated': {
+        AppLanguage.english: 'Expense has been updated',
+        AppLanguage.korean: '지출이 수정되었습니다',
+        AppLanguage.japanese: '支出が更新されました',
+      },
+      'expense_deleted': {
+        AppLanguage.english: 'Expense has been deleted',
+        AppLanguage.korean: '지출이 삭제되었습니다',
+        AppLanguage.japanese: '支出が削除されました',
+      },
+    };
+    return messages[key]?[language] ??
+        messages[key]?[AppLanguage.korean] ??
+        key;
   }
 }

@@ -1,3 +1,5 @@
+import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
+import 'package:finpal/core/constants/app_languages.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../bloc/expense/expense_bloc.dart';
@@ -40,7 +42,7 @@ class _BudgetSettingsPageState extends State<BudgetSettingsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('월 예산 설정'),
+        title: Text(_getLocalizedTitle(context)),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -51,18 +53,18 @@ class _BudgetSettingsPageState extends State<BudgetSettingsPage> {
             children: [
               TextFormField(
                 controller: _budgetController,
-                decoration: const InputDecoration(
-                  labelText: '월 예산',
-                  border: OutlineInputBorder(),
-                  suffix: Text('원'),
+                decoration: InputDecoration(
+                  labelText: _getLocalizedLabel(context, 'monthly_budget'),
+                  border: const OutlineInputBorder(),
+                  suffix: Text(_getLocalizedCurrency(context)),
                 ),
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value?.isEmpty ?? true) {
-                    return '예산을 입력해주세요';
+                    return _getLocalizedError(context, 'budget_required');
                   }
                   if (double.tryParse(value!.replaceAll(',', '')) == null) {
-                    return '올바른 금액을 입력해주세요';
+                    return _getLocalizedError(context, 'invalid_amount');
                   }
                   return null;
                 },
@@ -70,7 +72,7 @@ class _BudgetSettingsPageState extends State<BudgetSettingsPage> {
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _updateBudget,
-                child: const Text('저장'),
+                child: Text(_getLocalizedLabel(context, 'save')),
               ),
             ],
           ),
@@ -79,11 +81,63 @@ class _BudgetSettingsPageState extends State<BudgetSettingsPage> {
     );
   }
 
+  String _getLocalizedTitle(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    const Map<AppLanguage, String> titles = {
+      AppLanguage.english: 'Monthly Budget Settings',
+      AppLanguage.korean: '월 예산 설정',
+      AppLanguage.japanese: '月予算設定',
+    };
+    return titles[language] ?? titles[AppLanguage.korean]!;
+  }
+
+  String _getLocalizedLabel(BuildContext context, String key) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    final Map<String, Map<AppLanguage, String>> labels = {
+      'monthly_budget': {
+        AppLanguage.english: 'Monthly Budget',
+        AppLanguage.korean: '월 예산',
+        AppLanguage.japanese: '月予算',
+      },
+      'save': {
+        AppLanguage.english: 'Save',
+        AppLanguage.korean: '저장',
+        AppLanguage.japanese: '保存',
+      },
+    };
+    return labels[key]?[language] ?? labels[key]?[AppLanguage.korean] ?? key;
+  }
+
+  String _getLocalizedError(BuildContext context, String key) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    final Map<String, Map<AppLanguage, String>> errors = {
+      'budget_required': {
+        AppLanguage.english: 'Please enter your budget',
+        AppLanguage.korean: '예산을 입력해주세요',
+        AppLanguage.japanese: '予算を入力してください',
+      },
+      'invalid_amount': {
+        AppLanguage.english: 'Please enter a valid amount',
+        AppLanguage.korean: '올바른 금액을 입력해주세요',
+        AppLanguage.japanese: '正しい金額を入力してください',
+      },
+    };
+    return errors[key]?[language] ?? errors[key]?[AppLanguage.korean] ?? key;
+  }
+
+  String _getLocalizedCurrency(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    const Map<AppLanguage, String> currencies = {
+      AppLanguage.english: '\$',
+      AppLanguage.korean: '원',
+      AppLanguage.japanese: '¥',
+    };
+    return currencies[language] ?? currencies[AppLanguage.korean]!;
+  }
+
   void _updateBudget() {
     if (_formKey.currentState?.validate() ?? false) {
       final amount = double.parse(_budgetController.text.replaceAll(',', ''));
-
-      // 현재 사용자 ID와 함께 이벤트 추가
       final state = context.read<ExpenseBloc>().state;
       if (state is ExpenseLoaded) {
         context.read<ExpenseBloc>().add(UpdateMonthlyBudget(
@@ -94,9 +148,19 @@ class _BudgetSettingsPageState extends State<BudgetSettingsPage> {
         Navigator.pop(context);
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('월 예산이 설정되었습니다')),
+          SnackBar(content: Text(_getLocalizedSuccessMessage(context))),
         );
       }
     }
+  }
+
+  String _getLocalizedSuccessMessage(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    const Map<AppLanguage, String> messages = {
+      AppLanguage.english: 'Monthly budget has been set',
+      AppLanguage.korean: '월 예산이 설정되었습니다',
+      AppLanguage.japanese: '月予算が設定されました',
+    };
+    return messages[language] ?? messages[AppLanguage.korean]!;
   }
 }

@@ -2,6 +2,9 @@
 import 'package:finpal/domain/entities/user.dart';
 import 'package:finpal/presentation/pages/settings/widget/edit_profile_bottom_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
+import 'package:finpal/core/constants/app_languages.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ProfileHeader extends StatelessWidget {
   final User user;
@@ -53,10 +56,20 @@ class ProfileHeader extends StatelessWidget {
                 builder: (context) => EditProfileBottomSheet(user: user),
               );
             },
-            child: const Text('프로필 편집'),
+            child: Text(_getLocalizedEditButtonText(context)),
           ),
         ],
       ),
     );
+  }
+
+  String _getLocalizedEditButtonText(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    const Map<AppLanguage, String> texts = {
+      AppLanguage.english: 'Edit Profile',
+      AppLanguage.korean: '프로필 편집',
+      AppLanguage.japanese: 'プロフィール編集',
+    };
+    return texts[language] ?? texts[AppLanguage.korean]!;
   }
 }

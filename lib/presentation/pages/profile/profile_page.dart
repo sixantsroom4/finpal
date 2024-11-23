@@ -7,6 +7,8 @@ import 'package:finpal/presentation/pages/settings/widget/edit_profile_bottom_sh
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../bloc/auth/auth_bloc.dart';
+import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
+import 'package:finpal/core/constants/app_languages.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -23,7 +25,7 @@ class ProfilePage extends StatelessWidget {
 
         return Scaffold(
           appBar: AppBar(
-            title: const Text('프로필'),
+            title: Text(_getLocalizedTitle(context)),
           ),
           body: RefreshIndicator(
             onRefresh: () async {
@@ -41,5 +43,15 @@ class ProfilePage extends StatelessWidget {
         );
       },
     );
+  }
+
+  String _getLocalizedTitle(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    const Map<AppLanguage, String> titles = {
+      AppLanguage.english: 'Profile',
+      AppLanguage.korean: '프로필',
+      AppLanguage.japanese: 'プロフィール',
+    };
+    return titles[language] ?? titles[AppLanguage.korean]!;
   }
 }

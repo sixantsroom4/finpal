@@ -1,3 +1,5 @@
+import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
+import 'package:finpal/core/constants/app_languages.dart';
 import 'package:finpal/presentation/bloc/expense/expense_bloc.dart';
 import 'package:finpal/presentation/bloc/expense/expense_state.dart';
 import 'package:finpal/presentation/pages/expense/widget/budget_settings_page.dart';
@@ -30,16 +32,16 @@ class MonthlySummaryCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    '이번 달 지출',
-                    style: TextStyle(
+                  Text(
+                    _getLocalizedTitle(context),
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '${state.totalAmount.toStringAsFixed(0)}원',
+                    _getLocalizedAmount(context, state.totalAmount),
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -55,7 +57,7 @@ class MonthlySummaryCard extends StatelessWidget {
                         ),
                       );
                     },
-                    child: const Text('월 예산을 설정해주세요'),
+                    child: Text(_getLocalizedSetBudgetButton(context)),
                   ),
                 ],
               ),
@@ -73,16 +75,16 @@ class MonthlySummaryCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  '이번 달 지출',
-                  style: TextStyle(
+                Text(
+                  _getLocalizedTitle(context),
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '${state.totalAmount.toStringAsFixed(0)}원',
+                  _getLocalizedAmount(context, state.totalAmount),
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -100,7 +102,7 @@ class MonthlySummaryCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '월 예산까지 ${remainingBudget.toStringAsFixed(0)}원 남았습니다',
+                  _getLocalizedRemainingBudget(context, remainingBudget),
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 14,
@@ -112,5 +114,51 @@ class MonthlySummaryCard extends StatelessWidget {
         );
       },
     );
+  }
+
+  String _getLocalizedTitle(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    const Map<AppLanguage, String> titles = {
+      AppLanguage.english: 'This Month\'s Expenses',
+      AppLanguage.korean: '이번 달 지출',
+      AppLanguage.japanese: '今月の支出',
+    };
+    return titles[language] ?? titles[AppLanguage.korean]!;
+  }
+
+  String _getLocalizedAmount(BuildContext context, double amount) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    final formattedAmount = amount.toStringAsFixed(0);
+    switch (language) {
+      case AppLanguage.english:
+        return '\$$formattedAmount';
+      case AppLanguage.japanese:
+        return '¥$formattedAmount';
+      case AppLanguage.korean:
+      default:
+        return '${formattedAmount}원';
+    }
+  }
+
+  String _getLocalizedSetBudgetButton(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    const Map<AppLanguage, String> buttons = {
+      AppLanguage.english: 'Set Monthly Budget',
+      AppLanguage.korean: '월 예산을 설정해주세요',
+      AppLanguage.japanese: '月予算を設定してください',
+    };
+    return buttons[language] ?? buttons[AppLanguage.korean]!;
+  }
+
+  String _getLocalizedRemainingBudget(BuildContext context, double remaining) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    final formattedRemaining = remaining.toStringAsFixed(0);
+    final Map<AppLanguage, String Function(String)> messages = {
+      AppLanguage.english: (amount) => '\$$amount remaining in budget',
+      AppLanguage.korean: (amount) => '월 예산까지 ${amount}원 남았습니다',
+      AppLanguage.japanese: (amount) => '月予算まで¥$amount残っています',
+    };
+    return messages[language]?.call(formattedRemaining) ??
+        messages[AppLanguage.korean]!.call(formattedRemaining);
   }
 }

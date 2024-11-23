@@ -1,6 +1,8 @@
 // lib/core/routes/app_router.dart
 import 'dart:async';
 
+import 'package:finpal/core/constants/app_languages.dart';
+import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/presentation/pages/expense/widget/budget_settings_page.dart';
 import 'package:finpal/presentation/pages/onboarding/terms_page.dart';
 import 'package:finpal/presentation/pages/receipt/receipt_details_page.dart';
@@ -152,6 +154,38 @@ class ScaffoldWithNavigationBar extends StatelessWidget {
     required this.child,
   });
 
+  String _getLocalizedLabel(BuildContext context, String key) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    final Map<String, Map<AppLanguage, String>> labels = {
+      'home': {
+        AppLanguage.english: 'Home',
+        AppLanguage.korean: '홈',
+        AppLanguage.japanese: 'ホーム',
+      },
+      'expenses': {
+        AppLanguage.english: 'Expenses',
+        AppLanguage.korean: '지출',
+        AppLanguage.japanese: '支出',
+      },
+      'receipts': {
+        AppLanguage.english: 'Receipts',
+        AppLanguage.korean: '영수증',
+        AppLanguage.japanese: 'レシート',
+      },
+      'subscriptions': {
+        AppLanguage.english: 'Subscriptions',
+        AppLanguage.korean: '구독',
+        AppLanguage.japanese: 'サブスク',
+      },
+      'profile': {
+        AppLanguage.english: 'Profile',
+        AppLanguage.korean: '프로필',
+        AppLanguage.japanese: 'プロフィール',
+      },
+    };
+    return labels[key]?[language] ?? labels[key]?[AppLanguage.korean] ?? key;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -177,31 +211,31 @@ class ScaffoldWithNavigationBar extends StatelessWidget {
           }
         },
         selectedIndex: _calculateSelectedIndex(context),
-        destinations: const [
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
-            label: '홈',
+            icon: const Icon(Icons.home_outlined),
+            selectedIcon: const Icon(Icons.home),
+            label: _getLocalizedLabel(context, 'home'),
           ),
           NavigationDestination(
-            icon: Icon(Icons.receipt_long_outlined),
-            selectedIcon: Icon(Icons.receipt_long),
-            label: '지출',
+            icon: const Icon(Icons.receipt_long_outlined),
+            selectedIcon: const Icon(Icons.receipt_long),
+            label: _getLocalizedLabel(context, 'expenses'),
           ),
           NavigationDestination(
-            icon: Icon(Icons.document_scanner_outlined),
-            selectedIcon: Icon(Icons.document_scanner),
-            label: '영수증',
+            icon: const Icon(Icons.document_scanner_outlined),
+            selectedIcon: const Icon(Icons.document_scanner),
+            label: _getLocalizedLabel(context, 'receipts'),
           ),
           NavigationDestination(
-            icon: Icon(Icons.subscriptions_outlined),
-            selectedIcon: Icon(Icons.subscriptions),
-            label: '구독',
+            icon: const Icon(Icons.subscriptions_outlined),
+            selectedIcon: const Icon(Icons.subscriptions),
+            label: _getLocalizedLabel(context, 'subscriptions'),
           ),
           NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: '프로필',
+            icon: const Icon(Icons.person_outline),
+            selectedIcon: const Icon(Icons.person),
+            label: _getLocalizedLabel(context, 'profile'),
           ),
         ],
       ),

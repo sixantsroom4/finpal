@@ -1,4 +1,6 @@
 // lib/presentation/pages/home/home_page.dart
+import 'package:finpal/core/constants/app_languages.dart';
+import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/presentation/bloc/auth/auth_event.dart';
 import 'package:finpal/presentation/bloc/auth/auth_state.dart';
 import 'package:finpal/presentation/pages/home/widgets/expense_charts_view.dart';
@@ -58,18 +60,17 @@ class _HomePageState extends State<HomePage> {
       body: BlocBuilder<AuthBloc, AuthState>(
         builder: (context, state) {
           if (state is! Authenticated) {
-            // 로그인되지 않은 상태
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('로그인이 필요합니다'),
+                  Text(_getLocalizedLoginMessage(context)),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () {
                       context.read<AuthBloc>().add(AuthGoogleSignInRequested());
                     },
-                    child: const Text('Google로 로그인'),
+                    child: Text(_getLocalizedGoogleSignIn(context)),
                   ),
                 ],
               ),
@@ -86,7 +87,7 @@ class _HomePageState extends State<HomePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '안녕하세요, ${state.user.displayName}님',
+                      _getLocalizedGreeting(context, state.user.displayName),
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 24),
@@ -105,5 +106,45 @@ class _HomePageState extends State<HomePage> {
         },
       ),
     );
+  }
+
+  String _getLocalizedLoginMessage(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    const Map<AppLanguage, String> messages = {
+      AppLanguage.english: 'Login Required',
+      AppLanguage.korean: '로그인이 필요합니다',
+      AppLanguage.japanese: 'ログインが必要です',
+    };
+    return messages[language] ?? messages[AppLanguage.korean]!;
+  }
+
+  String _getLocalizedGoogleSignIn(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    const Map<AppLanguage, String> buttons = {
+      AppLanguage.english: 'Sign in with Google',
+      AppLanguage.korean: 'Google로 로그인',
+      AppLanguage.japanese: 'Googleでログイン',
+    };
+    return buttons[language] ?? buttons[AppLanguage.korean]!;
+  }
+
+  String _getLocalizedGreeting(BuildContext context, String name) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    const Map<AppLanguage, String> greetings = {
+      AppLanguage.english: 'Hello, ',
+      AppLanguage.korean: '안녕하세요, ',
+      AppLanguage.japanese: 'こんにちは、',
+    };
+
+    const Map<AppLanguage, String> honorifics = {
+      AppLanguage.english: '',
+      AppLanguage.korean: '님',
+      AppLanguage.japanese: 'さん',
+    };
+
+    final greeting = greetings[language] ?? greetings[AppLanguage.korean]!;
+    final honorific = honorifics[language] ?? honorifics[AppLanguage.korean]!;
+
+    return '$greeting$name$honorific';
   }
 }

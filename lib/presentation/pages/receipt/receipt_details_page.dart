@@ -16,6 +16,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:finpal/presentation/bloc/expense/expense_bloc.dart';
 import 'package:finpal/presentation/bloc/expense/expense_event.dart';
 import 'package:finpal/presentation/bloc/expense/expense_state.dart';
+import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
+import 'package:finpal/core/constants/app_languages.dart';
 
 class ReceiptDetailsPage extends StatelessWidget {
   final String receiptId;
@@ -25,6 +27,115 @@ class ReceiptDetailsPage extends StatelessWidget {
     Key? key,
     required this.receiptId,
   }) : super(key: key);
+
+  String _getLocalizedLabel(BuildContext context, String key) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    final Map<String, Map<AppLanguage, String>> labels = {
+      'receipt_not_found': {
+        AppLanguage.english: 'Receipt Not Found',
+        AppLanguage.korean: '영수증을 찾을 수 없습니다',
+        AppLanguage.japanese: 'レシートが見つかりません',
+      },
+      'receipt_not_found_desc': {
+        AppLanguage.english: 'The receipt has been deleted or does not exist',
+        AppLanguage.korean: '해당 영수증이 삭제되었거나 존재하지 않습니다',
+        AppLanguage.japanese: 'レシートが削除されたか存在しません',
+      },
+      'back_to_expenses': {
+        AppLanguage.english: 'Back to Expenses',
+        AppLanguage.korean: '지출 목록으로 돌아가기',
+        AppLanguage.japanese: '支出一覧に戻る',
+      },
+      'loading': {
+        AppLanguage.english: 'Loading...',
+        AppLanguage.korean: '로딩 중...',
+        AppLanguage.japanese: '読み込み中...',
+      },
+      'purchase_info': {
+        AppLanguage.english: 'Purchase Information',
+        AppLanguage.korean: '구매 정보',
+        AppLanguage.japanese: '購入情報',
+      },
+      'store': {
+        AppLanguage.english: 'Store',
+        AppLanguage.korean: '상점',
+        AppLanguage.japanese: '店舗',
+      },
+      'date': {
+        AppLanguage.english: 'Date',
+        AppLanguage.korean: '날짜',
+        AppLanguage.japanese: '日付',
+      },
+      'total': {
+        AppLanguage.english: 'Total',
+        AppLanguage.korean: '총액',
+        AppLanguage.japanese: '合計',
+      },
+      'items': {
+        AppLanguage.english: 'Items',
+        AppLanguage.korean: '구매 항목',
+        AppLanguage.japanese: '購入項目',
+      },
+      'edit': {
+        AppLanguage.english: 'Edit',
+        AppLanguage.korean: '수정',
+        AppLanguage.japanese: '編集',
+      },
+      'delete': {
+        AppLanguage.english: 'Delete',
+        AppLanguage.korean: '삭제',
+        AppLanguage.japanese: '削除',
+      },
+      'create_expense': {
+        AppLanguage.english: 'Create Expense',
+        AppLanguage.korean: '지출 내역 생성',
+        AppLanguage.japanese: '支出を作成',
+      },
+      'delete_receipt': {
+        AppLanguage.english: 'Delete Receipt',
+        AppLanguage.korean: '영수증 삭제',
+        AppLanguage.japanese: 'レシートを削除',
+      },
+      'delete_confirm': {
+        AppLanguage.english:
+            'Are you sure you want to delete this receipt?\nDeleted receipts cannot be recovered.',
+        AppLanguage.korean: '이 영수증을 삭제하시겠습니까?\n삭제된 영수증은 복구할 수 없습니다.',
+        AppLanguage.japanese: 'このレシートを削除してもよろしいですか？\n削除されたレシートは復元できません。',
+      },
+      'cancel': {
+        AppLanguage.english: 'Cancel',
+        AppLanguage.korean: '취소',
+        AppLanguage.japanese: 'キャンセル',
+      },
+    };
+    return labels[key]?[language] ?? labels[key]?[AppLanguage.korean] ?? key;
+  }
+
+  String _getLocalizedDate(BuildContext context, DateTime date) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    switch (language) {
+      case AppLanguage.english:
+        return DateFormat('MMM d, yyyy').format(date);
+      case AppLanguage.japanese:
+        return DateFormat('yyyy年 M月 d日').format(date);
+      case AppLanguage.korean:
+      default:
+        return DateFormat('yyyy년 M월 d일').format(date);
+    }
+  }
+
+  String _getLocalizedAmount(BuildContext context, double amount) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    switch (language) {
+      case AppLanguage.english:
+        return '\$${_numberFormat.format(amount)}';
+      case AppLanguage.japanese:
+        return '¥${_numberFormat.format(amount)}';
+      case AppLanguage.korean:
+      default:
+        return '${_numberFormat.format(amount)}원';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,12 +166,12 @@ class ReceiptDetailsPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    '영수증을 찾을 수 없습니다',
+                    _getLocalizedLabel(context, 'receipt_not_found'),
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '해당 영수증이 삭제되었거나 존재하지 않습니다',
+                    _getLocalizedLabel(context, 'receipt_not_found_desc'),
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Colors.grey,
                         ),
@@ -68,7 +179,8 @@ class ReceiptDetailsPage extends StatelessWidget {
                   const SizedBox(height: 24),
                   ElevatedButton(
                     onPressed: () => context.go('/expenses'),
-                    child: const Text('지출 목록으로 돌아가기'),
+                    child:
+                        Text(_getLocalizedLabel(context, 'back_to_expenses')),
                   ),
                 ],
               ),
@@ -90,7 +202,7 @@ class ReceiptDetailsPage extends StatelessWidget {
             return ReceiptModel(
               id: receiptId,
               userId: '',
-              merchantName: '로딩 중...',
+              merchantName: _getLocalizedLabel(context, 'loading'),
               date: DateTime.now(),
               totalAmount: 0,
               imageUrl: '',
@@ -99,7 +211,7 @@ class ReceiptDetailsPage extends StatelessWidget {
           },
         );
 
-        if (receipt.merchantName == '로딩 중...') {
+        if (receipt.merchantName == _getLocalizedLabel(context, 'loading')) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
@@ -168,19 +280,20 @@ class ReceiptDetailsPage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '구매 정보',
+                          _getLocalizedLabel(context, 'purchase_info'),
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                         const Divider(height: 32),
-                        _buildInfoRow('상점', receipt.merchantName),
-                        _buildInfoRow('날짜',
-                            DateFormat('yyyy년 M월 d일').format(receipt.date)),
-                        _buildInfoRow('총액',
-                            '${_numberFormat.format(receipt.totalAmount)}원'),
+                        _buildInfoRow(_getLocalizedLabel(context, 'store'),
+                            receipt.merchantName),
+                        _buildInfoRow(_getLocalizedLabel(context, 'date'),
+                            _getLocalizedDate(context, receipt.date)),
+                        _buildInfoRow(_getLocalizedLabel(context, 'total'),
+                            _getLocalizedAmount(context, receipt.totalAmount)),
                         if (receipt.items.isNotEmpty) ...[
                           const Divider(height: 32),
                           Text(
-                            '구매 항목',
+                            _getLocalizedLabel(context, 'items'),
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
                           const SizedBox(height: 16),
@@ -281,12 +394,12 @@ class ReceiptDetailsPage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('영수증 삭제'),
-        content: const Text('이 영수증을 삭제하시겠습니까?\n삭제된 영수증은 복구할 수 없습니다.'),
+        title: Text(_getLocalizedLabel(context, 'delete_receipt')),
+        content: Text(_getLocalizedLabel(context, 'delete_confirm')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+            child: Text(_getLocalizedLabel(context, 'cancel')),
           ),
           TextButton(
             onPressed: () {
@@ -303,8 +416,8 @@ class ReceiptDetailsPage extends StatelessWidget {
               Navigator.pop(context); // 다이얼로그 닫기
               context.go('/receipts'); // 목록 페이지로 이동
             },
-            child: const Text(
-              '삭제',
+            child: Text(
+              _getLocalizedLabel(context, 'delete'),
               style: TextStyle(color: Colors.red),
             ),
           ),

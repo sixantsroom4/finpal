@@ -5,9 +5,52 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../bloc/subscription/subscription_bloc.dart';
 import '../../../../domain/entities/subscription.dart';
+import '../../../bloc/app_language/app_language_bloc.dart';
+import '../../../../core/constants/app_languages.dart';
 
 class UpcomingSubscriptionsCard extends StatelessWidget {
   const UpcomingSubscriptionsCard({super.key});
+
+  String _getLocalizedLabel(BuildContext context, String key) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    final Map<String, Map<AppLanguage, String>> labels = {
+      'upcoming_payments': {
+        AppLanguage.english: 'Upcoming Payments',
+        AppLanguage.korean: '다가오는 결제',
+        AppLanguage.japanese: '今後の支払い',
+      },
+      'payment_today': {
+        AppLanguage.english: 'Payment due today',
+        AppLanguage.korean: '오늘 결제 예정',
+        AppLanguage.japanese: '本日支払い予定',
+      },
+      'monthly_total': {
+        AppLanguage.english: 'Monthly',
+        AppLanguage.korean: '월',
+        AppLanguage.japanese: '月額',
+      },
+      'no_upcoming_payments': {
+        AppLanguage.english: 'No upcoming payments this month',
+        AppLanguage.korean: '이번 달 예정된 결제가 없습니다.',
+        AppLanguage.japanese: '今月の予定された支払いはありません',
+      },
+    };
+    return labels[key]?[language] ?? labels[key]?[AppLanguage.korean] ?? key;
+  }
+
+  String _getLocalizedAmount(BuildContext context, double amount) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    final formattedAmount = NumberFormat('#,###').format(amount);
+    switch (language) {
+      case AppLanguage.english:
+        return '\$$formattedAmount';
+      case AppLanguage.japanese:
+        return '¥$formattedAmount';
+      case AppLanguage.korean:
+      default:
+        return '${formattedAmount}원';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,15 +79,15 @@ class UpcomingSubscriptionsCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        '다가오는 결제',
-                        style: TextStyle(
+                      Text(
+                        _getLocalizedLabel(context, 'upcoming_payments'),
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
                       Text(
-                        '월 ${NumberFormat('#,###').format(state.monthlyTotal)}원',
+                        _getLocalizedAmount(context, state.monthlyTotal),
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -54,10 +97,10 @@ class UpcomingSubscriptionsCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  const Center(
+                  Center(
                     child: Text(
-                      '이번 달 예정된 결제가 없습니다.',
-                      style: TextStyle(
+                      _getLocalizedLabel(context, 'no_upcoming_payments'),
+                      style: const TextStyle(
                         color: Colors.grey,
                         fontSize: 14,
                       ),
@@ -79,15 +122,15 @@ class UpcomingSubscriptionsCard extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      '다가오는 결제',
-                      style: TextStyle(
+                    Text(
+                      _getLocalizedLabel(context, 'upcoming_payments'),
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                     Text(
-                      '월 ${NumberFormat('#,###').format(state.monthlyTotal)}원',
+                      _getLocalizedAmount(context, state.monthlyTotal),
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,

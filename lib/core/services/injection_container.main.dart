@@ -66,6 +66,7 @@ Future<void> initMain() async {
 
   sl.registerFactory(() => ExpenseBloc(
         expenseRepository: sl(),
+        appLanguageBloc: sl(),
       ));
 
   sl.registerFactory(() => SubscriptionBloc(

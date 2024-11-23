@@ -8,6 +8,8 @@ import '../../../bloc/expense/expense_event.dart';
 import '../../../bloc/receipt/receipt_bloc.dart';
 import '../../../bloc/receipt/receipt_event.dart';
 import '../../../../core/utils/constants.dart';
+import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
+import 'package:finpal/core/constants/app_languages.dart';
 
 class CreateExpenseFromReceipt extends StatefulWidget {
   final Receipt receipt;
@@ -52,14 +54,14 @@ class _CreateExpenseFromReceiptState extends State<CreateExpenseFromReceipt> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            '지출 내역 생성',
+            _getLocalizedLabel(context, 'create_expense'),
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 16),
           TextField(
             controller: _descriptionController,
             decoration: const InputDecoration(
-              labelText: '내용',
+              labelText: 'description',
               border: OutlineInputBorder(),
             ),
           ),
@@ -67,7 +69,7 @@ class _CreateExpenseFromReceiptState extends State<CreateExpenseFromReceipt> {
           DropdownButtonFormField<String>(
             value: _selectedCategory,
             decoration: const InputDecoration(
-              labelText: '카테고리',
+              labelText: 'category',
               border: OutlineInputBorder(),
             ),
             items: CategoryConstants.getAll().map((category) {
@@ -88,14 +90,14 @@ class _CreateExpenseFromReceiptState extends State<CreateExpenseFromReceipt> {
               Expanded(
                 child: OutlinedButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('취소'),
+                  child: const Text('cancel'),
                 ),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: ElevatedButton(
                   onPressed: _createExpense,
-                  child: const Text('생성'),
+                  child: const Text('create'),
                 ),
               ),
             ],
@@ -127,7 +129,44 @@ class _CreateExpenseFromReceiptState extends State<CreateExpenseFromReceipt> {
     Navigator.pop(context);
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('지출 내역이 생성되었습니다.')),
+      const SnackBar(content: Text('expense_created')),
     );
+  }
+
+  String _getLocalizedLabel(BuildContext context, String key) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    final Map<String, Map<AppLanguage, String>> labels = {
+      'create_expense': {
+        AppLanguage.english: 'Create Expense',
+        AppLanguage.korean: '지출 내역 생성',
+        AppLanguage.japanese: '支出を作成',
+      },
+      'description': {
+        AppLanguage.english: 'Description',
+        AppLanguage.korean: '내용',
+        AppLanguage.japanese: '内容',
+      },
+      'category': {
+        AppLanguage.english: 'Category',
+        AppLanguage.korean: '카테고리',
+        AppLanguage.japanese: 'カテゴリー',
+      },
+      'cancel': {
+        AppLanguage.english: 'Cancel',
+        AppLanguage.korean: '취소',
+        AppLanguage.japanese: 'キャンセル',
+      },
+      'create': {
+        AppLanguage.english: 'Create',
+        AppLanguage.korean: '생성',
+        AppLanguage.japanese: '作成',
+      },
+      'expense_created': {
+        AppLanguage.english: 'Expense has been created.',
+        AppLanguage.korean: '지출 내역이 생성되었습니다.',
+        AppLanguage.japanese: '支出が作成されました。',
+      },
+    };
+    return labels[key]?[language] ?? labels[key]?[AppLanguage.korean] ?? key;
   }
 }

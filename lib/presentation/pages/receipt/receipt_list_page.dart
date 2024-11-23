@@ -8,6 +8,8 @@ import 'package:finpal/presentation/bloc/receipt/receipt_state.dart';
 import 'package:finpal/presentation/pages/receipt/receipt_list_item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
+import 'package:finpal/core/constants/app_languages.dart';
 
 class ReceiptListPage extends StatefulWidget {
   @override
@@ -40,24 +42,25 @@ class _ReceiptListPageState extends State<ReceiptListPage> {
     return BlocBuilder<ReceiptBloc, ReceiptState>(
       builder: (context, state) {
         if (state is ReceiptScanInProgress) {
-          return const Center(
+          return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                CircularProgressIndicator(),
-                SizedBox(height: 16),
-                Text('영수증 분석 중...'),
+                const CircularProgressIndicator(),
+                const SizedBox(height: 16),
+                Text(_getLocalizedLabel(context, 'analyzing')),
               ],
             ),
           );
         } else if (state is ReceiptAnalysisSuccess) {
           return SnackBar(
-            content: Text('영수증 분석이 완료되었습니다.'),
+            content: Text(_getLocalizedLabel(context, 'analysis_complete')),
             backgroundColor: Colors.green,
           );
         } else if (state is ReceiptError) {
           return SnackBar(
-            content: Text(state.message ?? '영수증 처리 중 오류가 발생했습니다.'),
+            content:
+                Text(state.message ?? _getLocalizedLabel(context, 'error')),
             backgroundColor: Colors.red,
           );
         }
@@ -95,12 +98,12 @@ class _ReceiptListPageState extends State<ReceiptListPage> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            '저장된 영수증이 없습니다',
+            _getLocalizedLabel(context, 'empty_title'),
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 16),
           Text(
-            '영수증을 스캔하여 자동으로 지출을 기록해보세요',
+            _getLocalizedLabel(context, 'empty_subtitle'),
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Colors.grey,
                 ),
@@ -108,5 +111,37 @@ class _ReceiptListPageState extends State<ReceiptListPage> {
         ],
       ),
     );
+  }
+
+  String _getLocalizedLabel(BuildContext context, String key) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    final Map<String, Map<AppLanguage, String>> labels = {
+      'analyzing': {
+        AppLanguage.english: 'Analyzing receipt...',
+        AppLanguage.korean: '영수증 분석 중...',
+        AppLanguage.japanese: 'レシートを分析中...',
+      },
+      'analysis_complete': {
+        AppLanguage.english: 'Receipt analysis completed.',
+        AppLanguage.korean: '영수증 분석이 완료되었습니다.',
+        AppLanguage.japanese: 'レシートの分析が完了しました。',
+      },
+      'error': {
+        AppLanguage.english: 'An error occurred while processing the receipt.',
+        AppLanguage.korean: '영수증 처리 중 오류가 발생했습니다.',
+        AppLanguage.japanese: 'レシートの処理中にエラーが発生しました。',
+      },
+      'empty_title': {
+        AppLanguage.english: 'No Saved Receipts',
+        AppLanguage.korean: '저장된 영수증이 없습니다',
+        AppLanguage.japanese: '保存されたレシートがありません',
+      },
+      'empty_subtitle': {
+        AppLanguage.english: 'Scan receipts to record expenses automatically',
+        AppLanguage.korean: '영수증을 스캔하여 자동으로 지출을 기록해보세요',
+        AppLanguage.japanese: 'レシートをスキャンして自動的に支出を記録しましょう',
+      },
+    };
+    return labels[key]?[language] ?? labels[key]?[AppLanguage.korean] ?? key;
   }
 }

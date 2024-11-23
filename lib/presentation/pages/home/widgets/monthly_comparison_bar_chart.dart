@@ -1,3 +1,5 @@
+import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
+import 'package:finpal/core/constants/app_languages.dart';
 import 'package:finpal/presentation/bloc/expense/expense_state.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -24,9 +26,9 @@ class MonthlyComparisonBarChart extends StatelessWidget {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              const Text(
-                '카테고리별 지출 비교',
-                style: TextStyle(
+              Text(
+                _getLocalizedTitle(context),
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
@@ -50,7 +52,8 @@ class MonthlyComparisonBarChart extends StatelessWidget {
                             return Padding(
                               padding: const EdgeInsets.only(top: 8.0),
                               child: Text(
-                                categories[value.toInt()],
+                                _getLocalizedCategory(
+                                    context, categories[value.toInt()]),
                                 style: const TextStyle(fontSize: 10),
                               ),
                             );
@@ -63,7 +66,7 @@ class MonthlyComparisonBarChart extends StatelessWidget {
                           reservedSize: 40,
                           getTitlesWidget: (value, meta) {
                             return Text(
-                              NumberFormat('#,###').format(value),
+                              _getLocalizedAmount(context, value),
                               style: const TextStyle(fontSize: 10),
                             );
                           },
@@ -92,12 +95,12 @@ class MonthlyComparisonBarChart extends StatelessWidget {
                 children: [
                   _LegendItem(
                     color: Colors.blue,
-                    label: '이번 달',
+                    label: _getLocalizedCurrentMonth(context),
                   ),
                   const SizedBox(width: 16),
                   _LegendItem(
                     color: Colors.grey,
-                    label: '지난 달',
+                    label: _getLocalizedPreviousMonth(context),
                   ),
                 ],
               ),
@@ -106,6 +109,82 @@ class MonthlyComparisonBarChart extends StatelessWidget {
         );
       },
     );
+  }
+
+  String _getLocalizedTitle(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    const Map<AppLanguage, String> titles = {
+      AppLanguage.english: 'Expense Comparison by Category',
+      AppLanguage.korean: '카테고리별 지출 비교',
+      AppLanguage.japanese: 'カテゴリー別支出比較',
+    };
+    return titles[language] ?? titles[AppLanguage.korean]!;
+  }
+
+  String _getLocalizedCategory(BuildContext context, String category) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    final Map<String, Map<AppLanguage, String>> categories = {
+      'food': {
+        AppLanguage.english: 'Food',
+        AppLanguage.korean: '식비',
+        AppLanguage.japanese: '食費',
+      },
+      'transportation': {
+        AppLanguage.english: 'Transport',
+        AppLanguage.korean: '교통',
+        AppLanguage.japanese: '交通',
+      },
+      'shopping': {
+        AppLanguage.english: 'Shopping',
+        AppLanguage.korean: '쇼핑',
+        AppLanguage.japanese: '買物',
+      },
+      'entertainment': {
+        AppLanguage.english: 'Entertainment',
+        AppLanguage.korean: '여가',
+        AppLanguage.japanese: '娯楽',
+      },
+      'health': {
+        AppLanguage.english: 'Health',
+        AppLanguage.korean: '의료',
+        AppLanguage.japanese: '医療',
+      },
+    };
+    return categories[category]?[language] ?? category;
+  }
+
+  String _getLocalizedAmount(BuildContext context, double amount) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    final formattedAmount = NumberFormat('#,###').format(amount);
+    switch (language) {
+      case AppLanguage.english:
+        return '\$$formattedAmount';
+      case AppLanguage.japanese:
+        return '¥$formattedAmount';
+      case AppLanguage.korean:
+      default:
+        return '${formattedAmount}원';
+    }
+  }
+
+  String _getLocalizedCurrentMonth(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    const Map<AppLanguage, String> labels = {
+      AppLanguage.english: 'This Month',
+      AppLanguage.korean: '이번 달',
+      AppLanguage.japanese: '今月',
+    };
+    return labels[language] ?? labels[AppLanguage.korean]!;
+  }
+
+  String _getLocalizedPreviousMonth(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    const Map<AppLanguage, String> labels = {
+      AppLanguage.english: 'Last Month',
+      AppLanguage.korean: '지난 달',
+      AppLanguage.japanese: '先月',
+    };
+    return labels[language] ?? labels[AppLanguage.korean]!;
   }
 
   double _getMaxValue(

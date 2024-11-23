@@ -5,6 +5,8 @@ import '../../../../domain/entities/receipt.dart';
 import '../../../bloc/receipt/receipt_bloc.dart';
 import '../../../bloc/receipt/receipt_event.dart';
 import '../../../bloc/receipt/receipt_state.dart';
+import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
+import 'package:finpal/core/constants/app_languages.dart';
 
 class EditReceiptBottomSheet extends StatefulWidget {
   final Receipt receipt;
@@ -42,6 +44,58 @@ class _EditReceiptBottomSheetState extends State<EditReceiptBottomSheet> {
     super.dispose();
   }
 
+  String _getLocalizedLabel(BuildContext context, String key) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    final Map<String, Map<AppLanguage, String>> labels = {
+      'edit_receipt': {
+        AppLanguage.english: 'Edit Receipt',
+        AppLanguage.korean: '영수증 수정',
+        AppLanguage.japanese: 'レシートを編集',
+      },
+      'store_name': {
+        AppLanguage.english: 'Store Name',
+        AppLanguage.korean: '상점명',
+        AppLanguage.japanese: '店舗名',
+      },
+      'store_name_required': {
+        AppLanguage.english: 'Please enter store name',
+        AppLanguage.korean: '상점명을 입력해주세요',
+        AppLanguage.japanese: '店舗名を入力してください',
+      },
+      'total': {
+        AppLanguage.english: 'Total',
+        AppLanguage.korean: '총액',
+        AppLanguage.japanese: '合計',
+      },
+      'total_required': {
+        AppLanguage.english: 'Please enter total amount',
+        AppLanguage.korean: '총액을 입력해주세요',
+        AppLanguage.japanese: '合計金額を入力してください',
+      },
+      'date': {
+        AppLanguage.english: 'Date',
+        AppLanguage.korean: '날짜',
+        AppLanguage.japanese: '日付',
+      },
+      'save': {
+        AppLanguage.english: 'Save',
+        AppLanguage.korean: '저장',
+        AppLanguage.japanese: '保存',
+      },
+    };
+    return labels[key]?[language] ?? labels[key]?[AppLanguage.korean] ?? key;
+  }
+
+  String _getLocalizedCurrency(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    const Map<AppLanguage, String> currencies = {
+      AppLanguage.english: '\$',
+      AppLanguage.korean: '원',
+      AppLanguage.japanese: '¥',
+    };
+    return currencies[language] ?? currencies[AppLanguage.korean]!;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -61,7 +115,7 @@ class _EditReceiptBottomSheetState extends State<EditReceiptBottomSheet> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '영수증 수정',
+                  _getLocalizedLabel(context, 'edit_receipt'),
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 IconButton(
@@ -73,13 +127,13 @@ class _EditReceiptBottomSheetState extends State<EditReceiptBottomSheet> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _merchantNameController,
-              decoration: const InputDecoration(
-                labelText: '상점명',
+              decoration: InputDecoration(
+                labelText: _getLocalizedLabel(context, 'store_name'),
                 border: OutlineInputBorder(),
               ),
               validator: (value) {
                 if (value?.isEmpty ?? true) {
-                  return '상점명을 입력해주세요';
+                  return _getLocalizedLabel(context, 'store_name_required');
                 }
                 return null;
               },
@@ -87,22 +141,22 @@ class _EditReceiptBottomSheetState extends State<EditReceiptBottomSheet> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _totalAmountController,
-              decoration: const InputDecoration(
-                labelText: '총액',
+              decoration: InputDecoration(
+                labelText: _getLocalizedLabel(context, 'total'),
                 border: OutlineInputBorder(),
-                suffix: Text('원'),
+                suffix: Text(_getLocalizedCurrency(context)),
               ),
               keyboardType: TextInputType.number,
               validator: (value) {
                 if (value?.isEmpty ?? true) {
-                  return '총액을 입력해주세요';
+                  return _getLocalizedLabel(context, 'total_required');
                 }
                 return null;
               },
             ),
             const SizedBox(height: 16),
             ListTile(
-              title: const Text('날짜'),
+              title: Text(_getLocalizedLabel(context, 'date')),
               subtitle: Text(_selectedDate.toString().split(' ')[0]),
               trailing: const Icon(Icons.calendar_today),
               onTap: () async {
@@ -122,7 +176,7 @@ class _EditReceiptBottomSheetState extends State<EditReceiptBottomSheet> {
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: _submit,
-              child: const Text('저장'),
+              child: Text(_getLocalizedLabel(context, 'save')),
             ),
             const SizedBox(height: 16),
           ],

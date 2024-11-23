@@ -3,6 +3,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:finpal/domain/entities/receipt.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
+import 'package:finpal/core/constants/app_languages.dart';
 
 class ReceiptGridItem extends StatelessWidget {
   final Receipt receipt;
@@ -23,7 +26,6 @@ class ReceiptGridItem extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 영수증 이미지
             Expanded(
               child: CachedNetworkImage(
                 imageUrl: receipt.imageUrl,
@@ -37,7 +39,6 @@ class ReceiptGridItem extends StatelessWidget {
                 ),
               ),
             ),
-            // 정보 섹션
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Column(
@@ -51,12 +52,12 @@ class ReceiptGridItem extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    DateFormat('M월 d일').format(receipt.date),
+                    _getLocalizedDate(context, receipt.date),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${NumberFormat('#,###').format(receipt.totalAmount)}원',
+                    _getLocalizedAmount(context, receipt.totalAmount),
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -68,5 +69,32 @@ class ReceiptGridItem extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _getLocalizedDate(BuildContext context, DateTime date) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    switch (language) {
+      case AppLanguage.english:
+        return DateFormat('MMM d').format(date);
+      case AppLanguage.japanese:
+        return DateFormat('M月d日').format(date);
+      case AppLanguage.korean:
+      default:
+        return DateFormat('M월 d일').format(date);
+    }
+  }
+
+  String _getLocalizedAmount(BuildContext context, double amount) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    final formatter = NumberFormat('#,###');
+    switch (language) {
+      case AppLanguage.english:
+        return '\$${formatter.format(amount)}';
+      case AppLanguage.japanese:
+        return '¥${formatter.format(amount)}';
+      case AppLanguage.korean:
+      default:
+        return '${formatter.format(amount)}원';
+    }
   }
 }

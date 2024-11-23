@@ -7,6 +7,8 @@ import 'package:uuid/uuid.dart';
 import '../../../../domain/entities/subscription.dart';
 import '../../../bloc/subscription/subscription_bloc.dart';
 import '../../../bloc/auth/auth_bloc.dart';
+import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
+import 'package:finpal/core/constants/app_languages.dart';
 
 class AddSubscriptionBottomSheet extends StatefulWidget {
   const AddSubscriptionBottomSheet({super.key});
@@ -32,6 +34,151 @@ class _AddSubscriptionBottomSheetState
     super.dispose();
   }
 
+  String _getLocalizedLabel(BuildContext context, String key) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    final Map<String, Map<AppLanguage, String>> labels = {
+      'add_subscription': {
+        AppLanguage.english: 'Add Subscription',
+        AppLanguage.korean: '구독 추가',
+        AppLanguage.japanese: 'サブスク追加',
+      },
+      'service_name': {
+        AppLanguage.english: 'Service Name',
+        AppLanguage.korean: '서비스명',
+        AppLanguage.japanese: 'サービス名',
+      },
+      'amount': {
+        AppLanguage.english: 'Amount',
+        AppLanguage.korean: '금액',
+        AppLanguage.japanese: '金額',
+      },
+      'category': {
+        AppLanguage.english: 'Category',
+        AppLanguage.korean: '카테고리',
+        AppLanguage.japanese: 'カテゴリー',
+      },
+      'billing_cycle': {
+        AppLanguage.english: 'Billing Cycle',
+        AppLanguage.korean: '결제 주기',
+        AppLanguage.japanese: '決済周期',
+      },
+      'billing_day': {
+        AppLanguage.english: 'Billing Day',
+        AppLanguage.korean: '결제일',
+        AppLanguage.japanese: '決済日',
+      },
+      'add': {
+        AppLanguage.english: 'Add',
+        AppLanguage.korean: '추가',
+        AppLanguage.japanese: '追加',
+      },
+    };
+    return labels[key]?[language] ?? labels[key]?[AppLanguage.korean] ?? key;
+  }
+
+  String _getLocalizedError(BuildContext context, String key) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    final Map<String, Map<AppLanguage, String>> errors = {
+      'service_name_required': {
+        AppLanguage.english: 'Please enter service name',
+        AppLanguage.korean: '서비스명을 입력해주세요',
+        AppLanguage.japanese: 'サービス名を入力してください',
+      },
+      'amount_required': {
+        AppLanguage.english: 'Please enter amount',
+        AppLanguage.korean: '금액을 입력해주세요',
+        AppLanguage.japanese: '金額を入力してください',
+      },
+      'invalid_amount': {
+        AppLanguage.english: 'Please enter a valid amount',
+        AppLanguage.korean: '올바른 금액을 입력해주세요',
+        AppLanguage.japanese: '正しい金額を入力してください',
+      },
+    };
+    return errors[key]?[language] ?? errors[key]?[AppLanguage.korean] ?? key;
+  }
+
+  String _getLocalizedCurrency(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    const Map<AppLanguage, String> currencies = {
+      AppLanguage.english: '\$',
+      AppLanguage.korean: '원',
+      AppLanguage.japanese: '¥',
+    };
+    return currencies[language] ?? currencies[AppLanguage.korean]!;
+  }
+
+  String _getLocalizedCategory(BuildContext context, String category) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    final Map<String, Map<AppLanguage, String>> categories = {
+      'OTT': {
+        AppLanguage.english: 'OTT',
+        AppLanguage.korean: 'OTT',
+        AppLanguage.japanese: 'OTT',
+      },
+      'MUSIC': {
+        AppLanguage.english: 'Music',
+        AppLanguage.korean: '음악',
+        AppLanguage.japanese: '音楽',
+      },
+      'GAME': {
+        AppLanguage.english: 'Game',
+        AppLanguage.korean: '게임',
+        AppLanguage.japanese: 'ゲーム',
+      },
+      'FITNESS': {
+        AppLanguage.english: 'Fitness',
+        AppLanguage.korean: '피트니스',
+        AppLanguage.japanese: 'フィットネス',
+      },
+      'OTHER': {
+        AppLanguage.english: 'Other',
+        AppLanguage.korean: '기타',
+        AppLanguage.japanese: 'その他',
+      },
+    };
+    return categories[category]?[language] ??
+        categories[category]?[AppLanguage.korean] ??
+        category;
+  }
+
+  String _getLocalizedBillingCycle(BuildContext context, String cycle) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    final Map<String, Map<AppLanguage, String>> cycles = {
+      'monthly': {
+        AppLanguage.english: 'Monthly',
+        AppLanguage.korean: '월간',
+        AppLanguage.japanese: '月間',
+      },
+      'yearly': {
+        AppLanguage.english: 'Yearly',
+        AppLanguage.korean: '연간',
+        AppLanguage.japanese: '年間',
+      },
+      'weekly': {
+        AppLanguage.english: 'Weekly',
+        AppLanguage.korean: '주간',
+        AppLanguage.japanese: '週間',
+      },
+    };
+    return cycles[cycle.toLowerCase()]?[language] ??
+        cycles[cycle.toLowerCase()]?[AppLanguage.korean] ??
+        cycle;
+  }
+
+  String _getLocalizedDay(BuildContext context, int day) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    switch (language) {
+      case AppLanguage.english:
+        return 'Day $day';
+      case AppLanguage.japanese:
+        return '$day日';
+      case AppLanguage.korean:
+      default:
+        return '${day}일';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -51,7 +198,7 @@ class _AddSubscriptionBottomSheetState
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '구독 추가',
+                  _getLocalizedLabel(context, 'add_subscription'),
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 IconButton(
@@ -63,13 +210,13 @@ class _AddSubscriptionBottomSheetState
             const SizedBox(height: 16),
             TextFormField(
               controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: '서비스명',
+              decoration: InputDecoration(
+                labelText: _getLocalizedLabel(context, 'service_name'),
                 border: OutlineInputBorder(),
               ),
               validator: (value) {
                 if (value?.isEmpty ?? true) {
-                  return '서비스명을 입력해주세요';
+                  return _getLocalizedError(context, 'service_name_required');
                 }
                 return null;
               },
@@ -77,18 +224,18 @@ class _AddSubscriptionBottomSheetState
             const SizedBox(height: 16),
             TextFormField(
               controller: _amountController,
-              decoration: const InputDecoration(
-                labelText: '금액',
+              decoration: InputDecoration(
+                labelText: _getLocalizedLabel(context, 'amount'),
                 border: OutlineInputBorder(),
-                suffix: Text('원'),
+                suffix: Text(_getLocalizedCurrency(context)),
               ),
               keyboardType: TextInputType.number,
               validator: (value) {
                 if (value?.isEmpty ?? true) {
-                  return '금액을 입력해주세요';
+                  return _getLocalizedError(context, 'amount_required');
                 }
                 if (double.tryParse(value!.replaceAll(',', '')) == null) {
-                  return '올바른 금액을 입력해주세요';
+                  return _getLocalizedError(context, 'invalid_amount');
                 }
                 return null;
               },
@@ -96,17 +243,22 @@ class _AddSubscriptionBottomSheetState
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
               value: _selectedCategory,
-              decoration: const InputDecoration(
-                labelText: '카테고리',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: _getLocalizedLabel(context, 'category'),
+                border: const OutlineInputBorder(),
               ),
-              items: const [
-                DropdownMenuItem(value: 'OTT', child: Text('OTT')),
-                DropdownMenuItem(value: 'MUSIC', child: Text('음악')),
-                DropdownMenuItem(value: 'GAME', child: Text('게임')),
-                DropdownMenuItem(value: 'FITNESS', child: Text('피트니스')),
-                DropdownMenuItem(value: 'OTHER', child: Text('기타')),
-              ],
+              items: [
+                'OTT',
+                'MUSIC',
+                'GAME',
+                'FITNESS',
+                'OTHER',
+              ]
+                  .map((category) => DropdownMenuItem(
+                        value: category,
+                        child: Text(_getLocalizedCategory(context, category)),
+                      ))
+                  .toList(),
               onChanged: (value) {
                 setState(() {
                   _selectedCategory = value ?? 'OTT';
@@ -116,15 +268,20 @@ class _AddSubscriptionBottomSheetState
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
               value: _selectedBillingCycle,
-              decoration: const InputDecoration(
-                labelText: '결제 주기',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: _getLocalizedLabel(context, 'billing_cycle'),
+                border: const OutlineInputBorder(),
               ),
-              items: const [
-                DropdownMenuItem(value: 'monthly', child: Text('월간')),
-                DropdownMenuItem(value: 'yearly', child: Text('연간')),
-                DropdownMenuItem(value: 'weekly', child: Text('주간')),
-              ],
+              items: [
+                'monthly',
+                'yearly',
+                'weekly',
+              ]
+                  .map((cycle) => DropdownMenuItem(
+                        value: cycle,
+                        child: Text(_getLocalizedBillingCycle(context, cycle)),
+                      ))
+                  .toList(),
               onChanged: (value) {
                 setState(() {
                   _selectedBillingCycle = value ?? 'monthly';
@@ -134,15 +291,15 @@ class _AddSubscriptionBottomSheetState
             const SizedBox(height: 16),
             DropdownButtonFormField<int>(
               value: _selectedBillingDay,
-              decoration: const InputDecoration(
-                labelText: '결제일',
+              decoration: InputDecoration(
+                labelText: _getLocalizedLabel(context, 'billing_day'),
                 border: OutlineInputBorder(),
               ),
               items: List.generate(
                 28,
                 (index) => DropdownMenuItem(
                   value: index + 1,
-                  child: Text('${index + 1}일'),
+                  child: Text(_getLocalizedDay(context, index + 1)),
                 ),
               ),
               onChanged: (value) {
@@ -154,7 +311,7 @@ class _AddSubscriptionBottomSheetState
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: _submit,
-              child: const Text('추가'),
+              child: Text(_getLocalizedLabel(context, 'add')),
             ),
             const SizedBox(height: 16),
           ],

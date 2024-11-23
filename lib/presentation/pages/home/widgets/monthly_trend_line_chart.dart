@@ -1,3 +1,5 @@
+import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
+import 'package:finpal/core/constants/app_languages.dart';
 import 'package:finpal/presentation/bloc/expense/expense_state.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -23,9 +25,9 @@ class MonthlyTrendLineChart extends StatelessWidget {
 
         return Column(
           children: [
-            const Text(
-              '월별 지출 추이',
-              style: TextStyle(
+            Text(
+              _getLocalizedTitle(context),
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),
@@ -49,7 +51,7 @@ class MonthlyTrendLineChart extends StatelessWidget {
                             return Padding(
                               padding: const EdgeInsets.only(top: 8.0),
                               child: Text(
-                                DateFormat('M월').format(month),
+                                _getLocalizedMonth(context, month),
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: value == 0
@@ -121,6 +123,29 @@ class MonthlyTrendLineChart extends StatelessWidget {
         );
       },
     );
+  }
+
+  String _getLocalizedTitle(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    const Map<AppLanguage, String> titles = {
+      AppLanguage.english: 'Monthly Expense Trend',
+      AppLanguage.korean: '월별 지출 추이',
+      AppLanguage.japanese: '月別支出推移',
+    };
+    return titles[language] ?? titles[AppLanguage.korean]!;
+  }
+
+  String _getLocalizedMonth(BuildContext context, DateTime date) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    switch (language) {
+      case AppLanguage.english:
+        return DateFormat('MMM').format(date);
+      case AppLanguage.japanese:
+        return '${date.month}月';
+      case AppLanguage.korean:
+      default:
+        return '${date.month}월';
+    }
   }
 
   List<FlSpot> _createSpots(Map<String, double> monthlyTotals) {

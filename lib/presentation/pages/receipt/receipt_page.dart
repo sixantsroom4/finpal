@@ -15,6 +15,8 @@ import 'widgets/receipt_grid_item.dart';
 import 'receipt_scan_result_page.dart';
 import 'receipt_preview_page.dart';
 import 'package:go_router/go_router.dart';
+import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
+import 'package:finpal/core/constants/app_languages.dart';
 
 class ReceiptPage extends StatefulWidget {
   const ReceiptPage({super.key});
@@ -47,7 +49,7 @@ class _ReceiptPageState extends State<ReceiptPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('영수증'),
+        title: Text(_getLocalizedTitle(context)),
         actions: [
           IconButton(
             icon: const Icon(Icons.sort),
@@ -57,18 +59,21 @@ class _ReceiptPageState extends State<ReceiptPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _scanReceipt(context),
+        tooltip: _getLocalizedTooltip(context),
         child: const Icon(Icons.document_scanner),
       ),
       body: BlocConsumer<ReceiptBloc, ReceiptState>(
         listener: (context, state) {
           if (state is ReceiptError) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
+              SnackBar(
+                  content: Text(_getLocalizedError(context, state.message))),
             );
           }
           if (state is ReceiptOperationSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
+              SnackBar(
+                  content: Text(_getLocalizedSuccess(context, state.message))),
             );
           }
         },
@@ -83,12 +88,12 @@ class _ReceiptPageState extends State<ReceiptPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    '저장된 영수증이 없습니다',
+                    _getLocalizedEmptyTitle(context),
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    '영수증을 스캔하여 자동으로 지출을 기록해보세요',
+                    _getLocalizedEmptySubtitle(context),
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Colors.grey,
                         ),
@@ -100,7 +105,6 @@ class _ReceiptPageState extends State<ReceiptPage> {
 
           return CustomScrollView(
             slivers: [
-              // 통계 섹션
               SliverToBoxAdapter(
                 child: Card(
                   margin: const EdgeInsets.all(16),
@@ -111,9 +115,10 @@ class _ReceiptPageState extends State<ReceiptPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('이번 달 영수증'),
+                            Text(_getLocalizedLabel(context, 'this_month')),
                             Text(
-                              '${state.receipts.length}장',
+                              _getLocalizedCount(
+                                  context, state.receipts.length),
                               style: Theme.of(context).textTheme.titleMedium,
                             ),
                           ],
@@ -122,9 +127,9 @@ class _ReceiptPageState extends State<ReceiptPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('총 지출액'),
+                            Text(_getLocalizedLabel(context, 'total_amount')),
                             Text(
-                              '${_numberFormat.format(state.totalAmount)}원',
+                              _getLocalizedAmount(context, state.totalAmount),
                               style: Theme.of(context)
                                   .textTheme
                                   .titleMedium
@@ -237,6 +242,111 @@ class _ReceiptPageState extends State<ReceiptPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('영수증 스캔 중 오류가 발생했습니다: ${e.toString()}')),
       );
+    }
+  }
+
+  String _getLocalizedTitle(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    const Map<AppLanguage, String> titles = {
+      AppLanguage.english: 'Receipts',
+      AppLanguage.korean: '영수증',
+      AppLanguage.japanese: 'レシート',
+    };
+    return titles[language] ?? titles[AppLanguage.korean]!;
+  }
+
+  String _getLocalizedTooltip(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    const Map<AppLanguage, String> tooltips = {
+      AppLanguage.english: 'Scan Receipt',
+      AppLanguage.korean: '영수증 스캔',
+      AppLanguage.japanese: 'レシートをスキャン',
+    };
+    return tooltips[language] ?? tooltips[AppLanguage.korean]!;
+  }
+
+  String _getLocalizedError(BuildContext context, String message) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    Map<AppLanguage, String Function(String)> errors = {
+      AppLanguage.english: (msg) => 'Error: $msg',
+      AppLanguage.korean: (msg) => '오류: $msg',
+      AppLanguage.japanese: (msg) => 'エラー: $msg',
+    };
+    return errors[language]?.call(message) ??
+        errors[AppLanguage.korean]!(message);
+  }
+
+  String _getLocalizedSuccess(BuildContext context, String message) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    Map<AppLanguage, String Function(String)> successes = {
+      AppLanguage.english: (msg) => 'Success: $msg',
+      AppLanguage.korean: (msg) => '성공: $msg',
+      AppLanguage.japanese: (msg) => '成功: $msg',
+    };
+    return successes[language]?.call(message) ??
+        successes[AppLanguage.korean]!(message);
+  }
+
+  String _getLocalizedEmptyTitle(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    const Map<AppLanguage, String> texts = {
+      AppLanguage.english: 'No Receipts',
+      AppLanguage.korean: '저장된 영수증이 없습니다',
+      AppLanguage.japanese: '保存されたレシートがありません',
+    };
+    return texts[language] ?? texts[AppLanguage.korean]!;
+  }
+
+  String _getLocalizedEmptySubtitle(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    const Map<AppLanguage, String> texts = {
+      AppLanguage.english: 'Scan receipts to record expenses automatically',
+      AppLanguage.korean: '영수증을 스캔하여 자동으로 지출을 기록해보세요',
+      AppLanguage.japanese: 'レシートをスキャンして自動的に支出を記録しましょう',
+    };
+    return texts[language] ?? texts[AppLanguage.korean]!;
+  }
+
+  String _getLocalizedLabel(BuildContext context, String key) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    final Map<String, Map<AppLanguage, String>> labels = {
+      'this_month': {
+        AppLanguage.english: 'This Month',
+        AppLanguage.korean: '이번 달 영수증',
+        AppLanguage.japanese: '今月のレシート',
+      },
+      'total_amount': {
+        AppLanguage.english: 'Total Amount',
+        AppLanguage.korean: '총 지출액',
+        AppLanguage.japanese: '総支出額',
+      },
+    };
+    return labels[key]?[language] ?? labels[key]?[AppLanguage.korean] ?? key;
+  }
+
+  String _getLocalizedCount(BuildContext context, int count) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    switch (language) {
+      case AppLanguage.english:
+        return '$count receipts';
+      case AppLanguage.japanese:
+        return '$count枚';
+      case AppLanguage.korean:
+      default:
+        return '${count}장';
+    }
+  }
+
+  String _getLocalizedAmount(BuildContext context, double amount) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    switch (language) {
+      case AppLanguage.english:
+        return '\$${_numberFormat.format(amount)}';
+      case AppLanguage.japanese:
+        return '¥${_numberFormat.format(amount)}';
+      case AppLanguage.korean:
+      default:
+        return '${_numberFormat.format(amount)}원';
     }
   }
 }
