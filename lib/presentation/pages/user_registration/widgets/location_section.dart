@@ -76,24 +76,24 @@ class LocationSection extends StatelessWidget {
     final language = context.read<AppLanguageBloc>().state.language;
     final Map<AppLocation, Map<AppLanguage, String>> locations = {
       AppLocation.korea: {
-        AppLanguage.english: 'South Korea',
-        AppLanguage.korean: '대한민국',
-        AppLanguage.japanese: '韓国',
+        AppLanguage.english: '🇰🇷 South Korea',
+        AppLanguage.korean: '🇰🇷 대한민국',
+        AppLanguage.japanese: '🇰🇷 韓国',
       },
       AppLocation.japan: {
-        AppLanguage.english: 'Japan',
-        AppLanguage.korean: '일본',
-        AppLanguage.japanese: '日本',
+        AppLanguage.english: '🇯🇵 Japan',
+        AppLanguage.korean: '🇯🇵 일본',
+        AppLanguage.japanese: '🇯🇵 日本',
       },
       AppLocation.usa: {
-        AppLanguage.english: 'United States',
-        AppLanguage.korean: '미국',
-        AppLanguage.japanese: 'アメリカ',
+        AppLanguage.english: '🇺🇸 United States',
+        AppLanguage.korean: '🇺🇸 미국',
+        AppLanguage.japanese: '🇺🇸 アメリカ',
       },
       AppLocation.europe: {
-        AppLanguage.english: 'Europe',
-        AppLanguage.korean: '유럽',
-        AppLanguage.japanese: 'ヨーロッパ',
+        AppLanguage.english: '🇪🇺 Europe',
+        AppLanguage.korean: '🇪🇺 유럽',
+        AppLanguage.japanese: '🇪🇺 ヨーロッパ',
       },
     };
     return locations[location]?[language] ??

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:finpal/presentation/bloc/user_registration/user_registration_bloc.dart';
 import 'package:finpal/core/utils/language_utils.dart';
+import 'package:finpal/core/constants/app_languages.dart';
 
 class PersonalInfoSection extends StatelessWidget {
   const PersonalInfoSection({super.key});
@@ -18,30 +19,29 @@ class PersonalInfoSection extends StatelessWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(
+                Row(
                   children: [
                     Text(
-                      '개인정보',
-                      style: TextStyle(
+                      _getLocalizedTitle(context),
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w600,
                         color: Color(0xFF0C2340),
                       ),
                     ),
-                    SizedBox(width: 8),
-                    Icon(Icons.person, color: Color(0xFF0C2340)),
+                    const SizedBox(width: 8),
+                    const Icon(Icons.person, color: Color(0xFF0C2340)),
                   ],
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  '서비스 이용을 위한 마지막 단계입니다! 🎉',
-                  style: TextStyle(
+                Text(
+                  _getLocalizedDescription(context),
+                  style: const TextStyle(
                     fontSize: 14,
                     color: Color(0xFF6B7280),
                   ),
                 ),
                 const SizedBox(height: 24),
-                // 성별 선택
                 Container(
                   decoration: BoxDecoration(
                     border: Border.all(color: const Color(0xFFE5E8EC)),
@@ -59,10 +59,11 @@ class PersonalInfoSection extends StatelessWidget {
                     value: state is UserRegistrationInProgress
                         ? state.gender
                         : null,
-                    decoration: const InputDecoration(
-                      labelText: '성별 선택 👤',
+                    decoration: InputDecoration(
+                      labelText: _getLocalizedGenderLabel(context),
                       border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16),
+                      contentPadding:
+                          const EdgeInsets.symmetric(horizontal: 16),
                     ),
                     items: [
                       DropdownMenuItem(
@@ -105,14 +106,13 @@ class PersonalInfoSection extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 20),
-                // 출생년도 선택
                 GestureDetector(
                   onTap: () {
                     showDialog(
                       context: context,
                       builder: (BuildContext context) {
                         return AlertDialog(
-                          title: const Text('출생년도 선택 🎉'),
+                          title: Text(_getLocalizedBirthYearTitle(context)),
                           content: SizedBox(
                             height: 300,
                             width: 300,
@@ -156,8 +156,8 @@ class PersonalInfoSection extends StatelessWidget {
                         Text(
                           state is UserRegistrationInProgress &&
                                   state.birthYear != null
-                              ? '${state.birthYear}년'
-                              : '출생년도를 선택해주세요',
+                              ? '${state.birthYear}${_getLocalizedYear(context)}'
+                              : _getLocalizedBirthYearHint(context),
                           style: TextStyle(
                             color: state is UserRegistrationInProgress &&
                                     state.birthYear != null
@@ -171,9 +171,9 @@ class PersonalInfoSection extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  '* 입력하신 정보는 서비스 개선을 위서만 사용됩니다 🔒',
-                  style: TextStyle(
+                Text(
+                  _getLocalizedNote(context),
+                  style: const TextStyle(
                     fontSize: 12,
                     color: Color(0xFF6B7280),
                     fontStyle: FontStyle.italic,
@@ -185,5 +185,76 @@ class PersonalInfoSection extends StatelessWidget {
         );
       },
     );
+  }
+
+  String _getLocalizedTitle(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    const Map<AppLanguage, String> titles = {
+      AppLanguage.english: 'Personal Information',
+      AppLanguage.korean: '개인정보',
+      AppLanguage.japanese: '個人情報',
+    };
+    return titles[language] ?? titles[AppLanguage.korean]!;
+  }
+
+  String _getLocalizedDescription(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    const Map<AppLanguage, String> descriptions = {
+      AppLanguage.english: 'Last step for using the service! 🎉',
+      AppLanguage.korean: '서비스 이용을 위한 마지막 단계입니다! 🎉',
+      AppLanguage.japanese: 'サービス利用のための最後のステップです! 🎉',
+    };
+    return descriptions[language] ?? descriptions[AppLanguage.korean]!;
+  }
+
+  String _getLocalizedGenderLabel(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    const Map<AppLanguage, String> labels = {
+      AppLanguage.english: 'Select Gender 👤',
+      AppLanguage.korean: '성별 선택 👤',
+      AppLanguage.japanese: '性別選択 👤',
+    };
+    return labels[language] ?? labels[AppLanguage.korean]!;
+  }
+
+  String _getLocalizedBirthYearTitle(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    const Map<AppLanguage, String> titles = {
+      AppLanguage.english: 'Select Birth Year 🎉',
+      AppLanguage.korean: '출생년도 선택 🎉',
+      AppLanguage.japanese: '生年選択 🎉',
+    };
+    return titles[language] ?? titles[AppLanguage.korean]!;
+  }
+
+  String _getLocalizedBirthYearHint(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    const Map<AppLanguage, String> hints = {
+      AppLanguage.english: 'Select your birth year',
+      AppLanguage.korean: '출생년도를 선택해주세요',
+      AppLanguage.japanese: '生年を選択してください',
+    };
+    return hints[language] ?? hints[AppLanguage.korean]!;
+  }
+
+  String _getLocalizedYear(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    const Map<AppLanguage, String> years = {
+      AppLanguage.english: '',
+      AppLanguage.korean: '년',
+      AppLanguage.japanese: '年',
+    };
+    return years[language] ?? years[AppLanguage.korean]!;
+  }
+
+  String _getLocalizedNote(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    const Map<AppLanguage, String> notes = {
+      AppLanguage.english:
+          '* The information provided will only be used for service improvement 🔒',
+      AppLanguage.korean: '* 입력하신 정보는 서비스 개선을 위해서만 사용됩니다 🔒',
+      AppLanguage.japanese: '* 入力された情報はサービス改善のためにのみ使用されます 🔒',
+    };
+    return notes[language] ?? notes[AppLanguage.korean]!;
   }
 }
