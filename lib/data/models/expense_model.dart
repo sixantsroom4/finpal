@@ -5,6 +5,7 @@ class ExpenseModel extends Expense {
   ExpenseModel({
     required String id,
     required double amount,
+    required String currency,
     required String description,
     required DateTime date,
     required String category,
@@ -20,6 +21,7 @@ class ExpenseModel extends Expense {
   }) : super(
           id: id,
           amount: amount,
+          currency: currency,
           description: description,
           date: date,
           category: category,
@@ -38,6 +40,7 @@ class ExpenseModel extends Expense {
     return ExpenseModel(
       id: json['id'],
       amount: (json['amount'] as num).toDouble(),
+      currency: json['currency'] ?? 'KRW',
       description: json['description'],
       date: DateTime.parse(json['date']),
       category: json['category'],
@@ -63,6 +66,7 @@ class ExpenseModel extends Expense {
     return {
       'id': id,
       'amount': amount,
+      'currency': currency,
       'description': description,
       'date': date.toIso8601String(),
       'category': category,
@@ -82,6 +86,7 @@ class ExpenseModel extends Expense {
     return ExpenseModel(
       id: expense.id,
       amount: expense.amount,
+      currency: expense.currency,
       description: expense.description,
       date: expense.date,
       category: expense.category,
@@ -94,6 +99,42 @@ class ExpenseModel extends Expense {
       isSubscription: expense.isSubscription,
       subscriptionId: expense.subscriptionId,
       createdAt: expense.createdAt,
+    );
+  }
+
+  ExpenseModel copyWith({
+    String? id,
+    double? amount,
+    String? currency,
+    String? description,
+    DateTime? date,
+    String? category,
+    String? userId,
+    String? receiptUrl,
+    String? receiptId,
+    bool? isShared,
+    List<String>? sharedWith,
+    Map<String, double>? splitAmounts,
+    bool? isSubscription,
+    String? subscriptionId,
+    DateTime? createdAt,
+  }) {
+    return ExpenseModel(
+      id: id ?? this.id,
+      amount: amount ?? this.amount,
+      currency: currency ?? this.currency,
+      description: description ?? this.description,
+      date: date ?? this.date,
+      category: category ?? this.category,
+      userId: userId ?? this.userId,
+      receiptUrl: receiptUrl ?? this.receiptUrl,
+      receiptId: receiptId ?? this.receiptId,
+      isShared: isShared ?? this.isShared,
+      sharedWith: sharedWith ?? this.sharedWith,
+      splitAmounts: splitAmounts ?? this.splitAmounts,
+      isSubscription: isSubscription ?? this.isSubscription,
+      subscriptionId: subscriptionId ?? this.subscriptionId,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 }

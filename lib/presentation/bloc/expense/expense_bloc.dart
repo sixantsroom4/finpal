@@ -8,17 +8,22 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../domain/repositories/expense_repository.dart';
 import 'expense_event.dart';
 import 'expense_state.dart';
+import '../../../data/models/user_model.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
   final ExpenseRepository _expenseRepository;
   final AppLanguageBloc _appLanguageBloc;
   StreamSubscription<List<Expense>>? _expenseSubscription;
+  final FirebaseFirestore _firestore;
 
   ExpenseBloc({
     required ExpenseRepository expenseRepository,
     required AppLanguageBloc appLanguageBloc,
+    required FirebaseFirestore firestore,
   })  : _expenseRepository = expenseRepository,
         _appLanguageBloc = appLanguageBloc,
+        _firestore = firestore,
         super(ExpenseInitial()) {
     on<LoadExpenses>(_onLoadExpenses);
     on<AddExpense>(_onAddExpense);
@@ -92,13 +97,26 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
     Emitter<ExpenseState> emit,
   ) async {
     emit(ExpenseLoading());
-    final result = await _expenseRepository.addExpense(event.expense);
+
+    // 사용자의 선호 통화 가져오기
+    final userDoc = await _firestore
+        .collection('users')
+        .doc(event.expenseModel.userId)
+        .get();
+    final userModel = UserModel.fromJson(userDoc.data()!);
+
+    // 통화 정보가 포함된 새 지출 생성
+    final expenseWithCurrency = event.expenseModel.copyWith(
+      currency: userModel.preferredCurrency,
+    );
+
+    final result = await _expenseRepository.addExpense(expenseWithCurrency);
 
     result.fold(
       (failure) => emit(ExpenseError(failure.message)),
       (expense) {
         emit(const ExpenseOperationSuccess('지출이 추가되었습니다.'));
-        add(LoadExpenses(event.expense.userId));
+        add(LoadExpenses(event.expenseModel.userId));
       },
     );
   }

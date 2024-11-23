@@ -308,6 +308,7 @@ class SubscriptionDetailsBottomSheet extends StatelessWidget {
       userId: subscription.userId,
       endDate: subscription.endDate,
       isActive: !subscription.isActive,
+      currency: subscription.currency,
     );
 
     context.read<SubscriptionBloc>().add(

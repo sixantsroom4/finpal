@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:finpal/data/models/expense_model.dart';
 import '../../../domain/entities/expense.dart';
 
 abstract class ExpenseEvent extends Equatable {
@@ -18,12 +19,12 @@ class LoadExpenses extends ExpenseEvent {
 }
 
 class AddExpense extends ExpenseEvent {
-  final Expense expense;
+  final ExpenseModel expenseModel;
 
-  const AddExpense(this.expense);
+  const AddExpense({required this.expenseModel});
 
   @override
-  List<Object> get props => [expense];
+  List<Object> get props => [expenseModel];
 }
 
 class UpdateExpense extends ExpenseEvent {

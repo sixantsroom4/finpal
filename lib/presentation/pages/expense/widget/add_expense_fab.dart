@@ -1,4 +1,6 @@
 // lib/presentation/pages/expense/widgets/add_expense_fab.dart
+import 'package:finpal/data/models/expense_model.dart';
+import 'package:finpal/data/models/user_model.dart';
 import 'package:finpal/domain/entities/expense.dart';
 import 'package:finpal/presentation/bloc/auth/auth_state.dart';
 import 'package:finpal/presentation/bloc/expense/expense_event.dart';
@@ -158,7 +160,7 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: _submit,
+              onPressed: _addExpense,
               child: Text(_getLocalizedLabel(context, 'save')),
             ),
             const SizedBox(height: 16),
@@ -168,29 +170,27 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
     );
   }
 
-  void _submit() {
+  void _addExpense() {
     if (_formKey.currentState?.validate() ?? false) {
       final authState = context.read<AuthBloc>().state;
       if (authState is Authenticated) {
-        final amount =
-            double.tryParse(_amountController.text.replaceAll(',', '')) ?? 0;
+        final expense = ExpenseModel(
+          id: const Uuid().v4(),
+          amount: double.parse(_amountController.text.replaceAll(',', '')),
+          currency: authState.user.settings?['currency'] ?? 'KRW',
+          description: _descriptionController.text,
+          category: _selectedCategory,
+          userId: authState.user.id,
+          date: _selectedDate,
+          createdAt: DateTime.now(),
+        );
 
-        context.read<ExpenseBloc>().add(
-              AddExpense(
-                Expense(
-                  id: const Uuid().v4(),
-                  userId: authState.user.id,
-                  amount: amount,
-                  description: _descriptionController.text,
-                  category: _selectedCategory,
-                  date: _selectedDate,
-                ),
-              ),
-            );
+        context.read<ExpenseBloc>().add(AddExpense(expenseModel: expense));
 
         Navigator.pop(context);
+
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('지출이 추가되었습니다.')),
+          SnackBar(content: Text(_getLocalizedSuccessMessage(context))),
         );
       }
     }

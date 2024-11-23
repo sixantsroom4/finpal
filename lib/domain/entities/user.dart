@@ -21,6 +21,8 @@ class User extends Equatable {
     this.hasAcceptedTerms = false,
   });
 
+  String get currency => settings?['currency'] ?? 'KRW';
+
   @override
   List<Object?> get props => [
         id,

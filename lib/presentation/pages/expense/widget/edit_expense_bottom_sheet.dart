@@ -284,6 +284,7 @@ class _EditExpenseBottomSheetState extends State<EditExpenseBottomSheet> {
       final updatedExpense = Expense(
         id: widget.expense.id,
         amount: double.parse(_amountController.text.replaceAll(',', '')),
+        currency: widget.expense.currency,
         description: _descriptionController.text.trim(),
         category: _selectedCategory,
         date: _selectedDate,

@@ -8,6 +8,7 @@ import 'package:finpal/presentation/pages/expense/widget/add_expense_fab.dart';
 import 'package:finpal/presentation/pages/expense/widget/expense_details_bottom_sheet.dart';
 import 'package:finpal/presentation/pages/expense/widget/expense_filter_chip.dart';
 import 'package:finpal/presentation/pages/expense/widget/monthly_expense_card.dart';
+import 'package:finpal/presentation/widgets/amount_display.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -116,8 +117,9 @@ class _ExpensePageState extends State<ExpensePage> {
                             subtitle: Text(
                               DateFormat('M월 d일').format(expense.date),
                             ),
-                            trailing: Text(
-                              '${_numberFormat.format(expense.amount)}원',
+                            trailing: AmountDisplay(
+                              amount: expense.amount,
+                              currency: expense.currency,
                             ),
                             onTap: () => _showExpenseDetails(context, expense),
                           );

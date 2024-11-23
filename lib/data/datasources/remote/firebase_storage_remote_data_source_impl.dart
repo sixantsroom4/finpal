@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:finpal/data/models/user_model.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
@@ -625,6 +626,7 @@ class FirebaseStorageRemoteDataSourceImpl
         'userId': userId,
         'imageUrl': imageUrl,
         'createdAt': DateTime.now().toIso8601String(),
+        'currency': 'KRW',
       });
 
       return await saveReceipt(receipt);
@@ -675,6 +677,7 @@ class FirebaseStorageRemoteDataSourceImpl
       final expense = ExpenseModel(
         id: expenseRef.id,
         amount: subscription.amount,
+        currency: subscription.currency,
         description: '${subscription.name} 구독료',
         category: subscription.category,
         date: nextBillingDate,

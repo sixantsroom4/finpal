@@ -1,3 +1,4 @@
+import 'package:finpal/data/models/expense_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
@@ -110,16 +111,20 @@ class _CreateExpenseFromReceiptState extends State<CreateExpenseFromReceipt> {
   void _createExpense() {
     final expenseId = const Uuid().v4();
 
-    final expense = Expense.create(
+    final expense = ExpenseModel(
+      id: expenseId,
       amount: widget.receipt.totalAmount,
+      currency: widget.receipt.currency,
       description: _descriptionController.text,
       category: _selectedCategory,
       userId: widget.receipt.userId,
       receiptUrl: widget.receipt.imageUrl,
       receiptId: widget.receipt.id,
+      date: widget.receipt.date,
+      createdAt: DateTime.now(),
     );
 
-    context.read<ExpenseBloc>().add(AddExpense(expense));
+    context.read<ExpenseBloc>().add(AddExpense(expenseModel: expense));
 
     // 영수증 업데이트 이벤트 발생 (expenseId 연결)
     context.read<ReceiptBloc>().add(UpdateReceipt(

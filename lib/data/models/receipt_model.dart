@@ -51,6 +51,7 @@ class ReceiptModel extends Receipt {
     required String id,
     required String imageUrl,
     required DateTime date,
+    required String currency,
     required String merchantName,
     required double totalAmount,
     required List<ReceiptItem> items,
@@ -60,6 +61,7 @@ class ReceiptModel extends Receipt {
           id: id,
           imageUrl: imageUrl,
           date: date,
+          currency: currency,
           merchantName: merchantName,
           totalAmount: totalAmount,
           items: items,
@@ -72,6 +74,7 @@ class ReceiptModel extends Receipt {
       id: json['id'],
       imageUrl: json['imageUrl'],
       date: DateTime.parse(json['date']),
+      currency: json['currency'],
       merchantName: json['merchantName'],
       totalAmount: (json['totalAmount'] as num).toDouble(),
       items: (json['items'] as List)
@@ -87,6 +90,7 @@ class ReceiptModel extends Receipt {
       'id': id,
       'imageUrl': imageUrl,
       'date': date.toIso8601String(),
+      'currency': currency,
       'merchantName': merchantName,
       'totalAmount': totalAmount,
       'items': items
@@ -105,6 +109,7 @@ class ReceiptModel extends Receipt {
       id: receipt.id,
       imageUrl: receipt.imageUrl,
       date: receipt.date,
+      currency: receipt.currency,
       merchantName: receipt.merchantName,
       totalAmount: receipt.totalAmount,
       items: receipt.items
@@ -135,6 +140,7 @@ class ReceiptModel extends Receipt {
       id: id,
       imageUrl: imageUrl,
       date: DateTime.tryParse(ocrResult['date'] ?? '') ?? DateTime.now(),
+      currency: ocrResult['currency'] ?? 'USD',
       merchantName: ocrResult['merchantName'] ?? 'Unknown',
       totalAmount: (ocrResult['totalAmount'] as num?)?.toDouble() ??
           items.fold(0, (sum, item) => sum + item.totalPrice),
@@ -150,6 +156,7 @@ class ReceiptModel extends Receipt {
     String? merchantName,
     DateTime? date,
     double? totalAmount,
+    String? currency,
     String? imageUrl,
     String? expenseId,
     List<ReceiptItem>? items,
@@ -160,6 +167,7 @@ class ReceiptModel extends Receipt {
       merchantName: merchantName ?? this.merchantName,
       date: date ?? this.date,
       totalAmount: totalAmount ?? this.totalAmount,
+      currency: currency ?? this.currency,
       imageUrl: imageUrl ?? this.imageUrl,
       expenseId: expenseId ?? this.expenseId,
       items: items ?? this.items,

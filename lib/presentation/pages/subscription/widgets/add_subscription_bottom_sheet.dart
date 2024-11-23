@@ -334,6 +334,7 @@ class _AddSubscriptionBottomSheetState
           category: _selectedCategory,
           userId: authState.user.id,
           isActive: true,
+          currency: 'USD',
         );
 
         context.read<SubscriptionBloc>().add(AddSubscription(subscription));

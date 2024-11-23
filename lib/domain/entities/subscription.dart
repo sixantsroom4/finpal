@@ -5,6 +5,7 @@ class Subscription extends Equatable {
   final String id;
   final String name;
   final double amount;
+  final String currency;
   final DateTime startDate;
   final DateTime? endDate;
   final String billingCycle; // monthly, yearly, etc.
@@ -17,6 +18,7 @@ class Subscription extends Equatable {
     required this.id,
     required this.name,
     required this.amount,
+    required this.currency,
     required this.startDate,
     required this.billingCycle,
     required this.billingDay,
@@ -31,6 +33,7 @@ class Subscription extends Equatable {
         id,
         name,
         amount,
+        currency,
         startDate,
         endDate,
         billingCycle,
@@ -53,6 +56,7 @@ class Subscription extends Equatable {
       id: const Uuid().v4(),
       name: name,
       amount: amount,
+      currency: 'USD',
       startDate: DateTime.now(),
       billingCycle: billingCycle,
       billingDay: billingDay,

@@ -191,6 +191,7 @@ class _EditReceiptBottomSheetState extends State<EditReceiptBottomSheet> {
         id: widget.receipt.id,
         imageUrl: widget.receipt.imageUrl,
         date: _selectedDate,
+        currency: widget.receipt.currency,
         merchantName: _merchantNameController.text.trim(),
         totalAmount:
             double.parse(_totalAmountController.text.replaceAll(',', '')),

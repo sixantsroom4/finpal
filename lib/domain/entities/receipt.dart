@@ -7,6 +7,7 @@ class Receipt extends Equatable {
   final DateTime date;
   final String merchantName;
   final double totalAmount;
+  final String currency;
   final List<ReceiptItem> items;
   final String userId;
   final String? expenseId;
@@ -17,6 +18,7 @@ class Receipt extends Equatable {
     required this.date,
     required this.merchantName,
     required this.totalAmount,
+    required this.currency,
     required this.items,
     required this.userId,
     this.expenseId,
@@ -29,6 +31,7 @@ class Receipt extends Equatable {
         date,
         merchantName,
         totalAmount,
+        currency,
         items,
         userId,
         expenseId,
@@ -38,6 +41,7 @@ class Receipt extends Equatable {
     required String imageUrl,
     required String merchantName,
     required double totalAmount,
+    required String currency,
     required List<ReceiptItem> items,
     required String userId,
     String? expenseId,
@@ -48,6 +52,7 @@ class Receipt extends Equatable {
       date: DateTime.now(),
       merchantName: merchantName,
       totalAmount: totalAmount,
+      currency: currency,
       items: items,
       userId: userId,
       expenseId: expenseId,
@@ -60,6 +65,7 @@ class Receipt extends Equatable {
     DateTime? date,
     String? merchantName,
     double? totalAmount,
+    String? currency,
     List<ReceiptItem>? items,
     String? userId,
     String? expenseId,
@@ -70,6 +76,7 @@ class Receipt extends Equatable {
       date: date ?? this.date,
       merchantName: merchantName ?? this.merchantName,
       totalAmount: totalAmount ?? this.totalAmount,
+      currency: currency ?? this.currency,
       items: items ?? this.items,
       userId: userId ?? this.userId,
       expenseId: expenseId ?? this.expenseId,
@@ -83,6 +90,7 @@ class Receipt extends Equatable {
       'date': date.toIso8601String(),
       'merchantName': merchantName,
       'totalAmount': totalAmount,
+      'currency': currency,
       'items': items.map((item) => item.toJson()).toList(),
       'userId': userId,
       'expenseId': expenseId,

@@ -16,7 +16,7 @@ class Expense extends Equatable {
   final bool isSubscription;
   final String? subscriptionId;
   final DateTime createdAt;
-
+  final String currency;
   Expense({
     required this.id,
     required this.amount,
@@ -32,6 +32,7 @@ class Expense extends Equatable {
     this.isSubscription = false,
     this.subscriptionId,
     DateTime? createdAt,
+    required this.currency,
   }) : createdAt = createdAt ?? DateTime.now();
 
   @override
@@ -50,6 +51,7 @@ class Expense extends Equatable {
         isSubscription,
         subscriptionId,
         createdAt,
+        currency,
       ];
 
   factory Expense.create({
@@ -64,6 +66,7 @@ class Expense extends Equatable {
     Map<String, double>? splitAmounts,
     bool isSubscription = false,
     String? subscriptionId,
+    required String currency,
   }) {
     return Expense(
       id: const Uuid().v4(),
@@ -80,6 +83,7 @@ class Expense extends Equatable {
       isSubscription: isSubscription,
       subscriptionId: subscriptionId,
       createdAt: DateTime.now(),
+      currency: currency,
     );
   }
 }

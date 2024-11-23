@@ -324,6 +324,7 @@ class _EditSubscriptionBottomSheetState
         userId: widget.subscription.userId,
         endDate: widget.subscription.endDate,
         isActive: widget.subscription.isActive,
+        currency: widget.subscription.currency,
       );
 
       context.read<SubscriptionBloc>().add(

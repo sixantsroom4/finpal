@@ -205,6 +205,7 @@ class ReceiptDetailsPage extends StatelessWidget {
               merchantName: _getLocalizedLabel(context, 'loading'),
               date: DateTime.now(),
               totalAmount: 0,
+              currency: 'USD',
               imageUrl: '',
               items: [],
             );
