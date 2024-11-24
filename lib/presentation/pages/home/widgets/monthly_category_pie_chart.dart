@@ -1,3 +1,4 @@
+import 'package:finpal/core/utils/constants.dart';
 import 'package:finpal/presentation/bloc/expense/expense_state.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -168,12 +169,15 @@ class MonthlyCategoryPieChart extends StatelessWidget {
       Colors.amber,
     ];
 
+    final language = context.read<AppLanguageBloc>().state.language;
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: categoryTotals.entries.toList().asMap().entries.map((entry) {
         final index = entry.key;
-        final category = entry.value.key;
+        final category =
+            CategoryConstants.getLocalizedCategory(entry.value.key, language);
         final amount = entry.value.value;
 
         return Padding(

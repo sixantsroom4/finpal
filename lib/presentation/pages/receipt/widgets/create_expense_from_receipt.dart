@@ -26,23 +26,20 @@ class CreateExpenseFromReceipt extends StatefulWidget {
 }
 
 class _CreateExpenseFromReceiptState extends State<CreateExpenseFromReceipt> {
-  String _selectedCategory = CategoryConstants.food;
+  late String _selectedCategory;
   final _descriptionController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
+    _selectedCategory = 'food';
     _descriptionController.text = widget.receipt.merchantName;
   }
 
   @override
-  void dispose() {
-    _descriptionController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+
     return Container(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom + 16,
@@ -61,28 +58,25 @@ class _CreateExpenseFromReceiptState extends State<CreateExpenseFromReceipt> {
           const SizedBox(height: 16),
           TextField(
             controller: _descriptionController,
-            decoration: const InputDecoration(
-              labelText: 'description',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: _getLocalizedLabel(context, 'description'),
+              border: const OutlineInputBorder(),
             ),
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
             value: _selectedCategory,
-            decoration: const InputDecoration(
-              labelText: 'category',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: _getLocalizedLabel(context, 'category'),
+              border: const OutlineInputBorder(),
             ),
-            items: CategoryConstants.getAll().map((category) {
-              return DropdownMenuItem(
-                value: category,
-                child: Text(category),
-              );
-            }).toList(),
+            items: _getLocalizedCategories(context),
             onChanged: (value) {
-              setState(() {
-                _selectedCategory = value ?? CategoryConstants.food;
-              });
+              if (value != null) {
+                setState(() {
+                  _selectedCategory = value;
+                });
+              }
             },
           ),
           const SizedBox(height: 24),
@@ -91,14 +85,14 @@ class _CreateExpenseFromReceiptState extends State<CreateExpenseFromReceipt> {
               Expanded(
                 child: OutlinedButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('cancel'),
+                  child: Text(_getLocalizedLabel(context, 'cancel')),
                 ),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: ElevatedButton(
                   onPressed: _createExpense,
-                  child: const Text('create'),
+                  child: Text(_getLocalizedLabel(context, 'create')),
                 ),
               ),
             ],
@@ -106,6 +100,16 @@ class _CreateExpenseFromReceiptState extends State<CreateExpenseFromReceipt> {
         ],
       ),
     );
+  }
+
+  List<DropdownMenuItem<String>> _getLocalizedCategories(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    return CategoryConstants.categories.entries.map((entry) {
+      return DropdownMenuItem<String>(
+        value: entry.key,
+        child: Text(entry.value[language] ?? entry.value[AppLanguage.korean]!),
+      );
+    }).toList();
   }
 
   void _createExpense() {

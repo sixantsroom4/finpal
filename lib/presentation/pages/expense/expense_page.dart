@@ -115,7 +115,7 @@ class _ExpensePageState extends State<ExpensePage> {
                             ),
                             title: Text(expense.description),
                             subtitle: Text(
-                              DateFormat('M월 d일').format(expense.date),
+                              _getLocalizedDate(context, expense.date),
                             ),
                             trailing: AmountDisplay(
                               amount: expense.amount,
@@ -229,5 +229,18 @@ class _ExpensePageState extends State<ExpensePage> {
       },
     };
     return categories[category.toLowerCase()]?[language] ?? category;
+  }
+
+  String _getLocalizedDate(BuildContext context, DateTime date) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    switch (language) {
+      case AppLanguage.english:
+        return DateFormat('MMM d').format(date);
+      case AppLanguage.japanese:
+        return DateFormat('M月 d日').format(date);
+      case AppLanguage.korean:
+      default:
+        return DateFormat('M월 d일').format(date);
+    }
   }
 }
