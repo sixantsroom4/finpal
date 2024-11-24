@@ -1,5 +1,6 @@
 import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
 import 'package:finpal/presentation/bloc/app_settings/app_settings_event.dart';
+import 'package:finpal/presentation/bloc/app_settings/app_settings_state.dart';
 import 'package:finpal/presentation/bloc/user_registration/user_registration_bloc.dart';
 import 'package:finpal/presentation/bloc/user_registration/user_registration_event.dart';
 import 'package:finpal/presentation/bloc/user_registration/user_registration_state.dart';
@@ -18,39 +19,41 @@ class AppSettingsSection extends StatelessWidget {
       builder: (context, registrationState) {
         return BlocBuilder<AppLanguageBloc, AppLanguageState>(
           builder: (context, languageState) {
-            final String currentCurrency =
-                registrationState is UserRegistrationInProgress
-                    ? registrationState.currency
-                    : 'KRW';
+            return BlocBuilder<AppSettingsBloc, AppSettingsState>(
+              builder: (context, settingsState) {
+                final String currentCurrency = settingsState.currency;
 
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 16, top: 16, bottom: 8),
-                  child: Text(
-                    _getLocalizedLabel(context, 'settings'),
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey,
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding:
+                          const EdgeInsets.only(left: 16, top: 16, bottom: 8),
+                      child: Text(
+                        _getLocalizedLabel(context, 'settings'),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.language),
-                  title: Text(_getLocalizedLabel(context, 'language')),
-                  subtitle: Text(_getLocalizedLanguageName(context)),
-                  onTap: () => _showLanguageDialog(context),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.attach_money),
-                  title: Text(_getLocalizedLabel(context, 'currency')),
-                  subtitle:
-                      Text(_getLocalizedCurrency(context, currentCurrency)),
-                  onTap: () => _showCurrencyDialog(context),
-                ),
-              ],
+                    ListTile(
+                      leading: const Icon(Icons.language),
+                      title: Text(_getLocalizedLabel(context, 'language')),
+                      subtitle: Text(_getLocalizedLanguageName(context)),
+                      onTap: () => _showLanguageDialog(context),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.attach_money),
+                      title: Text(_getLocalizedLabel(context, 'currency')),
+                      subtitle:
+                          Text(_getLocalizedCurrency(context, currentCurrency)),
+                      onTap: () => _showCurrencyDialog(context),
+                    ),
+                  ],
+                );
+              },
             );
           },
         );
@@ -105,6 +108,11 @@ class AppSettingsSection extends StatelessWidget {
         AppLanguage.english: 'Select Language',
         AppLanguage.korean: '언어 선택',
         AppLanguage.japanese: '言語選択',
+      },
+      'select_currency': {
+        AppLanguage.english: 'Select Currency',
+        AppLanguage.korean: '통화 선택',
+        AppLanguage.japanese: '通貨選択',
       },
     };
     return labels[key]?[language] ?? labels[key]?[AppLanguage.korean] ?? key;

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/core/constants/app_languages.dart';
+import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
 
 class PreferencesSection extends StatelessWidget {
   const PreferencesSection({super.key});
@@ -50,13 +51,34 @@ class PreferencesSection extends StatelessWidget {
   }
 
   String _getLocalizedCurrencyName(BuildContext context) {
+    final settingsState = context.read<AppSettingsBloc>().state;
     final language = context.read<AppLanguageBloc>().state.language;
-    final currencies = {
-      AppLanguage.english: r'USD ($)',
-      AppLanguage.korean: r'KRW (₩)',
-      AppLanguage.japanese: r'JPY (¥)',
+
+    final Map<String, Map<AppLanguage, String>> currencies = {
+      'KRW': {
+        AppLanguage.english: '🇰🇷 Korean Won (KRW)',
+        AppLanguage.korean: '🇰🇷 원화 (KRW)',
+        AppLanguage.japanese: '🇰🇷 ウォン (KRW)',
+      },
+      'JPY': {
+        AppLanguage.english: '🇯🇵 Japanese Yen (JPY)',
+        AppLanguage.korean: '🇯🇵 엔화 (JPY)',
+        AppLanguage.japanese: '🇯🇵 円 (JPY)',
+      },
+      'USD': {
+        AppLanguage.english: '🇺🇸 US Dollar (USD)',
+        AppLanguage.korean: '🇺🇸 달러 (USD)',
+        AppLanguage.japanese: '🇺🇸 ドル (USD)',
+      },
+      'EUR': {
+        AppLanguage.english: '🇪🇺 Euro (EUR)',
+        AppLanguage.korean: '🇪🇺 유로 (EUR)',
+        AppLanguage.japanese: '🇪🇺 ユーロ (EUR)',
+      },
     };
-    return currencies[language] ?? currencies[AppLanguage.korean]!;
+
+    return currencies[settingsState.currency]?[language] ??
+        currencies[settingsState.currency]![AppLanguage.korean]!;
   }
 
   @override
