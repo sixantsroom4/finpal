@@ -168,6 +168,19 @@ class SubscriptionDetailsBottomSheet extends StatelessWidget {
     }
   }
 
+  String _getLocalizedBillingDay(BuildContext context, int billingDay) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    switch (language) {
+      case AppLanguage.english:
+        return 'Day $billingDay';
+      case AppLanguage.japanese:
+        return '${billingDay}日';
+      case AppLanguage.korean:
+      default:
+        return '매월 ${billingDay}일';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -210,7 +223,7 @@ class SubscriptionDetailsBottomSheet extends StatelessWidget {
           ),
           _DetailItem(
             title: _getLocalizedLabel(context, 'billing_day'),
-            value: '매월 ${subscription.billingDay}일',
+            value: _getLocalizedBillingDay(context, subscription.billingDay),
           ),
           _DetailItem(
             title: _getLocalizedLabel(context, 'start_date'),

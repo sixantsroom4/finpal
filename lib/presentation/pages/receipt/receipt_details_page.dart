@@ -234,23 +234,26 @@ class ReceiptDetailsPage extends StatelessWidget {
                   }
                 },
                 itemBuilder: (context) => [
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'edit',
                     child: Row(
                       children: [
-                        Icon(Icons.edit),
-                        SizedBox(width: 8),
-                        Text('수정'),
+                        const Icon(Icons.edit),
+                        const SizedBox(width: 8),
+                        Text(_getLocalizedLabel(context, 'edit')),
                       ],
                     ),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'delete',
                     child: Row(
                       children: [
-                        Icon(Icons.delete, color: Colors.red),
-                        SizedBox(width: 8),
-                        Text('삭제', style: TextStyle(color: Colors.red)),
+                        const Icon(Icons.delete, color: Colors.red),
+                        const SizedBox(width: 8),
+                        Text(
+                          _getLocalizedLabel(context, 'delete'),
+                          style: const TextStyle(color: Colors.red),
+                        ),
                       ],
                     ),
                   ),
@@ -298,7 +301,8 @@ class ReceiptDetailsPage extends StatelessWidget {
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
                           const SizedBox(height: 16),
-                          ...receipt.items.map((item) => _buildItemRow(item)),
+                          ...receipt.items
+                              .map((item) => _buildItemRow(context, item)),
                         ],
                       ],
                     ),
@@ -326,7 +330,7 @@ class ReceiptDetailsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildItemRow(ReceiptItem item) {
+  Widget _buildItemRow(BuildContext context, ReceiptItem item) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
@@ -334,7 +338,7 @@ class ReceiptDetailsPage extends StatelessWidget {
           Expanded(flex: 2, child: Text(item.name)),
           Expanded(
             child: Text(
-              '${_numberFormat.format(item.price)}원',
+              _getLocalizedAmount(context, item.price),
               textAlign: TextAlign.right,
             ),
           ),
@@ -345,7 +349,7 @@ class ReceiptDetailsPage extends StatelessWidget {
           ),
           Expanded(
             child: Text(
-              '${_numberFormat.format(item.totalPrice)}원',
+              _getLocalizedAmount(context, item.totalPrice),
               textAlign: TextAlign.right,
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
@@ -366,7 +370,7 @@ class ReceiptDetailsPage extends StatelessWidget {
         child: ElevatedButton.icon(
           onPressed: () => _createExpense(context, receipt),
           icon: const Icon(Icons.add_card),
-          label: const Text('지출 내역 생성'),
+          label: Text(_getLocalizedLabel(context, 'create_expense')),
           style: ElevatedButton.styleFrom(
             minimumSize: const Size(double.infinity, 48),
           ),
