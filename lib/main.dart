@@ -19,6 +19,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
+import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -51,11 +52,11 @@ Future<void> main() async {
   authBloc.add(AuthCheckRequested());
   debugPrint('AuthCheckRequested event added');
 
-  // 카카오 SDK 초기화
-  KakaoSdk.init(
-    nativeAppKey: dotenv.env['KAKAO_NATIVE_APP_KEY']!,
-  );
-  debugPrint('Kakao SDK initialized');
+  // // 카카오 SDK 초기화
+  // KakaoSdk.init(
+  //   nativeAppKey: dotenv.env['KAKAO_NATIVE_APP_KEY']!,
+  // );
+  // debugPrint('Kakao SDK initialized');
 
   runApp(
     MultiBlocProvider(
@@ -64,6 +65,7 @@ Future<void> main() async {
         BlocProvider<AppLanguageBloc>(create: (_) => di.sl<AppLanguageBloc>()),
         BlocProvider<UserRegistrationBloc>(
             create: (_) => di.sl<UserRegistrationBloc>()),
+        BlocProvider<AppSettingsBloc>(create: (_) => di.sl<AppSettingsBloc>()),
       ],
       child: MyApp(authBloc: authBloc),
     ),
@@ -88,6 +90,7 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (_) => di.sl<ReceiptBloc>()),
         BlocProvider<UserRegistrationBloc>(
             create: (_) => di.sl<UserRegistrationBloc>()),
+        BlocProvider<AppSettingsBloc>(create: (_) => di.sl<AppSettingsBloc>()),
       ],
       child: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {

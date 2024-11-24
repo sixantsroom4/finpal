@@ -18,6 +18,8 @@ import '../../domain/repositories/expense_repository.dart';
 import '../../domain/repositories/receipt_repository.dart';
 import '../../domain/repositories/subscription_repository.dart';
 import 'injection_container.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
 
 Future<void> initMain() async {
   // Data sources
@@ -59,6 +61,10 @@ Future<void> initMain() async {
     ),
   );
 
+  // Services
+  // final sharedPreferences = await SharedPreferences.getInstance();
+  // sl.registerLazySingleton(() => sharedPreferences);
+
   // Blocs
   sl.registerFactory(() => AuthBloc(
         authRepository: sl(),
@@ -80,4 +86,6 @@ Future<void> initMain() async {
       ));
 
   sl.registerLazySingleton(() => AppLanguageBloc(sl()));
+
+  sl.registerLazySingleton(() => AppSettingsBloc(sl()));
 }
