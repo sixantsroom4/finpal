@@ -1,5 +1,6 @@
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/core/constants/app_languages.dart';
+import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
 import 'package:finpal/presentation/bloc/expense/expense_bloc.dart';
 import 'package:finpal/presentation/bloc/expense/expense_state.dart';
 import 'package:finpal/presentation/pages/expense/widget/budget_settings_page.dart';
@@ -127,16 +128,28 @@ class MonthlySummaryCard extends StatelessWidget {
   }
 
   String _getLocalizedAmount(BuildContext context, double amount) {
-    final language = context.read<AppLanguageBloc>().state.language;
+    final currency = context.read<AppSettingsBloc>().state.currency;
     final formattedAmount = amount.toStringAsFixed(0);
-    switch (language) {
-      case AppLanguage.english:
-        return '\$$formattedAmount';
-      case AppLanguage.japanese:
+
+    final currencySymbols = {
+      'KRW': '원',
+      'JPY': '¥',
+      'USD': '\$',
+      'EUR': '€',
+    };
+
+    final symbol = currencySymbols[currency] ?? currencySymbols['KRW']!;
+
+    // 통화별 표시 형식
+    switch (currency) {
+      case 'USD':
+      case 'EUR':
+        return '$symbol$formattedAmount';
+      case 'JPY':
         return '¥$formattedAmount';
-      case AppLanguage.korean:
+      case 'KRW':
       default:
-        return '${formattedAmount}원';
+        return '$formattedAmount$symbol';
     }
   }
 
@@ -152,13 +165,26 @@ class MonthlySummaryCard extends StatelessWidget {
 
   String _getLocalizedRemainingBudget(BuildContext context, double remaining) {
     final language = context.read<AppLanguageBloc>().state.language;
+    final currency = context.read<AppSettingsBloc>().state.currency;
     final formattedRemaining = remaining.toStringAsFixed(0);
-    final Map<AppLanguage, String Function(String)> messages = {
-      AppLanguage.english: (amount) => '\$$amount remaining in budget',
-      AppLanguage.korean: (amount) => '월 예산까지 ${amount}원 남았습니다',
-      AppLanguage.japanese: (amount) => '月予算まで¥$amount残っています',
+
+    final currencySymbols = {
+      'KRW': '원',
+      'JPY': '¥',
+      'USD': '\$',
+      'EUR': '€',
     };
-    return messages[language]?.call(formattedRemaining) ??
-        messages[AppLanguage.korean]!.call(formattedRemaining);
+
+    final symbol = currencySymbols[currency] ?? currencySymbols['KRW']!;
+
+    final Map<AppLanguage, String Function(String, String)> messages = {
+      AppLanguage.english: (amount, symbol) =>
+          '$symbol$amount remaining in budget',
+      AppLanguage.korean: (amount, symbol) => '월 예산까지 $amount$symbol 남았습니다',
+      AppLanguage.japanese: (amount, symbol) => '月予算まで$symbol$amount残っています',
+    };
+
+    return messages[language]?.call(formattedRemaining, symbol) ??
+        messages[AppLanguage.korean]!.call(formattedRemaining, symbol);
   }
 }

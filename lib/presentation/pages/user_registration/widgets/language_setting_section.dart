@@ -54,9 +54,6 @@ class LanguageSettingSection extends StatelessWidget {
                         context
                             .read<AppLanguageBloc>()
                             .add(AppLanguageChanged(newValue));
-                        context
-                            .read<UserRegistrationBloc>()
-                            .add(LanguageChanged(newValue));
                       }
                     },
                   );

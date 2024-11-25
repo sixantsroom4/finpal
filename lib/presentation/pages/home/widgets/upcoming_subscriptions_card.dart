@@ -7,6 +7,7 @@ import '../../../bloc/subscription/subscription_bloc.dart';
 import '../../../../domain/entities/subscription.dart';
 import '../../../bloc/app_language/app_language_bloc.dart';
 import '../../../../core/constants/app_languages.dart';
+import '../../../bloc/app_settings/app_settings_bloc.dart';
 
 class UpcomingSubscriptionsCard extends StatelessWidget {
   const UpcomingSubscriptionsCard({super.key});
@@ -39,16 +40,27 @@ class UpcomingSubscriptionsCard extends StatelessWidget {
   }
 
   String _getLocalizedAmount(BuildContext context, double amount) {
-    final language = context.read<AppLanguageBloc>().state.language;
+    final currency = context.read<AppSettingsBloc>().state.currency;
     final formattedAmount = NumberFormat('#,###').format(amount);
-    switch (language) {
-      case AppLanguage.english:
-        return '\$$formattedAmount';
-      case AppLanguage.japanese:
+
+    final currencySymbols = {
+      'KRW': '원',
+      'JPY': '¥',
+      'USD': '\$',
+      'EUR': '€',
+    };
+
+    final symbol = currencySymbols[currency] ?? currencySymbols['KRW']!;
+
+    switch (currency) {
+      case 'USD':
+      case 'EUR':
+        return '$symbol$formattedAmount';
+      case 'JPY':
         return '¥$formattedAmount';
-      case AppLanguage.korean:
+      case 'KRW':
       default:
-        return '${formattedAmount}원';
+        return '$formattedAmount$symbol';
     }
   }
 
@@ -229,7 +241,7 @@ class _SubscriptionTile extends StatelessWidget {
           ),
           // 금액
           Text(
-            '${NumberFormat('#,###').format(subscription.amount)}원',
+            _getLocalizedAmount(context, subscription.amount),
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
@@ -280,6 +292,31 @@ class _SubscriptionTile extends StatelessWidget {
         return Icons.fitness_center_outlined;
       default:
         return Icons.subscriptions_outlined;
+    }
+  }
+
+  String _getLocalizedAmount(BuildContext context, double amount) {
+    final currency = context.read<AppSettingsBloc>().state.currency;
+    final formattedAmount = NumberFormat('#,###').format(amount);
+
+    final currencySymbols = {
+      'KRW': '원',
+      'JPY': '¥',
+      'USD': '\$',
+      'EUR': '€',
+    };
+
+    final symbol = currencySymbols[currency] ?? currencySymbols['KRW']!;
+
+    switch (currency) {
+      case 'USD':
+      case 'EUR':
+        return '$symbol$formattedAmount';
+      case 'JPY':
+        return '¥$formattedAmount';
+      case 'KRW':
+      default:
+        return '$formattedAmount$symbol';
     }
   }
 }

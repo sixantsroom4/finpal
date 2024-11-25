@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:finpal/presentation/bloc/receipt/receipt_event.dart';
 import '../../../domain/entities/receipt.dart';
 
 abstract class ReceiptState extends Equatable {
@@ -60,6 +61,7 @@ class ReceiptLoaded extends ReceiptState {
   final double totalAmount;
   final String? message;
   final bool isAnalysisComplete;
+  final SortOption? currentSortOption;
 
   const ReceiptLoaded({
     required this.receipts,
@@ -67,11 +69,18 @@ class ReceiptLoaded extends ReceiptState {
     required this.totalAmount,
     this.message,
     this.isAnalysisComplete = false,
+    this.currentSortOption,
   });
 
   @override
-  List<Object?> get props =>
-      [receipts, merchantTotals, totalAmount, message, isAnalysisComplete];
+  List<Object?> get props => [
+        receipts,
+        merchantTotals,
+        totalAmount,
+        message,
+        isAnalysisComplete,
+        currentSortOption,
+      ];
 }
 
 class ReceiptError extends ReceiptState {

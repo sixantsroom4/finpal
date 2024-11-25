@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/core/constants/app_languages.dart';
+import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
 
 class ReceiptListItem extends StatelessWidget {
   final Receipt receipt;
@@ -53,16 +54,29 @@ class ReceiptListItem extends StatelessWidget {
   }
 
   String _getLocalizedAmount(BuildContext context, double amount) {
-    final language = context.read<AppLanguageBloc>().state.language;
+    final currency = context.read<AppSettingsBloc>().state.currency;
     final formatter = NumberFormat('#,###');
-    switch (language) {
-      case AppLanguage.english:
-        return '\$${formatter.format(amount)}';
-      case AppLanguage.japanese:
-        return '¥${formatter.format(amount)}';
-      case AppLanguage.korean:
+    final formattedAmount = formatter.format(amount);
+
+    final currencySymbols = {
+      'KRW': '원',
+      'JPY': '¥',
+      'USD': '\$',
+      'EUR': '€',
+    };
+
+    final symbol = currencySymbols[currency] ?? currencySymbols['KRW']!;
+
+    // 통화별 표시 형식
+    switch (currency) {
+      case 'USD':
+      case 'EUR':
+        return '$symbol$formattedAmount';
+      case 'JPY':
+        return '¥$formattedAmount';
+      case 'KRW':
       default:
-        return '${formatter.format(amount)}원';
+        return '$formattedAmount$symbol';
     }
   }
 }

@@ -6,6 +6,7 @@ import '../../../../domain/entities/subscription.dart';
 import '../../../bloc/subscription/subscription_bloc.dart';
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/core/constants/app_languages.dart';
+import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
 
 class EditSubscriptionBottomSheet extends StatefulWidget {
   final Subscription subscription;
@@ -107,14 +108,15 @@ class _EditSubscriptionBottomSheetState
     return errors[key]?[language] ?? errors[key]?[AppLanguage.korean] ?? key;
   }
 
-  String _getLocalizedCurrency(BuildContext context) {
-    final language = context.read<AppLanguageBloc>().state.language;
-    const Map<AppLanguage, String> currencies = {
-      AppLanguage.english: '\$',
-      AppLanguage.korean: '원',
-      AppLanguage.japanese: '¥',
+  String _getCurrencySymbol(BuildContext context) {
+    final currency = context.read<AppSettingsBloc>().state.currency;
+    final currencySymbols = {
+      'KRW': '원',
+      'JPY': '¥',
+      'USD': '\$',
+      'EUR': '€',
     };
-    return currencies[language] ?? currencies[AppLanguage.korean]!;
+    return currencySymbols[currency] ?? currencySymbols['KRW']!;
   }
 
   Map<String, String> _getLocalizedCategories(BuildContext context) {
@@ -231,7 +233,7 @@ class _EditSubscriptionBottomSheetState
               decoration: InputDecoration(
                 labelText: _getLocalizedLabel(context, 'amount'),
                 border: OutlineInputBorder(),
-                suffix: Text(_getLocalizedCurrency(context)),
+                suffix: Text(_getCurrencySymbol(context)),
               ),
               keyboardType: TextInputType.number,
               validator: (value) {
@@ -313,6 +315,7 @@ class _EditSubscriptionBottomSheetState
 
   void _submit() {
     if (_formKey.currentState?.validate() ?? false) {
+      final currency = context.read<AppSettingsBloc>().state.currency;
       final updatedSubscription = Subscription(
         id: widget.subscription.id,
         name: _nameController.text,
@@ -324,7 +327,7 @@ class _EditSubscriptionBottomSheetState
         userId: widget.subscription.userId,
         endDate: widget.subscription.endDate,
         isActive: widget.subscription.isActive,
-        currency: widget.subscription.currency,
+        currency: currency,
       );
 
       context.read<SubscriptionBloc>().add(

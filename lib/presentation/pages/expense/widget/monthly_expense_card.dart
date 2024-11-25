@@ -9,6 +9,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../bloc/expense/expense_bloc.dart';
 import '../../../bloc/auth/auth_bloc.dart';
+import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
 
 class MonthlyExpenseCard extends StatefulWidget {
   const MonthlyExpenseCard({super.key});
@@ -152,16 +153,28 @@ class _MonthlyExpenseCardState extends State<MonthlyExpenseCard> {
   }
 
   String _getLocalizedAmount(BuildContext context, double amount) {
-    final language = context.read<AppLanguageBloc>().state.language;
+    final currency = context.read<AppSettingsBloc>().state.currency;
     final formattedAmount = _numberFormat.format(amount);
-    switch (language) {
-      case AppLanguage.english:
-        return '\$$formattedAmount';
-      case AppLanguage.japanese:
+
+    final currencySymbols = {
+      'KRW': '원',
+      'JPY': '¥',
+      'USD': '\$',
+      'EUR': '€',
+    };
+
+    final symbol = currencySymbols[currency] ?? currencySymbols['KRW']!;
+
+    // 통화별 표시 형식
+    switch (currency) {
+      case 'USD':
+      case 'EUR':
+        return '$symbol$formattedAmount';
+      case 'JPY':
         return '¥$formattedAmount';
-      case AppLanguage.korean:
+      case 'KRW':
       default:
-        return '${formattedAmount}원';
+        return '$formattedAmount$symbol';
     }
   }
 }

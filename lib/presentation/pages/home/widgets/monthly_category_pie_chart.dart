@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../../../bloc/expense/expense_bloc.dart';
 import '../../../bloc/app_language/app_language_bloc.dart';
 import '../../../../core/constants/app_languages.dart';
+import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
 
 class MonthlyCategoryPieChart extends StatelessWidget {
   const MonthlyCategoryPieChart({super.key});
@@ -49,16 +50,28 @@ class MonthlyCategoryPieChart extends StatelessWidget {
   }
 
   String _getLocalizedAmount(BuildContext context, double amount) {
-    final language = context.read<AppLanguageBloc>().state.language;
+    final currency = context.read<AppSettingsBloc>().state.currency;
     final formattedAmount = NumberFormat('#,###').format(amount);
-    switch (language) {
-      case AppLanguage.english:
-        return '\$$formattedAmount';
-      case AppLanguage.japanese:
+
+    final currencySymbols = {
+      'KRW': '원',
+      'JPY': '¥',
+      'USD': '\$',
+      'EUR': '€',
+    };
+
+    final symbol = currencySymbols[currency] ?? currencySymbols['KRW']!;
+
+    // 통화별 표시 형식
+    switch (currency) {
+      case 'USD':
+      case 'EUR':
+        return '$symbol$formattedAmount';
+      case 'JPY':
         return '¥$formattedAmount';
-      case AppLanguage.korean:
+      case 'KRW':
       default:
-        return '${formattedAmount}원';
+        return '$formattedAmount$symbol';
     }
   }
 
@@ -196,21 +209,78 @@ class MonthlyCategoryPieChart extends StatelessWidget {
               Expanded(
                 child: Text(
                   category,
-                  style: const TextStyle(fontSize: 10),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
               Text(
                 _getLocalizedAmount(context, amount),
                 style: const TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w500,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
           ),
         );
       }).toList(),
+    );
+  }
+
+  Widget _buildInfoRow(BuildContext context, String label, String value,
+      {bool isCurrency = false}) {
+    if (isCurrency) {
+      final currency = context.read<AppSettingsBloc>().state.currency;
+      final amount = double.parse(value.replaceAll(RegExp(r'[^0-9.]'), ''));
+
+      final currencySymbols = {
+        'KRW': '원',
+        'JPY': '¥',
+        'USD': '\$',
+        'EUR': '€',
+      };
+
+      final symbol = currencySymbols[currency] ?? currencySymbols['KRW']!;
+
+      // 통화별 표시 형식
+      switch (currency) {
+        case 'USD':
+        case 'EUR':
+          value = '$symbol${NumberFormat('#,###').format(amount)}';
+          break;
+        case 'JPY':
+          value = '¥${NumberFormat('#,###').format(amount)}';
+          break;
+        case 'KRW':
+        default:
+          value = '${NumberFormat('#,###').format(amount)}$symbol';
+      }
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 16,
+              color: Colors.grey,
+            ),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

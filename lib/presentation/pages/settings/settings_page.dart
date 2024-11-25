@@ -1,4 +1,5 @@
 // lib/presentation/pages/settings/settings_page.dart
+import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
 import 'package:finpal/presentation/bloc/auth/auth_event.dart';
 import 'package:finpal/presentation/bloc/auth/auth_state.dart';
 import 'package:finpal/presentation/pages/settings/widget/preferences_section.dart';
@@ -45,7 +46,7 @@ class SettingsPage extends StatelessWidget {
               const Divider(),
               ListTile(
                 leading: const Icon(Icons.account_balance_wallet),
-                title: Text(_getLocalizedLabel(context, 'monthly_budget')),
+                title: Text(_getLocalizedBudgetTitle(context)),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => context.push('/settings/budget'),
               ),
@@ -111,6 +112,18 @@ class SettingsPage extends StatelessWidget {
       },
     };
     return labels[key]?[language] ?? labels[key]?[AppLanguage.korean] ?? key;
+  }
+
+  String _getLocalizedBudgetTitle(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    final currency = context.read<AppSettingsBloc>().state.currency;
+
+    final Map<AppLanguage, String> titles = {
+      AppLanguage.english: 'Monthly Budget ($currency)',
+      AppLanguage.korean: '월 예산 ($currency)',
+      AppLanguage.japanese: '月予算 ($currency)',
+    };
+    return titles[language] ?? titles[AppLanguage.korean]!;
   }
 
   void _showLogoutDialog(BuildContext context) {

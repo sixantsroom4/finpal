@@ -8,6 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/core/constants/app_languages.dart';
+import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
 
 class EditReceiptInfoBottomSheet extends StatefulWidget {
   final Receipt receipt;
@@ -46,7 +47,7 @@ class _EditReceiptInfoBottomSheetState
       'edit_receipt': {
         AppLanguage.english: 'Edit Receipt',
         AppLanguage.korean: '영수증 정보 수정',
-        AppLanguage.japanese: 'レシート情報を編集',
+        AppLanguage.japanese: 'シート情報を編集',
       },
       'store_name': {
         AppLanguage.english: 'Store Name',
@@ -105,6 +106,17 @@ class _EditReceiptInfoBottomSheetState
       },
     };
     return labels[key]?[language] ?? labels[key]?[AppLanguage.korean] ?? key;
+  }
+
+  String _getCurrencySymbol(BuildContext context) {
+    final currency = context.read<AppSettingsBloc>().state.currency;
+    final currencySymbols = {
+      'KRW': '원 ',
+      'JPY': '¥ ',
+      'USD': '\$ ',
+      'EUR': '€ ',
+    };
+    return currencySymbols[currency] ?? currencySymbols['KRW']!;
   }
 
   @override
@@ -245,6 +257,7 @@ class _EditReceiptInfoBottomSheetState
                       controller: _totalAmountController,
                       decoration: InputDecoration(
                         labelText: _getLocalizedLabel(context, 'total'),
+                        prefixText: _getCurrencySymbol(context),
                       ),
                       keyboardType: TextInputType.number,
                       inputFormatters: [

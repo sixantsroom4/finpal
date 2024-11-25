@@ -1,5 +1,6 @@
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/core/constants/app_languages.dart';
+import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../bloc/expense/expense_bloc.dart';
@@ -126,13 +127,14 @@ class _BudgetSettingsPageState extends State<BudgetSettingsPage> {
   }
 
   String _getLocalizedCurrency(BuildContext context) {
-    final language = context.read<AppLanguageBloc>().state.language;
-    const Map<AppLanguage, String> currencies = {
-      AppLanguage.english: '\$',
-      AppLanguage.korean: '원',
-      AppLanguage.japanese: '¥',
+    final currency = context.read<AppSettingsBloc>().state.currency;
+    const Map<String, String> currencySymbols = {
+      'KRW': '원',
+      'JPY': '¥',
+      'USD': '\$',
+      'EUR': '€',
     };
-    return currencies[language] ?? currencies[AppLanguage.korean]!;
+    return currencySymbols[currency] ?? currencySymbols['KRW']!;
   }
 
   void _updateBudget() {

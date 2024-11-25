@@ -67,3 +67,8 @@ class UserRegistrationCompleted extends UserRegistrationEvent {
   @override
   List<Object> get props => [userId, authBloc];
 }
+
+class UserRegistrationCurrencyChanged extends UserRegistrationEvent {
+  final String currency;
+  UserRegistrationCurrencyChanged(this.currency);
+}

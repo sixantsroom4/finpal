@@ -2,6 +2,7 @@
 import 'package:finpal/data/models/expense_model.dart';
 import 'package:finpal/data/models/user_model.dart';
 import 'package:finpal/domain/entities/expense.dart';
+import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
 import 'package:finpal/presentation/bloc/auth/auth_state.dart';
 import 'package:finpal/presentation/bloc/expense/expense_event.dart';
 import 'package:flutter/material.dart';
@@ -160,7 +161,7 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: _addExpense,
+              onPressed: () => _addExpense(context),
               child: Text(_getLocalizedLabel(context, 'save')),
             ),
             const SizedBox(height: 16),
@@ -170,23 +171,25 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
     );
   }
 
-  void _addExpense() {
+  void _addExpense(BuildContext context) {
     if (_formKey.currentState?.validate() ?? false) {
-      final authState = context.read<AuthBloc>().state;
-      if (authState is Authenticated) {
+      final state = context.read<AuthBloc>().state;
+      if (state is Authenticated) {
+        final amount = double.parse(_amountController.text.replaceAll(',', ''));
+        final currency = context.read<AppSettingsBloc>().state.currency;
+
         final expense = ExpenseModel(
           id: const Uuid().v4(),
-          amount: double.parse(_amountController.text.replaceAll(',', '')),
-          currency: authState.user.settings?['currency'] ?? 'KRW',
+          userId: state.user.id,
           description: _descriptionController.text,
+          amount: amount,
+          currency: currency,
           category: _selectedCategory,
-          userId: authState.user.id,
           date: _selectedDate,
           createdAt: DateTime.now(),
         );
 
         context.read<ExpenseBloc>().add(AddExpense(expenseModel: expense));
-
         Navigator.pop(context);
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -313,13 +316,14 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
   }
 
   String _getLocalizedCurrency(BuildContext context) {
-    final language = context.read<AppLanguageBloc>().state.language;
-    const Map<AppLanguage, String> currencies = {
-      AppLanguage.english: '\$',
-      AppLanguage.korean: '원',
-      AppLanguage.japanese: '¥',
+    final currency = context.read<AppSettingsBloc>().state.currency;
+    const Map<String, String> currencySymbols = {
+      'KRW': '원',
+      'JPY': '¥',
+      'USD': '\$',
+      'EUR': '€',
     };
-    return currencies[language] ?? currencies[AppLanguage.korean]!;
+    return currencySymbols[currency] ?? currencySymbols['KRW']!;
   }
 
   String _getLocalizedSuccessMessage(BuildContext context) {

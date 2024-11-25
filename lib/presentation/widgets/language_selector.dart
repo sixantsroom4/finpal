@@ -31,25 +31,6 @@ class LanguageSelector extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
         ),
         offset: const Offset(0, 40),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.language, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                selectedLanguage.label,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(width: 4),
-              const Icon(Icons.arrow_drop_down, size: 20),
-            ],
-          ),
-        ),
         itemBuilder: (context) => AppLanguage.values.map((language) {
           return PopupMenuItem<AppLanguage>(
             value: language,
@@ -79,6 +60,25 @@ class LanguageSelector extends StatelessWidget {
           );
         }).toList(),
         onSelected: onLanguageChanged,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.language, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                selectedLanguage.label,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(width: 4),
+              const Icon(Icons.arrow_drop_down, size: 20),
+            ],
+          ),
+        ),
       ),
     );
   }

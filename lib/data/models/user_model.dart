@@ -146,3 +146,25 @@ class UserModel extends User {
   /// 사용자의 선호 언어
   String get preferredLanguage => settings?['language'] ?? 'ko';
 }
+
+class UserSettings {
+  final String language;
+  final String currency;
+
+  const UserSettings({
+    this.language = 'ko',
+    this.currency = 'KRW',
+  });
+
+  factory UserSettings.fromJson(Map<String, dynamic> json) {
+    return UserSettings(
+      language: json['language'] ?? 'ko',
+      currency: json['currency'] ?? 'KRW',
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'language': language,
+        'currency': currency,
+      };
+}

@@ -57,6 +57,33 @@ class ReceiptBloc extends Bloc<ReceiptEvent, ReceiptState> {
         emit(ReceiptError(e.toString()));
       }
     });
+    on<SortReceipts>((event, emit) async {
+      if (state is ReceiptLoaded) {
+        final currentState = state as ReceiptLoaded;
+        final sortedReceipts = List<Receipt>.from(currentState.receipts);
+
+        switch (event.sortOption) {
+          case SortOption.date:
+            sortedReceipts.sort((a, b) => b.date.compareTo(a.date));
+            break;
+          case SortOption.store:
+            sortedReceipts
+                .sort((a, b) => a.merchantName.compareTo(b.merchantName));
+            break;
+          case SortOption.amount:
+            sortedReceipts
+                .sort((a, b) => b.totalAmount.compareTo(a.totalAmount));
+            break;
+        }
+
+        emit(ReceiptLoaded(
+          receipts: sortedReceipts,
+          merchantTotals: currentState.merchantTotals,
+          totalAmount: currentState.totalAmount,
+          currentSortOption: event.sortOption,
+        ));
+      }
+    });
   }
 
   Future<void> _onScanReceipt(

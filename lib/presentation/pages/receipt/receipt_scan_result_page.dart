@@ -13,6 +13,7 @@ import 'package:intl/intl.dart';
 import 'widgets/edit_receipt_info_bottom_sheet.dart';
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/core/constants/app_languages.dart';
+import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
 
 class ReceiptScanResultPage extends StatelessWidget {
   final String imagePath;
@@ -415,15 +416,15 @@ class ReceiptScanResultPage extends StatelessWidget {
   }
 
   NumberFormat _getCurrencyFormatter(BuildContext context) {
-    final language = context.read<AppLanguageBloc>().state.language;
-    switch (language) {
-      case AppLanguage.english:
-        return NumberFormat.currency(locale: 'en_US', symbol: '\$');
-      case AppLanguage.japanese:
-        return NumberFormat.currency(locale: 'ja_JP', symbol: '¥');
-      case AppLanguage.korean:
-      default:
-        return NumberFormat.currency(locale: 'ko_KR', symbol: '₩');
-    }
+    final currency = context.read<AppSettingsBloc>().state.currency;
+
+    final Map<String, NumberFormat> formatters = {
+      'USD': NumberFormat.currency(locale: 'en_US', symbol: '\$'),
+      'JPY': NumberFormat.currency(locale: 'ja_JP', symbol: '¥'),
+      'EUR': NumberFormat.currency(locale: 'de_DE', symbol: '€'),
+      'KRW': NumberFormat.currency(locale: 'ko_KR', symbol: '₩'),
+    };
+
+    return formatters[currency] ?? formatters['KRW']!;
   }
 }

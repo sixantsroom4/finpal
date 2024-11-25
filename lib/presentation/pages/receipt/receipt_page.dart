@@ -17,6 +17,7 @@ import 'receipt_preview_page.dart';
 import 'package:go_router/go_router.dart';
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/core/constants/app_languages.dart';
+import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
 
 class ReceiptPage extends StatefulWidget {
   const ReceiptPage({super.key});
@@ -183,26 +184,32 @@ class _ReceiptPageState extends State<ReceiptPage> {
         children: [
           ListTile(
             leading: const Icon(Icons.date_range),
-            title: const Text('날짜순'),
+            title: Text(_getLocalizedLabel(context, 'sort_by_date')),
             onTap: () {
+              context.read<ReceiptBloc>().add(
+                    SortReceipts(SortOption.date),
+                  );
               Navigator.pop(context);
-              // TODO: 정렬 구현
             },
           ),
           ListTile(
             leading: const Icon(Icons.store),
-            title: const Text('가맹점순'),
+            title: Text(_getLocalizedLabel(context, 'sort_by_store')),
             onTap: () {
+              context.read<ReceiptBloc>().add(
+                    SortReceipts(SortOption.store),
+                  );
               Navigator.pop(context);
-              // TODO: 정렬 구현
             },
           ),
           ListTile(
             leading: const Icon(Icons.attach_money),
-            title: const Text('금액순'),
+            title: Text(_getLocalizedLabel(context, 'sort_by_amount')),
             onTap: () {
+              context.read<ReceiptBloc>().add(
+                    SortReceipts(SortOption.amount),
+                  );
               Navigator.pop(context);
-              // TODO: 정렬 구현
             },
           ),
         ],
@@ -320,6 +327,21 @@ class _ReceiptPageState extends State<ReceiptPage> {
         AppLanguage.korean: '총 지출액',
         AppLanguage.japanese: '総支出額',
       },
+      'sort_by_date': {
+        AppLanguage.english: 'Date',
+        AppLanguage.korean: '날짜',
+        AppLanguage.japanese: '日付',
+      },
+      'sort_by_store': {
+        AppLanguage.english: 'Store',
+        AppLanguage.korean: '가맹점',
+        AppLanguage.japanese: '店舗',
+      },
+      'sort_by_amount': {
+        AppLanguage.english: 'Amount',
+        AppLanguage.korean: '금액',
+        AppLanguage.japanese: '金額',
+      },
     };
     return labels[key]?[language] ?? labels[key]?[AppLanguage.korean] ?? key;
   }
@@ -338,15 +360,28 @@ class _ReceiptPageState extends State<ReceiptPage> {
   }
 
   String _getLocalizedAmount(BuildContext context, double amount) {
-    final language = context.read<AppLanguageBloc>().state.language;
-    switch (language) {
-      case AppLanguage.english:
-        return '\$${_numberFormat.format(amount)}';
-      case AppLanguage.japanese:
-        return '¥${_numberFormat.format(amount)}';
-      case AppLanguage.korean:
+    final currency = context.read<AppSettingsBloc>().state.currency;
+    final formattedAmount = _numberFormat.format(amount);
+
+    final currencySymbols = {
+      'KRW': '원',
+      'JPY': '¥',
+      'USD': '\$',
+      'EUR': '€',
+    };
+
+    final symbol = currencySymbols[currency] ?? currencySymbols['KRW']!;
+
+    // 통화별 표시 형식
+    switch (currency) {
+      case 'USD':
+      case 'EUR':
+        return '$symbol$formattedAmount';
+      case 'JPY':
+        return '¥$formattedAmount';
+      case 'KRW':
       default:
-        return '${_numberFormat.format(amount)}원';
+        return '$formattedAmount$symbol';
     }
   }
 }

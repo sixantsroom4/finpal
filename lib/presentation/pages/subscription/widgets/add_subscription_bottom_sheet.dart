@@ -9,6 +9,7 @@ import '../../../bloc/subscription/subscription_bloc.dart';
 import '../../../bloc/auth/auth_bloc.dart';
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/core/constants/app_languages.dart';
+import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
 
 class AddSubscriptionBottomSheet extends StatefulWidget {
   const AddSubscriptionBottomSheet({super.key});
@@ -98,14 +99,15 @@ class _AddSubscriptionBottomSheetState
     return errors[key]?[language] ?? errors[key]?[AppLanguage.korean] ?? key;
   }
 
-  String _getLocalizedCurrency(BuildContext context) {
-    final language = context.read<AppLanguageBloc>().state.language;
-    const Map<AppLanguage, String> currencies = {
-      AppLanguage.english: '\$',
-      AppLanguage.korean: '원',
-      AppLanguage.japanese: '¥',
+  String _getCurrencySymbol(BuildContext context) {
+    final currency = context.read<AppSettingsBloc>().state.currency;
+    final currencySymbols = {
+      'KRW': '원',
+      'JPY': '¥',
+      'USD': '\$',
+      'EUR': '€',
     };
-    return currencies[language] ?? currencies[AppLanguage.korean]!;
+    return currencySymbols[currency] ?? currencySymbols['KRW']!;
   }
 
   String _getLocalizedCategory(BuildContext context, String category) {
@@ -227,7 +229,7 @@ class _AddSubscriptionBottomSheetState
               decoration: InputDecoration(
                 labelText: _getLocalizedLabel(context, 'amount'),
                 border: OutlineInputBorder(),
-                suffix: Text(_getLocalizedCurrency(context)),
+                suffix: Text(_getCurrencySymbol(context)),
               ),
               keyboardType: TextInputType.number,
               validator: (value) {
@@ -324,6 +326,7 @@ class _AddSubscriptionBottomSheetState
     if (_formKey.currentState?.validate() ?? false) {
       final authState = context.read<AuthBloc>().state;
       if (authState is Authenticated) {
+        final currency = context.read<AppSettingsBloc>().state.currency;
         final subscription = Subscription(
           id: const Uuid().v4(),
           name: _nameController.text,
@@ -334,7 +337,7 @@ class _AddSubscriptionBottomSheetState
           category: _selectedCategory,
           userId: authState.user.id,
           isActive: true,
-          currency: 'USD',
+          currency: currency,
         );
 
         context.read<SubscriptionBloc>().add(AddSubscription(subscription));

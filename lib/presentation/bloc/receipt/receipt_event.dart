@@ -102,3 +102,18 @@ class LoadReceiptById extends ReceiptEvent {
   @override
   List<Object> get props => [receiptId];
 }
+
+enum SortOption {
+  date,
+  store,
+  amount,
+}
+
+class SortReceipts extends ReceiptEvent {
+  final SortOption sortOption;
+
+  const SortReceipts(this.sortOption);
+
+  @override
+  List<Object> get props => [sortOption];
+}
