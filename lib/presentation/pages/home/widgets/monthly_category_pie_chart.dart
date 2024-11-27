@@ -40,6 +40,51 @@ class MonthlyCategoryPieChart extends StatelessWidget {
         AppLanguage.korean: '피트니스',
         AppLanguage.japanese: 'フィットネス',
       },
+      'productivity': {
+        AppLanguage.english: 'Productivity',
+        AppLanguage.korean: '생산성',
+        AppLanguage.japanese: '生産性',
+      },
+      'software': {
+        AppLanguage.english: 'Software',
+        AppLanguage.korean: '소프트웨어',
+        AppLanguage.japanese: 'ソフトウェア',
+      },
+      'pet_care': {
+        AppLanguage.english: 'Pet Care',
+        AppLanguage.korean: '반려동물 관리',
+        AppLanguage.japanese: 'ペットケア',
+      },
+      'beauty': {
+        AppLanguage.english: 'Beauty',
+        AppLanguage.korean: '뷰티',
+        AppLanguage.japanese: '美容',
+      },
+      'car_services': {
+        AppLanguage.english: 'Car Services',
+        AppLanguage.korean: '자동차 서비스',
+        AppLanguage.japanese: '車サービス',
+      },
+      'streaming': {
+        AppLanguage.english: 'Streaming Services',
+        AppLanguage.korean: '스트리밍 서비스',
+        AppLanguage.japanese: 'ストリーミングサービス',
+      },
+      'rent': {
+        AppLanguage.english: 'Rent',
+        AppLanguage.korean: '월세',
+        AppLanguage.japanese: '家賃',
+      },
+      'delivery': {
+        AppLanguage.english: 'Delivery Services',
+        AppLanguage.korean: '배송 서비스',
+        AppLanguage.japanese: '配送サービス',
+      },
+      'premium': {
+        AppLanguage.english: 'Premium Memberships',
+        AppLanguage.korean: '프리미엄 멤버십',
+        AppLanguage.japanese: 'プレミアム会員',
+      },
       'other': {
         AppLanguage.english: 'Other',
         AppLanguage.korean: '기타',
