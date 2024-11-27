@@ -27,6 +27,23 @@ class UserRegistrationPage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back,
+            color: Color(0xFF1C2833),
+          ),
+          onPressed: () {
+            final authState = context.read<AuthBloc>().state;
+            if (authState is AuthRequiresRegistration) {
+              context.read<AuthBloc>().emit(
+                    Authenticated(
+                      authState.user.copyWith(hasAcceptedTerms: false),
+                    ),
+                  );
+            }
+            context.go('/terms');
+          },
+        ),
         title: Text(
           _getLocalizedTitle(context),
           style: const TextStyle(

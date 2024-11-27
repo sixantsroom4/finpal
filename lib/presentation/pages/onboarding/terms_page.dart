@@ -32,7 +32,14 @@ class _TermsPageState extends State<TermsPage> {
         return Scaffold(
           backgroundColor: Colors.white,
           appBar: AppBar(
-            backgroundColor: Colors.white,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () {
+                context.read<AuthBloc>().add(AuthSignedOut());
+                context.go('/welcome');
+              },
+            ),
+            backgroundColor: Colors.transparent,
             elevation: 0,
             centerTitle: true,
             title: Column(
