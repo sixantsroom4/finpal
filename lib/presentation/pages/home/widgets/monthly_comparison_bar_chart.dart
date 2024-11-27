@@ -129,7 +129,7 @@ class MonthlyComparisonBarChart extends StatelessWidget {
         AppLanguage.korean: '식비',
         AppLanguage.japanese: '食費',
       },
-      'transportation': {
+      'transport': {
         AppLanguage.english: 'Transport',
         AppLanguage.korean: '교통',
         AppLanguage.japanese: '交通',
@@ -145,9 +145,39 @@ class MonthlyComparisonBarChart extends StatelessWidget {
         AppLanguage.japanese: '娯楽',
       },
       'health': {
-        AppLanguage.english: 'Health',
+        AppLanguage.english: 'Medical',
         AppLanguage.korean: '의료',
         AppLanguage.japanese: '医療',
+      },
+      'beauty': {
+        AppLanguage.english: 'Beauty',
+        AppLanguage.korean: '미용',
+        AppLanguage.japanese: '美容',
+      },
+      'utilities': {
+        AppLanguage.english: 'Utilities',
+        AppLanguage.korean: '공과금',
+        AppLanguage.japanese: '公共料金',
+      },
+      'education': {
+        AppLanguage.english: 'Education',
+        AppLanguage.korean: '교육',
+        AppLanguage.japanese: '教育',
+      },
+      'savings': {
+        AppLanguage.english: 'Savings',
+        AppLanguage.korean: '저축',
+        AppLanguage.japanese: '貯蓄',
+      },
+      'travel': {
+        AppLanguage.english: 'Travel',
+        AppLanguage.korean: '여행',
+        AppLanguage.japanese: '旅行',
+      },
+      'others': {
+        AppLanguage.english: 'Others',
+        AppLanguage.korean: '기타',
+        AppLanguage.japanese: 'その他',
       },
     };
     return categories[category]?[language] ?? category;

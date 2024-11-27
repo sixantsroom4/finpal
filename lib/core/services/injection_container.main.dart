@@ -68,6 +68,7 @@ Future<void> initMain() async {
   // Blocs
   sl.registerFactory(() => AuthBloc(
         authRepository: sl(),
+        firestore: sl(),
       ));
 
   sl.registerFactory(() => ExpenseBloc(

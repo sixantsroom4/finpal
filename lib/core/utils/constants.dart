@@ -40,6 +40,31 @@ class CategoryConstants {
       AppLanguage.korean: '의료',
       AppLanguage.japanese: '医療',
     },
+    'beauty': {
+      AppLanguage.english: 'Beauty',
+      AppLanguage.korean: '미용',
+      AppLanguage.japanese: '美容',
+    },
+    'utilities': {
+      AppLanguage.english: 'Utilities',
+      AppLanguage.korean: '공과금',
+      AppLanguage.japanese: '公共料金',
+    },
+    'education': {
+      AppLanguage.english: 'Education',
+      AppLanguage.korean: '교육',
+      AppLanguage.japanese: '教育',
+    },
+    'savings': {
+      AppLanguage.english: 'Savings',
+      AppLanguage.korean: '저축',
+      AppLanguage.japanese: '貯蓄',
+    },
+    'travel': {
+      AppLanguage.english: 'Travel',
+      AppLanguage.korean: '여행',
+      AppLanguage.japanese: '旅行',
+    },
     'other': {
       AppLanguage.english: 'Others',
       AppLanguage.korean: '기타',

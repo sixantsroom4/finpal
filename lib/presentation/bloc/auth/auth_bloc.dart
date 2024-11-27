@@ -7,14 +7,18 @@ import '../../../domain/repositories/auth_repository.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository _authRepository;
   StreamSubscription? _authStateSubscription;
+  final FirebaseFirestore _firestore;
 
   AuthBloc({
     required AuthRepository authRepository,
+    required FirebaseFirestore firestore,
   })  : _authRepository = authRepository,
+        _firestore = firestore,
         super(AuthInitial()) {
     on<AuthCheckRequested>(_onAuthCheckRequested);
     on<AuthSignedOut>(_onAuthSignedOut);
@@ -81,19 +85,43 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       final result = await _authRepository.getCurrentUser();
       debugPrint('getCurrentUser 결과: $result');
-      result.fold(
-        (failure) {
+
+      await result.fold(
+        (failure) async {
           debugPrint('인증 실패: ${failure.message}');
           emit(AuthFailure(failure.message));
         },
-        (user) {
-          debugPrint('인증 상태: ${user != null ? "인증됨" : "미인증"}');
-          user != null ? emit(Authenticated(user)) : emit(Unauthenticated());
+        (user) async {
+          if (user != null) {
+            // Firestore에서 최신 사용자 데이터 로드
+            final userDoc =
+                await _firestore.collection('users').doc(user.id).get();
+
+            if (userDoc.exists) {
+              final userData = userDoc.data()!;
+              // hasAcceptedTerms 정보 포함하여 사용자 정보 업데이트
+              user = user.copyWith(
+                hasAcceptedTerms: userData['hasAcceptedTerms'] ?? false,
+              );
+            }
+            if (!emit.isDone) {
+              // emit이 아직 완료되지 않았는지 확인
+              emit(Authenticated(user));
+            }
+          } else {
+            if (!emit.isDone) {
+              // emit이 아직 완료되지 않았는지 확인
+              emit(Unauthenticated());
+            }
+          }
         },
       );
     } catch (e) {
       debugPrint('인증 확인 중 오류 발생: $e');
-      emit(Unauthenticated());
+      if (!emit.isDone) {
+        // emit이 아직 완료되지 않았는지 확인
+        emit(Unauthenticated());
+      }
     }
   }
 
@@ -249,7 +277,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         (_) => emit(state), // 비밀번호 변경은 인증 상태를 변경하지 않습니다
       );
     } catch (e) {
-      emit(AuthFailure('비밀번호  ���습니다: ${e.toString()}'));
+      emit(AuthFailure('비밀번호  습니다: ${e.toString()}'));
     }
   }
 

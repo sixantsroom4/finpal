@@ -155,6 +155,16 @@ class _ExpensePageState extends State<ExpensePage> {
         return Icons.movie;
       case 'health':
         return Icons.favorite;
+      case 'beauty':
+        return Icons.face;
+      case 'utilities':
+        return Icons.receipt_long;
+      case 'education':
+        return Icons.school;
+      case 'savings':
+        return Icons.savings;
+      case 'travel':
+        return Icons.flight;
       default:
         return Icons.attach_money;
     }
@@ -223,9 +233,34 @@ class _ExpensePageState extends State<ExpensePage> {
         AppLanguage.japanese: '娯楽',
       },
       'health': {
-        AppLanguage.english: 'Health',
+        AppLanguage.english: 'Medical',
         AppLanguage.korean: '의료',
         AppLanguage.japanese: '医療',
+      },
+      'beauty': {
+        AppLanguage.english: 'Beauty',
+        AppLanguage.korean: '미용',
+        AppLanguage.japanese: '美容',
+      },
+      'utilities': {
+        AppLanguage.english: 'Utilities',
+        AppLanguage.korean: '공과금',
+        AppLanguage.japanese: '公共料金',
+      },
+      'education': {
+        AppLanguage.english: 'Education',
+        AppLanguage.korean: '교육',
+        AppLanguage.japanese: '教育',
+      },
+      'savings': {
+        AppLanguage.english: 'Savings',
+        AppLanguage.korean: '저축',
+        AppLanguage.japanese: '貯蓄',
+      },
+      'travel': {
+        AppLanguage.english: 'Travel',
+        AppLanguage.korean: '여행',
+        AppLanguage.japanese: '旅行',
       },
     };
     return categories[category.toLowerCase()]?[language] ?? category;

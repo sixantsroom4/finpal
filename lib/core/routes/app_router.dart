@@ -29,7 +29,7 @@ class AppRouter {
   static GoRouter router(AuthBloc authBloc) {
     return GoRouter(
       debugLogDiagnostics: true,
-      initialLocation: '/',
+      initialLocation: '/expenses',
       refreshListenable: GoRouterRefreshStream(authBloc.stream),
       routes: [
         GoRoute(
