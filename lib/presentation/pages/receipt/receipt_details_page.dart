@@ -19,6 +19,7 @@ import 'package:finpal/presentation/bloc/expense/expense_state.dart';
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/core/constants/app_languages.dart';
 import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
+import 'widgets/edit_receipt_info_bottom_sheet.dart';
 
 class ReceiptDetailsPage extends StatelessWidget {
   final String receiptId;
@@ -405,7 +406,7 @@ class ReceiptDetailsPage extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (context) => EditReceiptBottomSheet(receipt: receipt),
+      builder: (context) => EditReceiptInfoBottomSheet(receipt: receipt),
     );
   }
 

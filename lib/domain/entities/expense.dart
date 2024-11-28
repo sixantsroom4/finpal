@@ -86,4 +86,40 @@ class Expense extends Equatable {
       currency: currency,
     );
   }
+
+  Expense copyWith({
+    String? id,
+    double? amount,
+    String? description,
+    DateTime? date,
+    String? category,
+    String? userId,
+    String? receiptUrl,
+    String? receiptId,
+    bool? isShared,
+    List<String>? sharedWith,
+    Map<String, double>? splitAmounts,
+    bool? isSubscription,
+    String? subscriptionId,
+    DateTime? createdAt,
+    String? currency,
+  }) {
+    return Expense(
+      id: id ?? this.id,
+      amount: amount ?? this.amount,
+      description: description ?? this.description,
+      date: date ?? this.date,
+      category: category ?? this.category,
+      userId: userId ?? this.userId,
+      receiptUrl: receiptUrl ?? this.receiptUrl,
+      receiptId: receiptId ?? this.receiptId,
+      isShared: isShared ?? this.isShared,
+      sharedWith: sharedWith ?? this.sharedWith,
+      splitAmounts: splitAmounts ?? this.splitAmounts,
+      isSubscription: isSubscription ?? this.isSubscription,
+      subscriptionId: subscriptionId ?? this.subscriptionId,
+      createdAt: createdAt ?? this.createdAt,
+      currency: currency ?? this.currency,
+    );
+  }
 }

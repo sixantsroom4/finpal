@@ -41,8 +41,16 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
   ) async {
     emit(ExpenseLoading());
 
+    // 사용자의 선호 통화와 예산 정보 가져오기
+    final userDoc =
+        await _firestore.collection('users').doc(event.userId).get();
+    final userModel = UserModel.fromJson(userDoc.data()!);
+    final preferredCurrency = userModel.preferredCurrency;
+
+    // 예산 정보 가져오기
     final budgetResult =
         await _expenseRepository.getMonthlyBudget(event.userId);
+
     final result = await _expenseRepository.getExpenses(event.userId);
     final previousMonthResult =
         await _expenseRepository.getPreviousMonthExpenses(event.userId);
@@ -50,8 +58,15 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
     result.fold(
       (failure) => emit(ExpenseError(failure.message)),
       (expenses) {
+        // 각 지출 항목의 통화를 사용자 선호 통화로 설정
+        final updatedExpenses = expenses
+            .map((expense) => expense.copyWith(
+                  currency: preferredCurrency,
+                ))
+            .toList();
+
         final categoryTotals = <String, double>{};
-        for (var expense in expenses) {
+        for (var expense in updatedExpenses) {
           categoryTotals[expense.category] =
               (categoryTotals[expense.category] ?? 0.0) + expense.amount;
         }
@@ -69,8 +84,9 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
         );
 
         emit(ExpenseLoaded(
-          expenses: expenses,
-          totalAmount: expenses.fold(0.0, (sum, exp) => sum + exp.amount),
+          expenses: updatedExpenses,
+          totalAmount:
+              updatedExpenses.fold(0.0, (sum, exp) => sum + exp.amount),
           monthlyBudget: budgetResult.fold(
             (failure) => state is ExpenseLoaded
                 ? (state as ExpenseLoaded).monthlyBudget
