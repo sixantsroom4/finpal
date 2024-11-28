@@ -100,6 +100,7 @@ class ReceiptBloc extends Bloc<ReceiptEvent, ReceiptState> {
       final result = await _receiptRepository.processReceipt(
         event.imagePath,
         event.userId,
+        event.userCurrency,
       );
 
       await result.fold(

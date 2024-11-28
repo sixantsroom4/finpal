@@ -312,6 +312,7 @@ class _EditReceiptInfoBottomSheetState
         price: 0,
         quantity: 1,
         totalPrice: 0,
+        currency: widget.receipt.currency,
       ));
     });
   }

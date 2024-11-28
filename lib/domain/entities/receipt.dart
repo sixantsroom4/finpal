@@ -103,16 +103,18 @@ class ReceiptItem extends Equatable {
   final double price;
   final int quantity;
   final double totalPrice;
+  final String currency;
 
   const ReceiptItem({
     required this.name,
     required this.price,
     required this.quantity,
     required this.totalPrice,
+    required this.currency,
   });
 
   @override
-  List<Object> get props => [name, price, quantity, totalPrice];
+  List<Object> get props => [name, price, quantity, totalPrice, currency];
 
   Map<String, dynamic> toJson() {
     return {
@@ -120,6 +122,7 @@ class ReceiptItem extends Equatable {
       'price': price,
       'quantity': quantity,
       'totalPrice': totalPrice,
+      'currency': currency,
     };
   }
 
@@ -128,12 +131,14 @@ class ReceiptItem extends Equatable {
     double? price,
     int? quantity,
     double? totalPrice,
+    String? currency,
   }) {
     return ReceiptItem(
       name: name ?? this.name,
       price: price ?? this.price,
       quantity: quantity ?? this.quantity,
       totalPrice: totalPrice ?? this.totalPrice,
+      currency: currency ?? this.currency,
     );
   }
 }

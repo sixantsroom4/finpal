@@ -10,6 +10,21 @@ import 'package:intl/intl.dart';
 import '../../../bloc/expense/expense_bloc.dart';
 import '../../../bloc/auth/auth_bloc.dart';
 import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
+import 'package:finpal/domain/entities/expense.dart';
+
+extension ExpenseListExtension on List<Expense> {
+  Map<String, double> groupByCurrency() {
+    final totals = <String, double>{};
+    for (var expense in this) {
+      totals.update(
+        expense.currency,
+        (value) => value + expense.amount,
+        ifAbsent: () => expense.amount,
+      );
+    }
+    return totals;
+  }
+}
 
 class MonthlyExpenseCard extends StatefulWidget {
   const MonthlyExpenseCard({super.key});
@@ -103,23 +118,53 @@ class _MonthlyExpenseCardState extends State<MonthlyExpenseCard> {
                   );
                 }
 
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      _getLocalizedExpenseLabel(context),
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    Text(
-                      _getLocalizedAmount(context,
-                          state is ExpenseLoaded ? state.totalAmount : 0),
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                    ),
-                  ],
-                );
+                if (state is ExpenseLoaded) {
+                  final currencyTotals = state.expenses.groupByCurrency();
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        _getLocalizedExpenseLabel(context),
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 8),
+                      ...currencyTotals.entries
+                          .map((entry) => Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 4),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      entry.key,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium,
+                                    ),
+                                    Text(
+                                      _getLocalizedAmount(
+                                          context, entry.value, entry.key),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .primary,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ))
+                          .toList(),
+                    ],
+                  );
+                }
+
+                return const SizedBox.shrink();
               },
             ),
             const SizedBox(height: 16),
@@ -152,8 +197,8 @@ class _MonthlyExpenseCardState extends State<MonthlyExpenseCard> {
     return labels[language] ?? labels[AppLanguage.korean]!;
   }
 
-  String _getLocalizedAmount(BuildContext context, double amount) {
-    final currency = context.read<AppSettingsBloc>().state.currency;
+  String _getLocalizedAmount(
+      BuildContext context, double amount, String currency) {
     final formattedAmount = _numberFormat.format(amount);
 
     final currencySymbols = {
@@ -163,7 +208,7 @@ class _MonthlyExpenseCardState extends State<MonthlyExpenseCard> {
       'EUR': '€',
     };
 
-    final symbol = currencySymbols[currency] ?? currencySymbols['KRW']!;
+    final symbol = currencySymbols[currency] ?? currency;
 
     // 통화별 표시 형식
     switch (currency) {

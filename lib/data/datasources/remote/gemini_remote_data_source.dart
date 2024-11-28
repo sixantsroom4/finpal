@@ -31,19 +31,20 @@ class GeminiRemoteDataSourceImpl implements GeminiRemoteDataSource {
       final imageBytes = await File(imagePath).readAsBytes();
 
       final prompt = '''
-      영수증을 분석하여 다음 형식의 JSON으로 응답해주세요:
+      영수증을 분석하여 다음 형식의 JSON으로 응답해주세요.
+      모든 금액은 영수증에 표시된 그대로의 숫자만 추출해주세요:
       {
         "merchantName": "상점명",
         "date": "YYYY-MM-DD HH:mm:ss",
         "items": [
           {
             "name": "상품명",
-            "price": 숫자,
+            "price": 숫자(통화 기호 제외),
             "quantity": 숫자,
-            "totalPrice": 숫자
+            "totalPrice": 숫자(통화 기호 제외)
           }
         ],
-        "totalAmount": 숫자
+        "totalAmount": 숫자(통화 기호 제외)
       }
       다른 설명은 제외하고 JSON 형식으로만 응답해주세요.
       ''';

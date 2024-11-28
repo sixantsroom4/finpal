@@ -7,11 +7,13 @@ class ReceiptItemModel extends ReceiptItem {
     required double price,
     required int quantity,
     required double totalPrice,
+    required String currency,
   }) : super(
           name: name,
           price: price,
           quantity: quantity,
           totalPrice: totalPrice,
+          currency: currency,
         );
 
   factory ReceiptItemModel.fromJson(Map<String, dynamic> json) {
@@ -24,25 +26,18 @@ class ReceiptItemModel extends ReceiptItem {
       totalPrice: (json['totalPrice'] ?? 0.0) is int
           ? (json['totalPrice'] as int).toDouble()
           : (json['totalPrice'] ?? 0.0) as double,
+      currency: json['currency'] ?? '',
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'name': name,
-      'quantity': quantity,
       'price': price,
+      'quantity': quantity,
       'totalPrice': totalPrice,
+      'currency': currency,
     };
-  }
-
-  factory ReceiptItemModel.fromEntity(ReceiptItem item) {
-    return ReceiptItemModel(
-      name: item.name,
-      price: item.price,
-      quantity: item.quantity,
-      totalPrice: item.totalPrice,
-    );
   }
 }
 
@@ -51,57 +46,44 @@ class ReceiptModel extends Receipt {
     required String id,
     required String imageUrl,
     required DateTime date,
-    required String currency,
     required String merchantName,
     required double totalAmount,
-    required List<ReceiptItem> items,
+    required String currency,
+    required List<ReceiptItemModel> items,
     required String userId,
     String? expenseId,
   }) : super(
           id: id,
           imageUrl: imageUrl,
           date: date,
-          currency: currency,
           merchantName: merchantName,
           totalAmount: totalAmount,
+          currency: currency,
           items: items,
           userId: userId,
           expenseId: expenseId,
         );
 
-  factory ReceiptModel.fromJson(Map<String, dynamic> json) {
+  factory ReceiptModel.fromJson(Map<String, dynamic> json,
+      {String? userCurrency}) {
+    final currency = userCurrency ?? json['currency'] ?? '';
     return ReceiptModel(
-      id: json['id'],
-      imageUrl: json['imageUrl'],
-      date: DateTime.parse(json['date']),
-      currency: json['currency'],
-      merchantName: json['merchantName'],
-      totalAmount: (json['totalAmount'] as num).toDouble(),
-      items: (json['items'] as List)
-          .map((item) => ReceiptItemModel.fromJson(item))
-          .toList(),
-      userId: json['userId'],
+      id: json['id'] ?? '',
+      imageUrl: json['imageUrl'] ?? '',
+      date: DateTime.tryParse(json['date'] ?? '') ?? DateTime.now(),
+      merchantName: json['merchantName'] ?? '',
+      totalAmount: (json['totalAmount'] as num?)?.toDouble() ?? 0.0,
+      currency: currency,
+      items: (json['items'] as List?)
+              ?.map((item) => ReceiptItemModel.fromJson({
+                    ...item as Map<String, dynamic>,
+                    'currency': currency,
+                  }))
+              .toList() ??
+          [],
+      userId: json['userId'] ?? '',
       expenseId: json['expenseId'],
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'imageUrl': imageUrl,
-      'date': date.toIso8601String(),
-      'currency': currency,
-      'merchantName': merchantName,
-      'totalAmount': totalAmount,
-      'items': items
-          .map((item) => (item is ReceiptItemModel
-                  ? item
-                  : ReceiptItemModel.fromEntity(item))
-              .toJson())
-          .toList(),
-      'userId': userId,
-      'expenseId': expenseId,
-    };
   }
 
   factory ReceiptModel.fromEntity(Receipt receipt) {
@@ -109,30 +91,39 @@ class ReceiptModel extends Receipt {
       id: receipt.id,
       imageUrl: receipt.imageUrl,
       date: receipt.date,
-      currency: receipt.currency,
       merchantName: receipt.merchantName,
       totalAmount: receipt.totalAmount,
+      currency: receipt.currency,
       items: receipt.items
-          .map((item) => ReceiptItemModel.fromEntity(item))
+          .map((item) => item is ReceiptItemModel
+              ? item
+              : ReceiptItemModel(
+                  name: item.name,
+                  price: item.price,
+                  quantity: item.quantity,
+                  totalPrice: item.totalPrice,
+                  currency: item.currency,
+                ))
           .toList(),
       userId: receipt.userId,
       expenseId: receipt.expenseId,
     );
   }
 
-  /// OCR 결과로부터 Receipt 모델 생성
   factory ReceiptModel.fromOCRResult({
     required String id,
     required String imageUrl,
     required Map<String, dynamic> ocrResult,
     required String userId,
+    required String userCurrency,
   }) {
     final items = (ocrResult['items'] as List).map((item) {
       return ReceiptItemModel(
-        name: item['name'],
+        name: item['name'] as String? ?? '',
         price: (item['price'] as num).toDouble(),
-        quantity: item['quantity'] ?? 1,
+        quantity: item['quantity'] as int? ?? 1,
         totalPrice: (item['totalPrice'] as num).toDouble(),
+        currency: userCurrency,
       );
     }).toList();
 
@@ -140,12 +131,13 @@ class ReceiptModel extends Receipt {
       id: id,
       imageUrl: imageUrl,
       date: DateTime.tryParse(ocrResult['date'] ?? '') ?? DateTime.now(),
-      currency: ocrResult['currency'] ?? 'USD',
       merchantName: ocrResult['merchantName'] ?? 'Unknown',
       totalAmount: (ocrResult['totalAmount'] as num?)?.toDouble() ??
           items.fold(0, (sum, item) => sum + item.totalPrice),
+      currency: userCurrency,
       items: items,
       userId: userId,
+      expenseId: ocrResult['expenseId'],
     );
   }
 
@@ -170,7 +162,17 @@ class ReceiptModel extends Receipt {
       currency: currency ?? this.currency,
       imageUrl: imageUrl ?? this.imageUrl,
       expenseId: expenseId ?? this.expenseId,
-      items: items ?? this.items,
+      items: (items ?? this.items)
+          .map((item) => item is ReceiptItemModel
+              ? item
+              : ReceiptItemModel(
+                  name: item.name,
+                  price: item.price,
+                  quantity: item.quantity,
+                  totalPrice: item.totalPrice,
+                  currency: item.currency,
+                ))
+          .toList(),
     );
   }
 }

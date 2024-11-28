@@ -21,6 +21,7 @@ import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'core/utils/firebase_migration_utils.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -58,6 +59,9 @@ Future<void> main() async {
   //   nativeAppKey: dotenv.env['KAKAO_NATIVE_APP_KEY']!,
   // );
   // debugPrint('Kakao SDK initialized');
+
+  // 마이그레이션 실행
+  await FirebaseMigrationUtils.runMigrations();
 
   runApp(
     MultiBlocProvider(

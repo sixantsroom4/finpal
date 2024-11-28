@@ -7,10 +7,12 @@ import 'package:finpal/domain/repositories/receipt_repository.dart';
 class ScanReceiptParams {
   final String imagePath;
   final String userId;
+  final String userCurrency;
 
   ScanReceiptParams({
     required this.imagePath,
     required this.userId,
+    required this.userCurrency,
   });
 }
 
@@ -21,6 +23,10 @@ class ScanReceiptUseCase implements UseCase<Receipt, ScanReceiptParams> {
 
   @override
   Future<Either<Failure, Receipt>> call(ScanReceiptParams params) {
-    return repository.processReceipt(params.imagePath, params.userId);
+    return repository.processReceipt(
+      params.imagePath,
+      params.userId,
+      params.userCurrency,
+    );
   }
 }

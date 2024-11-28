@@ -11,10 +11,12 @@ class UploadReceiptParams {
   final String? merchantName;
   final DateTime? receiptDate;
   final String? expenseId;
+  final String userCurrency;
 
   UploadReceiptParams({
     required this.imagePath,
     required this.userId,
+    required this.userCurrency,
     this.merchantName,
     this.receiptDate,
     this.expenseId,
@@ -33,6 +35,7 @@ class UploadReceiptUseCase implements UseCase<Receipt, UploadReceiptParams> {
       final result = await repository.processReceipt(
         params.imagePath,
         params.userId,
+        params.userCurrency,
       );
 
       return result.fold(

@@ -62,7 +62,24 @@ class FirebaseStorageRemoteDataSourceImpl
           return receipt; // 이미 존재하는 경우 기존 영수증 반환
         }
 
-        final receiptWithId = receipt.copyWith(id: receiptRef.id);
+        // 영수증 저장 전에 통화 설정 확인
+        final userDoc =
+            await _firestore.collection('users').doc(receipt.userId).get();
+
+        final userSettings =
+            userDoc.data()?['settings'] as Map<String, dynamic>?;
+        final userCurrency = userSettings?['currency'] as String? ?? 'KRW';
+
+        // 사용자의 통화 설정을 사용하여 영수증 모델 업데이트
+        final receiptWithCurrency = receipt.copyWith(
+          currency: userCurrency,
+          items: receipt.items
+              .map((item) =>
+                  (item as ReceiptItemModel).copyWith(currency: userCurrency))
+              .toList(),
+        );
+
+        final receiptWithId = receiptWithCurrency.copyWith(id: receiptRef.id);
         transaction.set(receiptRef, receiptWithId.toJson());
 
         // items 컬렉션에 각 아이템 저장
@@ -179,16 +196,18 @@ class FirebaseStorageRemoteDataSourceImpl
           .get();
 
       return Future.wait(snapshot.docs.map((doc) async {
-        // 영수증 아이템 조회
         final itemsSnapshot = await doc.reference.collection('items').get();
         final items = itemsSnapshot.docs
             .map((itemDoc) => ReceiptItemModel.fromJson(itemDoc.data()))
             .toList();
 
-        // 영수증 데이터와 아이템 목록 결합
+        final receiptData = doc.data();
+        // items를 Map 리스트로 변환
+        final itemsMapList = items.map((item) => item.toJson()).toList();
+
         return ReceiptModel.fromJson({
-          ...doc.data(),
-          'items': items.map((item) => item.toJson()).toList(),
+          ...receiptData,
+          'items': itemsMapList,
         });
       }));
     } catch (e) {
@@ -203,12 +222,13 @@ class FirebaseStorageRemoteDataSourceImpl
       final doc = await _firestore.collection('receipts').doc(receiptId).get();
       if (!doc.exists) return null;
 
-      final receiptData = doc.data()!;
       final itemsSnapshot = await doc.reference.collection('items').get();
       final items = itemsSnapshot.docs
           .map((itemDoc) => ReceiptItemModel.fromJson(itemDoc.data()))
           .toList();
 
+      // currency 필드를 그대로 사용
+      final receiptData = doc.data()!;
       return ReceiptModel.fromJson({
         ...receiptData,
         'items': items,
@@ -585,16 +605,28 @@ class FirebaseStorageRemoteDataSourceImpl
     try {
       debugPrint('===== 영수증 스캔 시작 =====');
 
-      // 1. 이미지 전처리
+      // 1. 사용자 설정 확인
+      final userDoc = await _firestore.collection('users').doc(userId).get();
+      if (!userDoc.exists) {
+        throw DatabaseException('사용자를 찾을 수 없습니다');
+      }
+
+      final userSettings = userDoc.data()?['settings'] as Map<String, dynamic>?;
+      final userCurrency = userSettings?['currency'] as String?;
+      if (userCurrency == null) {
+        throw DatabaseException('사용자의 통화 설정이 없습니다');
+      }
+
+      // 2. 이미지 전처리
       final processedImage = await _preprocessImage(imagePath);
       final bytes = await processedImage.readAsBytes();
       final base64Image = base64Encode(bytes);
 
-      // 2. Gemini로 수증 분석
+      // 3. Gemini로 영수증 분석
       final prompt = '''
-      이 영증 이미지를 분석해서 다음 정보를 JSON 형식으로 출해주요:
+      이 영수증 이미지를 분석해서 다음 정보를 JSON 형식으로 출력해주세요:
       {
-        "merchant": "상점명",
+        "merchant": "상��명",
         "totalAmount": 숫자로된 총액,
         "date": "YYYY-MM-DD" 형식의 날짜,
         "items": [
@@ -608,31 +640,44 @@ class FirebaseStorageRemoteDataSourceImpl
       ''';
 
       final response = await _model.generateContent([
-        genai.Content.multi([
-          genai.TextPart(prompt),
-          genai.DataPart('image/jpeg', bytes) // mime type과 함께 DataPart 사용
-        ])
+        genai.Content.multi(
+            [genai.TextPart(prompt), genai.DataPart('image/jpeg', bytes)])
       ]);
 
       final responseText = response.text ?? '{}';
       final parsedData = jsonDecode(responseText);
 
-      // 3. 미지 저장 및 URL 획득
+      // 4. 이미지 저장 및 URL 획득
       final imageUrl = await uploadReceiptImage(imagePath, userId);
 
-      // 4. Receipt 모델 생성 및 저장
-      final receipt = ReceiptModel.fromJson({
-        ...parsedData,
-        'userId': userId,
-        'imageUrl': imageUrl,
-        'createdAt': DateTime.now().toIso8601String(),
-        'currency': 'KRW',
-      });
+      // items 데이터 변환 로직 수정
+      final items = (parsedData['items'] as List<dynamic>)
+          .map((item) => ReceiptItemModel(
+                name: item['name'] as String,
+                price: (item['price'] as num).toDouble(),
+                quantity: (item['quantity'] as num).toInt(),
+                currency: userCurrency,
+                totalPrice: (item['price'] as num).toDouble() *
+                    (item['quantity'] as num).toInt(),
+              ))
+          .toList();
+
+      // Receipt 모델 생성
+      final receipt = ReceiptModel(
+        id: '', // Firestore에서 자동 생성
+        userId: userId,
+        merchantName: parsedData['merchant'] as String,
+        date: DateTime.parse(parsedData['date'] as String),
+        totalAmount: (parsedData['totalAmount'] as num).toDouble(),
+        imageUrl: imageUrl,
+        items: items,
+        currency: userCurrency,
+      );
 
       return await saveReceipt(receipt);
     } catch (e) {
       debugPrint('영수증 처리 실패: $e');
-      throw ServerException('영수증 처리 중 오류가 발생했습니다');
+      throw ServerException('영수증 처리 중 오류가 발생했습니다: ${e.toString()}');
     }
   }
 
@@ -669,7 +714,7 @@ class FirebaseStorageRemoteDataSourceImpl
   Future<void> createExpenseFromSubscription(
       SubscriptionModel subscription) async {
     try {
-      // 다음 결제일 계산
+      // 다음 결제일 산
       final nextBillingDate = subscription.calculateNextBillingDate();
 
       // 지출 생성
@@ -742,5 +787,64 @@ class FirebaseStorageRemoteDataSourceImpl
                 'id': doc.id,
               });
             }).toList());
+  }
+
+  @override
+  Future<ReceiptModel> processAndUploadReceipt(
+      String imagePath, String userId) async {
+    try {
+      // 1. 이미지 전처리
+      final file = File(imagePath);
+      final bytes = await file.readAsBytes();
+
+      // 2. 현재 사용자의 통화 설정 가져오기
+      final userDoc = await _firestore.collection('users').doc(userId).get();
+      if (!userDoc.exists) {
+        throw DatabaseException('사용자를 찾을 수 없습니다');
+      }
+      final userCurrency = userDoc.data()?['settings']?['currency'] ?? 'KRW';
+
+      // 3. Gemini로 영수증 분석
+      final prompt = '''
+      이 영수증 이미지를 분석해서 다음 정보를 JSON 형식으로 출력해주세요:
+      {
+        "merchantName": "상점명",
+        "totalAmount": 숫자로된 총액,
+        "date": "YYYY-MM-DD" 형식의 날짜,
+        "items": [
+          {
+            "name": "상품명",
+            "price": 숫자로된 가격,
+            "quantity": 1
+          }
+        ]
+      }
+      ''';
+
+      final response = await _model.generateContent([
+        genai.Content.multi(
+            [genai.TextPart(prompt), genai.DataPart('image/jpeg', bytes)])
+      ]);
+
+      final responseText = response.text ?? '{}';
+      final parsedData = jsonDecode(responseText);
+
+      // 4. 이미지 저장 및 URL 획득
+      final imageUrl = await uploadReceiptImage(imagePath, userId);
+
+      // 5. Receipt 모델 생성 및 저장 (사용자의 현재 통화 설정 사용)
+      final receipt = ReceiptModel.fromJson({
+        ...parsedData,
+        'userId': userId,
+        'imageUrl': imageUrl,
+        'currency': userCurrency, // 현재 사용자의 통화 설정 사용
+        'createdAt': DateTime.now().toIso8601String(),
+      });
+
+      return await saveReceipt(receipt);
+    } catch (e) {
+      debugPrint('영수증 처리 실패: $e');
+      throw ServerException('영수증 처리 중 오류가 발생했습니다: ${e.toString()}');
+    }
   }
 }

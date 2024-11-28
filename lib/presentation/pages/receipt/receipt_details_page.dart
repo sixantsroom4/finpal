@@ -20,6 +20,7 @@ import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/core/constants/app_languages.dart';
 import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
 import 'widgets/edit_receipt_info_bottom_sheet.dart';
+import 'package:finpal/core/utils/currency_utils.dart';
 
 class ReceiptDetailsPage extends StatelessWidget {
   final String receiptId;
@@ -126,9 +127,11 @@ class ReceiptDetailsPage extends StatelessWidget {
     }
   }
 
-  String _getLocalizedAmount(BuildContext context, double amount) {
-    final currency = context.read<AppSettingsBloc>().state.currency;
-    final formattedAmount = _numberFormat.format(amount);
+  String _getLocalizedAmount(
+      BuildContext context, double amount, Receipt receipt) {
+    final currency = receipt.currency;
+    final formatter = NumberFormat('#,###');
+    final formattedAmount = formatter.format(amount);
 
     final currencySymbols = {
       'KRW': '원',
@@ -139,7 +142,6 @@ class ReceiptDetailsPage extends StatelessWidget {
 
     final symbol = currencySymbols[currency] ?? currencySymbols['KRW']!;
 
-    // 통화별 표시 형식
     switch (currency) {
       case 'USD':
       case 'EUR':
@@ -308,7 +310,7 @@ class ReceiptDetailsPage extends StatelessWidget {
                         _buildInfoRow(_getLocalizedLabel(context, 'date'),
                             _getLocalizedDate(context, receipt.date)),
                         _buildInfoRow(_getLocalizedLabel(context, 'total'),
-                            _getLocalizedAmount(context, receipt.totalAmount)),
+                            '${CurrencyUtils.getCurrencySymbol(receipt.currency)} ${CurrencyUtils.formatAmount(receipt.totalAmount, receipt.currency)}'),
                         if (receipt.items.isNotEmpty) ...[
                           const Divider(height: 32),
                           Text(
@@ -353,7 +355,7 @@ class ReceiptDetailsPage extends StatelessWidget {
           Expanded(flex: 2, child: Text(item.name)),
           Expanded(
             child: Text(
-              _getLocalizedAmount(context, item.price),
+              '${CurrencyUtils.getCurrencySymbol(item.currency)} ${CurrencyUtils.formatAmount(item.price, item.currency)}',
               textAlign: TextAlign.right,
             ),
           ),
@@ -364,7 +366,7 @@ class ReceiptDetailsPage extends StatelessWidget {
           ),
           Expanded(
             child: Text(
-              _getLocalizedAmount(context, item.totalPrice),
+              '${CurrencyUtils.getCurrencySymbol(item.currency)} ${CurrencyUtils.formatAmount(item.totalPrice, item.currency)}',
               textAlign: TextAlign.right,
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),

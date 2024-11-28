@@ -8,6 +8,7 @@ import '../../domain/repositories/receipt_repository.dart';
 import '../datasources/remote/firebase_storage_remote_data_source.dart';
 import '../datasources/remote/gemini_remote_data_source.dart';
 import '../models/receipt_model.dart';
+import 'package:uuid/uuid.dart';
 
 class ReceiptRepositoryImpl implements ReceiptRepository {
   final FirebaseStorageRemoteDataSource storageDataSource;
@@ -22,46 +23,43 @@ class ReceiptRepositoryImpl implements ReceiptRepository {
   Future<Either<Failure, Receipt>> processReceipt(
     String imagePath,
     String userId,
+    String userCurrency,
   ) async {
     try {
       // 이미지 업로드
-      final imageUrl = await storageDataSource.uploadReceiptImage(
-        imagePath,
-        userId,
-      );
+      final imageUrl =
+          await storageDataSource.uploadReceiptImage(imagePath, userId);
 
-      // Gemini API 호출 재시도 로직
+      // Gemini API로 OCR 처리 및 통화 추출 시도
       int retryCount = 0;
       const maxRetries = 3;
-      const retryDelay = Duration(seconds: 2);
 
       while (retryCount < maxRetries) {
         try {
-          final ocrResult =
-              await geminiDataSource.processReceiptImage(imagePath);
+          final ocrResult = await geminiDataSource.processReceiptImage(
+            imagePath,
+          );
 
+          // OCR 결과로 Receipt 생성
           final receipt = ReceiptModel.fromOCRResult(
-            id: DateTime.now().millisecondsSinceEpoch.toString(),
+            id: const Uuid().v4(),
             imageUrl: imageUrl,
             ocrResult: ocrResult,
             userId: userId,
+            userCurrency: userCurrency, // 사용자 기본 통화 전달
           );
 
+          // 영수증 저장
           final savedReceipt = await storageDataSource.saveReceipt(receipt);
           return Right(savedReceipt);
         } catch (e) {
-          if (e.toString().contains('Resource has been exhausted')) {
-            retryCount++;
-            if (retryCount < maxRetries) {
-              await Future.delayed(retryDelay);
-              continue;
-            }
-          }
-          rethrow;
+          retryCount++;
+          if (retryCount >= maxRetries) rethrow;
+          await Future.delayed(const Duration(seconds: 2));
         }
       }
 
-      return Left(ServerFailure('API 할당량 초과로 인해 처리할 수 없습니다. 잠시 후 다시 시도해주세요.'));
+      throw ServerException('영수증 처리에 실패했습니다.');
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -73,7 +71,10 @@ class ReceiptRepositoryImpl implements ReceiptRepository {
       debugPrint('===== 영수증 저장 시작 =====');
       debugPrint('저장할 영수증: $receipt');
 
-      final receiptModel = ReceiptModel.fromEntity(receipt);
+      // Receipt를 ReceiptModel로 변환
+      final receiptModel =
+          receipt is ReceiptModel ? receipt : ReceiptModel.fromEntity(receipt);
+
       final savedReceipt = await storageDataSource.saveReceipt(receiptModel);
 
       debugPrint('저장된 영수증: ${savedReceipt.toJson()}');

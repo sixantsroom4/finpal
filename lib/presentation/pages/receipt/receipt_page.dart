@@ -19,6 +19,21 @@ import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/core/constants/app_languages.dart';
 import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
 
+// Receipt List에 대한 extension 추가
+extension ReceiptListExtension on List<Receipt> {
+  Map<String, double> groupByCurrency() {
+    final totals = <String, double>{};
+    for (var receipt in this) {
+      totals.update(
+        receipt.currency,
+        (value) => value + receipt.totalAmount,
+        ifAbsent: () => receipt.totalAmount,
+      );
+    }
+    return totals;
+  }
+}
+
 class ReceiptPage extends StatefulWidget {
   const ReceiptPage({super.key});
 
@@ -125,22 +140,33 @@ class _ReceiptPageState extends State<ReceiptPage> {
                           ],
                         ),
                         const Divider(),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(_getLocalizedLabel(context, 'total_amount')),
-                            Text(
-                              _getLocalizedAmount(context, state.totalAmount),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
-                                  ?.copyWith(
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
-                                  ),
+                        // 통화별 총액 표시 부분 수정
+                        ...state.receipts.groupByCurrency().entries.map(
+                              (entry) => Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 4),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(_getLocalizedLabel(
+                                        context, 'total_amount')),
+                                    Text(
+                                      _getLocalizedAmount(
+                                          context, entry.value, entry.key),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium
+                                          ?.copyWith(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .primary,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
-                          ],
-                        ),
                       ],
                     ),
                   ),
@@ -359,10 +385,9 @@ class _ReceiptPageState extends State<ReceiptPage> {
     }
   }
 
-  String _getLocalizedAmount(BuildContext context, double amount) {
-    final currency = context.read<AppSettingsBloc>().state.currency;
+  String _getLocalizedAmount(
+      BuildContext context, double amount, String currency) {
     final formattedAmount = _numberFormat.format(amount);
-
     final currencySymbols = {
       'KRW': '원',
       'JPY': '¥',
@@ -372,7 +397,6 @@ class _ReceiptPageState extends State<ReceiptPage> {
 
     final symbol = currencySymbols[currency] ?? currencySymbols['KRW']!;
 
-    // 통화별 표시 형식
     switch (currency) {
       case 'USD':
       case 'EUR':

@@ -88,5 +88,11 @@ Future<void> initMain() async {
 
   sl.registerLazySingleton(() => AppLanguageBloc(sl()));
 
-  sl.registerLazySingleton(() => AppSettingsBloc(sl()));
+  // AppSettingsBloc 등록 전에 중복 검사
+  if (!sl.isRegistered<AppSettingsBloc>()) {
+    sl.registerLazySingleton(() => AppSettingsBloc(
+          sl<SharedPreferences>(),
+          sl<AuthRepository>(),
+        ));
+  }
 }

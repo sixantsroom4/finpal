@@ -86,7 +86,7 @@ class ReceiptGridItem extends StatelessWidget {
   }
 
   String _getLocalizedAmount(BuildContext context, double amount) {
-    final currency = context.read<AppSettingsBloc>().state.currency;
+    final currency = receipt.currency;
     final formatter = NumberFormat('#,###');
     final formattedAmount = formatter.format(amount);
 
@@ -99,7 +99,6 @@ class ReceiptGridItem extends StatelessWidget {
 
     final symbol = currencySymbols[currency] ?? currencySymbols['KRW']!;
 
-    // 통화별 표시 형식
     switch (currency) {
       case 'USD':
       case 'EUR':

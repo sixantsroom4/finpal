@@ -8,6 +8,7 @@ abstract class ReceiptRepository {
   Future<Either<Failure, Receipt>> processReceipt(
     String imagePath,
     String userId,
+    String userCurrency,
   );
 
   /// OCR 처리된 영수증 정보 저장

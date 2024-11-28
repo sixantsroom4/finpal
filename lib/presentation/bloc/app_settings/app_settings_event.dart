@@ -1,7 +1,9 @@
+import 'package:finpal/core/constants/app_languages.dart';
+
 abstract class AppSettingsEvent {}
 
 class UpdateLanguage extends AppSettingsEvent {
-  final String language;
+  final AppLanguage language;
   UpdateLanguage(this.language);
 }
 

@@ -33,7 +33,7 @@ class SubscriptionModel extends Subscription {
       id: json['id'],
       name: json['name'],
       amount: (json['amount'] as num).toDouble(),
-      currency: json['currency'],
+      currency: json['currency'] ?? 'KRW',
       startDate: DateTime.parse(json['startDate']),
       endDate: json['endDate'] != null ? DateTime.parse(json['endDate']) : null,
       billingCycle: json['billingCycle'],

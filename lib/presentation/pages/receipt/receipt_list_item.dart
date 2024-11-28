@@ -54,7 +54,7 @@ class ReceiptListItem extends StatelessWidget {
   }
 
   String _getLocalizedAmount(BuildContext context, double amount) {
-    final currency = context.read<AppSettingsBloc>().state.currency;
+    final currency = receipt.currency;
     final formatter = NumberFormat('#,###');
     final formattedAmount = formatter.format(amount);
 

@@ -15,6 +15,9 @@ import 'injection_container.main.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:finpal/domain/repositories/auth_repository.dart';
+import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -69,6 +72,12 @@ Future<void> init() async {
       receiptRepository: sl(),
     ),
   );
+
+  // AppSettingsBloc
+  sl.registerLazySingleton(() => AppSettingsBloc(
+        sl<SharedPreferences>(),
+        sl<AuthRepository>(),
+      ));
 
   // Main initialization
   await initMain();

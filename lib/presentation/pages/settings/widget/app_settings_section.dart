@@ -9,6 +9,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:finpal/core/constants/app_languages.dart';
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/core/utils/language_utils.dart';
+import 'package:finpal/core/utils/currency_utils.dart';
 
 class AppSettingsSection extends StatelessWidget {
   const AppSettingsSection({super.key});

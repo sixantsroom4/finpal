@@ -11,14 +11,16 @@ abstract class ReceiptEvent extends Equatable {
 class ScanReceipt extends ReceiptEvent {
   final String imagePath;
   final String userId;
+  final String userCurrency;
 
   const ScanReceipt({
     required this.imagePath,
     required this.userId,
+    required this.userCurrency,
   });
 
   @override
-  List<Object> get props => [imagePath, userId];
+  List<Object> get props => [imagePath, userId, userCurrency];
 }
 
 class SaveReceipt extends ReceiptEvent {

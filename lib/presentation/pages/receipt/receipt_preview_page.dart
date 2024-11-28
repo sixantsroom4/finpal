@@ -86,6 +86,7 @@ class ReceiptPreviewPage extends StatelessWidget {
             ScanReceipt(
               imagePath: imagePath,
               userId: authState.user.id,
+              userCurrency: authState.user.currency,
             ),
           );
 
