@@ -15,4 +15,25 @@ extension ExpenseListExtension on List<ExpenseModel> {
 
     return currencyTotals;
   }
+
+  /// 특정 통화의 지출만 필터링합니다.
+  List<ExpenseModel> filterByCurrency(String currency) {
+    return where((expense) => expense.currency == currency).toList();
+  }
+
+  /// 특정 통화의 카테고리별 지출을 계산합니다.
+  Map<String, double> getCategoryTotalsByCurrency(String currency) {
+    final filtered = filterByCurrency(currency);
+    final categoryTotals = <String, double>{};
+
+    for (var expense in filtered) {
+      categoryTotals.update(
+        expense.category,
+        (total) => total + expense.amount,
+        ifAbsent: () => expense.amount,
+      );
+    }
+
+    return categoryTotals;
+  }
 }

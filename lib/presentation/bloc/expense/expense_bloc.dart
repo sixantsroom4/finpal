@@ -51,7 +51,17 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
     final budgetResult =
         await _expenseRepository.getMonthlyBudget(event.userId);
 
-    final result = await _expenseRepository.getExpenses(event.userId);
+    // 현재 달의 시작일과 종료일 계산
+    final now = DateTime.now();
+    final startOfMonth = DateTime(now.year, now.month, 1);
+    final startOfNextMonth = DateTime(now.year, now.month + 1, 1);
+
+    final result = await _expenseRepository.getExpensesByDateRange(
+      event.userId,
+      startOfMonth,
+      startOfNextMonth,
+    );
+
     final previousMonthResult =
         await _expenseRepository.getPreviousMonthExpenses(event.userId);
 

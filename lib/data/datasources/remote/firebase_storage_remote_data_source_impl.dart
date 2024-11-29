@@ -341,25 +341,39 @@ class FirebaseStorageRemoteDataSourceImpl
     DateTime endDate,
   ) async {
     try {
+      debugPrint('조회 시작일: $startDate');
+      debugPrint('조회 종료일: $endDate');
+
+      // userId로만 먼저 쿼리해서 결과 확인
       final snapshot = await _firestore
           .collection('expenses')
           .where('userId', isEqualTo: userId)
-          .where('date',
-              isGreaterThanOrEqualTo: startDate.toIso8601String(),
-              isLessThanOrEqualTo: endDate.toIso8601String())
+          // .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
+          // .where('date', isLessThan: Timestamp.fromDate(endDate))
           .orderBy('date', descending: true)
           .get();
 
-      return snapshot.docs.map((doc) {
-        final data = doc.data();
-        return ExpenseModel.fromJson({
-          ...data,
-          'id': doc.id,
-        });
+      debugPrint('조회된 문서 수: ${snapshot.docs.length}');
+
+      // 각 문서의 전체 데이터를 로그로 확인
+      for (var doc in snapshot.docs) {
+        debugPrint('문서 ID: ${doc.id}');
+        debugPrint('문서 데이터: ${doc.data()}');
+      }
+
+      // 날짜 필터링을 메모리에서 수행
+      final expenses = snapshot.docs
+          .map((doc) => ExpenseModel.fromJson(doc.data()))
+          .where((expense) {
+        final expenseDate = expense.date;
+        return expenseDate.isAfter(startDate) && expenseDate.isBefore(endDate);
       }).toList();
+
+      debugPrint('필터링 후 지출 수: ${expenses.length}');
+      return expenses;
     } catch (e) {
-      debugPrint('기간별 지출 목록 조회 실패: $e');
-      throw DatabaseException('기간별 지출 목록 조회 실패: ${e.toString()}');
+      debugPrint('Firebase 조회 에러: $e');
+      throw DatabaseException('지출 목록 조회 실패: ${e.toString()}');
     }
   }
 
@@ -626,7 +640,7 @@ class FirebaseStorageRemoteDataSourceImpl
       final prompt = '''
       이 영수증 이미지를 분석해서 다음 정보를 JSON 형식으로 출력해주세요:
       {
-        "merchant": "상��명",
+        "merchant": "상명",
         "totalAmount": 숫자로된 총액,
         "date": "YYYY-MM-DD" 형식의 날짜,
         "items": [
