@@ -68,15 +68,13 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
     result.fold(
       (failure) => emit(ExpenseError(failure.message)),
       (expenses) {
-        // 각 지출 항목의 통화를 사용자 선호 통화로 설정
-        final updatedExpenses = expenses
-            .map((expense) => expense.copyWith(
-                  currency: preferredCurrency,
-                ))
+        // 사용자의 선호 통화와 일치하는 지출만 필터링
+        final filteredExpenses = expenses
+            .where((expense) => expense.currency == preferredCurrency)
             .toList();
 
         final categoryTotals = <String, double>{};
-        for (var expense in updatedExpenses) {
+        for (var expense in filteredExpenses) {
           categoryTotals[expense.category] =
               (categoryTotals[expense.category] ?? 0.0) + expense.amount;
         }
@@ -85,7 +83,12 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
         previousMonthResult.fold(
           (failure) => {},
           (previousExpenses) {
-            for (var expense in previousExpenses) {
+            // 이전 달도 동일하게 필터링
+            final filteredPreviousExpenses = previousExpenses
+                .where((expense) => expense.currency == preferredCurrency)
+                .toList();
+
+            for (var expense in filteredPreviousExpenses) {
               previousMonthCategoryTotals[expense.category] =
                   (previousMonthCategoryTotals[expense.category] ?? 0.0) +
                       expense.amount;
@@ -94,9 +97,9 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
         );
 
         emit(ExpenseLoaded(
-          expenses: updatedExpenses,
+          expenses: filteredExpenses,
           totalAmount:
-              updatedExpenses.fold(0.0, (sum, exp) => sum + exp.amount),
+              filteredExpenses.fold(0.0, (sum, exp) => sum + exp.amount),
           monthlyBudget: budgetResult.fold(
             (failure) => state is ExpenseLoaded
                 ? (state as ExpenseLoaded).monthlyBudget
@@ -105,7 +108,9 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
           ),
           previousMonthTotal: previousMonthResult.fold(
             (failure) => 0.0,
-            (expenses) => expenses.fold(0.0, (sum, exp) => sum + exp.amount),
+            (expenses) => expenses
+                .where((e) => e.currency == preferredCurrency)
+                .fold(0.0, (sum, exp) => sum + exp.amount),
           ),
           categoryTotals: categoryTotals,
           previousMonthCategoryTotals: previousMonthCategoryTotals,

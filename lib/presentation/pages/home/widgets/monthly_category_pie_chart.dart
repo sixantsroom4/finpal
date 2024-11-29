@@ -128,12 +128,18 @@ class MonthlyCategoryPieChart extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
 
+        // 현재 유저의 설정된 통화 가져오기
+        final userCurrency = context.read<AppSettingsBloc>().state.currency;
+
         final now = DateTime.now();
         final currentMonthCategoryTotals = <String, double>{};
 
+        // 현재 달의 지출 중 유저의 통화와 일치하는 것만 필터링
         for (final expense in state.expenses) {
           if (expense.date.year == now.year &&
-              expense.date.month == now.month) {
+              expense.date.month == now.month &&
+              expense.currency == userCurrency) {
+            // 통화 체크 추가
             currentMonthCategoryTotals[expense.category] =
                 (currentMonthCategoryTotals[expense.category] ?? 0) +
                     expense.amount;
@@ -238,6 +244,8 @@ class MonthlyCategoryPieChart extends StatelessWidget {
             CategoryConstants.getLocalizedCategory(entry.value.key, language);
         final amount = entry.value.value;
 
+        // 현재 유저의 통화로 금액 표시
+        final userCurrency = context.read<AppSettingsBloc>().state.currency;
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 2.0),
           child: Row(
