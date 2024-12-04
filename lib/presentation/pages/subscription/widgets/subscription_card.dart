@@ -43,7 +43,6 @@ class SubscriptionCard extends StatelessWidget {
   }
 
   String _getLocalizedAmount(BuildContext context, double amount) {
-    final currency = context.read<AppSettingsBloc>().state.currency;
     final formatter = NumberFormat('#,###');
     final formattedAmount = formatter.format(amount);
 
@@ -54,10 +53,11 @@ class SubscriptionCard extends StatelessWidget {
       'EUR': '€',
     };
 
-    final symbol = currencySymbols[currency] ?? currencySymbols['KRW']!;
+    final symbol =
+        currencySymbols[subscription.currency] ?? currencySymbols['KRW']!;
 
     // 통화별 표시 형식
-    switch (currency) {
+    switch (subscription.currency) {
       case 'USD':
       case 'EUR':
         return '$symbol$formattedAmount';

@@ -150,9 +150,7 @@ class _SubscriptionPageState extends State<SubscriptionPage>
             children: [
               // 통계 카드
               SubscriptionStatisticsCard(
-                monthlyTotal: state.monthlyTotal,
-                yearlyTotal: state.yearlyTotal,
-                activeCount: state.subscriptions.length,
+                subscriptions: state.subscriptions,
               ),
 
               // 구독 목록

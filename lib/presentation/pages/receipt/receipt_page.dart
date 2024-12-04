@@ -20,6 +20,7 @@ import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/core/constants/app_languages.dart';
 import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // Receipt List에 대한 extension 추가
 extension ReceiptListExtension on List<Receipt> {
@@ -51,13 +52,34 @@ class _ReceiptPageState extends State<ReceiptPage> {
   SortOption _sortOption = SortOption.date;
   bool _ascending = false;
 
+  // SharedPreferences 키
+  static const String _sortOptionKey = 'receipt_sort_option';
+  static const String _sortAscendingKey = 'receipt_sort_ascending';
+
   @override
   void initState() {
     super.initState();
     initializeDateFormatting();
+    _loadSortPreferences();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadReceipts();
     });
+  }
+
+  // 정렬 설정 불러오기
+  Future<void> _loadSortPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _sortOption = SortOption.values[prefs.getInt(_sortOptionKey) ?? 0];
+      _ascending = prefs.getBool(_sortAscendingKey) ?? false;
+    });
+  }
+
+  // 정렬 설정 저장
+  Future<void> _saveSortPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_sortOptionKey, _sortOption.index);
+    await prefs.setBool(_sortAscendingKey, _ascending);
   }
 
   void _loadReceipts() {
@@ -71,20 +93,7 @@ class _ReceiptPageState extends State<ReceiptPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_getLocalizedTitle(context)),
-        actions: [
-          PopupMenuButton<SortOption>(
-            icon: const Icon(Icons.sort),
-            onSelected: _handleSortChange,
-            itemBuilder: (context) => [
-              _buildSortMenuItem(SortOption.date, Icons.calendar_today),
-              _buildSortMenuItem(SortOption.amount, Icons.attach_money),
-              _buildSortMenuItem(SortOption.store, Icons.store),
-            ],
-          ),
-        ],
-      ),
+      appBar: _buildAppBar(),
       body: BlocBuilder<ReceiptBloc, ReceiptState>(
         builder: (context, state) {
           if (state is ReceiptLoaded) {
@@ -284,6 +293,7 @@ class _ReceiptPageState extends State<ReceiptPage> {
         _sortOption = option;
         _ascending = false;
       }
+      _saveSortPreferences(); // 변경사항 저장
     });
   }
 
@@ -578,6 +588,41 @@ class _ReceiptPageState extends State<ReceiptPage> {
           ),
         ],
       ),
+    );
+  }
+
+  // AppBar 수정
+  AppBar _buildAppBar() {
+    return AppBar(
+      title: Text(_getLocalizedTitle(context)),
+      actions: [
+        PopupMenuButton<SortOption>(
+          icon: Stack(
+            children: [
+              const Icon(Icons.sort),
+              if (_sortOption != SortOption.date) // 기본값이 아닐 때만 표시
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).primaryColor,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          onSelected: _handleSortChange,
+          itemBuilder: (context) => [
+            _buildSortMenuItem(SortOption.date, Icons.calendar_today),
+            _buildSortMenuItem(SortOption.amount, Icons.attach_money),
+            _buildSortMenuItem(SortOption.store, Icons.store),
+          ],
+        ),
+      ],
     );
   }
 }

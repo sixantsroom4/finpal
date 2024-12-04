@@ -10,6 +10,7 @@ import '../../../bloc/auth/auth_bloc.dart';
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/core/constants/app_languages.dart';
 import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
+import 'package:finpal/data/models/subscription_model.dart';
 
 class AddSubscriptionBottomSheet extends StatefulWidget {
   const AddSubscriptionBottomSheet({super.key});
@@ -27,6 +28,8 @@ class _AddSubscriptionBottomSheetState
   String _selectedCategory = 'OTT';
   String _selectedBillingCycle = 'monthly';
   int _selectedBillingDay = 1;
+  String _selectedCurrency = 'KRW';
+  DateTime _startDate = DateTime.now();
 
   @override
   void dispose() {
@@ -366,7 +369,7 @@ class _AddSubscriptionBottomSheetState
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: _submit,
+              onPressed: _addSubscription,
               child: Text(_getLocalizedLabel(context, 'add')),
             ),
             const SizedBox(height: 16),
@@ -376,27 +379,26 @@ class _AddSubscriptionBottomSheetState
     );
   }
 
-  void _submit() {
-    if (_formKey.currentState?.validate() ?? false) {
-      final authState = context.read<AuthBloc>().state;
-      if (authState is Authenticated) {
-        final currency = context.read<AppSettingsBloc>().state.currency;
-        final subscription = Subscription(
-          id: const Uuid().v4(),
-          name: _nameController.text,
-          amount: double.parse(_amountController.text.replaceAll(',', '')),
-          startDate: DateTime.now(),
-          billingCycle: _selectedBillingCycle,
-          billingDay: _selectedBillingDay,
-          category: _selectedCategory,
-          userId: authState.user.id,
-          isActive: true,
-          currency: currency,
-        );
+  void _addSubscription() {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is Authenticated) {
+      final currency = context.read<AppSettingsBloc>().state.currency;
 
-        context.read<SubscriptionBloc>().add(AddSubscription(subscription));
-        Navigator.pop(context);
-      }
+      final subscription = SubscriptionModel(
+        id: const Uuid().v4(),
+        name: _nameController.text,
+        amount: double.parse(_amountController.text.replaceAll(',', '')),
+        currency: currency,
+        startDate: DateTime.now(),
+        billingCycle: _selectedBillingCycle,
+        billingDay: _selectedBillingDay,
+        category: _selectedCategory,
+        userId: authState.user.id,
+        isActive: true,
+      );
+
+      context.read<SubscriptionBloc>().add(AddSubscription(subscription));
+      Navigator.pop(context);
     }
   }
 }

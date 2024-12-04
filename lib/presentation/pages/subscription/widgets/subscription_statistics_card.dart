@@ -1,4 +1,5 @@
 // lib/presentation/pages/subscription/widgets/subscription_statistics_card.dart
+import 'package:finpal/domain/entities/subscription.dart';
 import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -7,21 +8,50 @@ import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/core/constants/app_languages.dart';
 
 class SubscriptionStatisticsCard extends StatelessWidget {
-  final double monthlyTotal;
-  final double yearlyTotal;
-  final int activeCount;
+  final List<Subscription> subscriptions;
 
   const SubscriptionStatisticsCard({
     super.key,
-    required this.monthlyTotal,
-    required this.yearlyTotal,
-    required this.activeCount,
+    required this.subscriptions,
   });
+
+  // 통화별로 구독을 그룹화하고 합계를 계산
+  Map<String, double> _calculateTotalsByCurrency() {
+    final totals = <String, double>{};
+    for (var sub in subscriptions) {
+      if (sub.isCurrentlyActive) {
+        totals.update(
+          sub.currency,
+          (value) => value + sub.amount,
+          ifAbsent: () => sub.amount,
+        );
+      }
+    }
+    return totals;
+  }
+
+  // 연간 총액도 통화별로 계산
+  Map<String, double> _calculateYearlyTotalsByCurrency() {
+    final totals = <String, double>{};
+    for (var sub in subscriptions) {
+      if (sub.isCurrentlyActive) {
+        final yearlyAmount = sub.billingCycle.toLowerCase() == 'monthly'
+            ? sub.amount * 12
+            : sub.amount;
+        totals.update(
+          sub.currency,
+          (value) => value + yearlyAmount,
+          ifAbsent: () => yearlyAmount,
+        );
+      }
+    }
+    return totals;
+  }
 
   String _getLocalizedLabel(BuildContext context, String key) {
     final language = context.read<AppLanguageBloc>().state.language;
     final Map<String, Map<AppLanguage, String>> labels = {
-      'monthly_subscription': {
+      'monthly_total': {
         AppLanguage.english: 'Expected Monthly Subscription',
         AppLanguage.korean: '이번 달 예상 구독료',
         AppLanguage.japanese: '今月の予想サブスク料金',
@@ -31,20 +61,53 @@ class SubscriptionStatisticsCard extends StatelessWidget {
         AppLanguage.korean: '연간 총액',
         AppLanguage.japanese: '年間総額',
       },
-      'active_subscriptions': {
-        AppLanguage.english: 'Active Subscriptions',
-        AppLanguage.korean: '활성 구독',
-        AppLanguage.japanese: '利用中のサブスク',
-      },
     };
     return labels[key]?[language] ?? labels[key]?[AppLanguage.korean] ?? key;
   }
 
-  String _getLocalizedAmount(BuildContext context, double amount) {
-    final currency = context.read<AppSettingsBloc>().state.currency;
+  @override
+  Widget build(BuildContext context) {
+    final monthlyTotals = _calculateTotalsByCurrency();
+    final yearlyTotals = _calculateYearlyTotalsByCurrency();
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _getLocalizedLabel(context, 'monthly_total'),
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            // 통화별 월간 구독료 표시
+            ...monthlyTotals.entries.map((entry) => Text(
+                  _formatAmount(context, entry.value, entry.key),
+                  style: Theme.of(context).textTheme.headlineSmall,
+                )),
+            const Divider(height: 24),
+            Text(
+              _getLocalizedLabel(context, 'yearly_total'),
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            // 통화별 연간 구독료 표시
+            ...yearlyTotals.entries.map((entry) => Text(
+                  _formatAmount(context, entry.value, entry.key),
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                )),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatAmount(BuildContext context, double amount, String currency) {
     final formatter = NumberFormat('#,###');
     final formattedAmount = formatter.format(amount);
-
     final currencySymbols = {
       'KRW': '원',
       'JPY': '¥',
@@ -54,7 +117,6 @@ class SubscriptionStatisticsCard extends StatelessWidget {
 
     final symbol = currencySymbols[currency] ?? currencySymbols['KRW']!;
 
-    // 통화별 표시 형식
     switch (currency) {
       case 'USD':
       case 'EUR':
@@ -65,87 +127,5 @@ class SubscriptionStatisticsCard extends StatelessWidget {
       default:
         return '$formattedAmount$symbol';
     }
-  }
-
-  String _getLocalizedCount(BuildContext context, int count) {
-    final language = context.read<AppLanguageBloc>().state.language;
-    switch (language) {
-      case AppLanguage.english:
-        return count.toString();
-      case AppLanguage.japanese:
-        return '$count個';
-      case AppLanguage.korean:
-      default:
-        return '${count}개';
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.all(16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Text(
-              _getLocalizedLabel(context, 'monthly_subscription'),
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              _getLocalizedAmount(context, monthlyTotal),
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            const Divider(height: 32),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _StatisticItem(
-                  label: _getLocalizedLabel(context, 'yearly_total'),
-                  value: _getLocalizedAmount(context, yearlyTotal),
-                ),
-                _StatisticItem(
-                  label: _getLocalizedLabel(context, 'active_subscriptions'),
-                  value: _getLocalizedCount(context, activeCount),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _StatisticItem extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _StatisticItem({
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey,
-              ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-      ],
-    );
   }
 }
