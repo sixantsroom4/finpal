@@ -258,33 +258,51 @@ class SubscriptionDetailsBottomSheet extends StatelessWidget {
 
           const SizedBox(height: 24),
 
+          // 상태 표시 섹션
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              children: [
+                Icon(
+                  subscription.isActive
+                      ? Icons.check_circle
+                      : Icons.pause_circle,
+                  color: subscription.isActive ? Colors.green : Colors.orange,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  subscription.isActive
+                      ? _getLocalizedLabel(context, 'active')
+                      : _getLocalizedLabel(context, 'paused'),
+                  style: TextStyle(
+                    color: subscription.isActive ? Colors.green : Colors.orange,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // 액션 버튼들
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              // 수정 버튼
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: () => _showEditSubscriptionDialog(context),
                   icon: const Icon(Icons.edit),
-                  label: Text(
-                    _getLocalizedLabel(context, 'edit'),
-                  ),
+                  label: Text(_getLocalizedLabel(context, 'edit')),
                 ),
               ),
               const SizedBox(width: 8),
-              // 구독 상태 변경 버튼
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: () => _toggleSubscriptionStatus(context),
                   icon: Icon(
-                    subscription.isActive
-                        ? Icons.pause_circle_outline
-                        : Icons.play_circle_outline,
-                  ),
-                  label: Text(
-                    subscription.isActive
-                        ? _getLocalizedLabel(context, 'pause')
-                        : _getLocalizedLabel(context, 'resume'),
-                  ),
+                      subscription.isActive ? Icons.pause : Icons.play_arrow),
+                  label: Text(subscription.isActive
+                      ? _getLocalizedLabel(context, 'pause')
+                      : _getLocalizedLabel(context, 'resume')),
                   style: ElevatedButton.styleFrom(
                     backgroundColor:
                         subscription.isActive ? Colors.orange : Colors.green,
@@ -294,15 +312,12 @@ class SubscriptionDetailsBottomSheet extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          // 삭제 버튼
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
               onPressed: () => _showDeleteConfirmation(context),
-              icon: const Icon(Icons.delete_outline, color: Colors.red),
-              label: Text(
-                _getLocalizedLabel(context, 'delete'),
-              ),
+              icon: const Icon(Icons.delete, color: Colors.red),
+              label: Text(_getLocalizedLabel(context, 'delete')),
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.red,
               ),
@@ -328,19 +343,19 @@ class SubscriptionDetailsBottomSheet extends StatelessWidget {
       id: subscription.id,
       name: subscription.name,
       amount: subscription.amount,
+      currency: subscription.currency,
       startDate: subscription.startDate,
+      endDate: subscription.endDate,
       billingCycle: subscription.billingCycle,
       billingDay: subscription.billingDay,
       category: subscription.category,
       userId: subscription.userId,
-      endDate: subscription.endDate,
       isActive: !subscription.isActive,
-      currency: subscription.currency,
     );
 
-    context.read<SubscriptionBloc>().add(
-          UpdateSubscription(updatedSubscription),
-        );
+    context
+        .read<SubscriptionBloc>()
+        .add(UpdateSubscription(updatedSubscription));
     Navigator.pop(context);
   }
 

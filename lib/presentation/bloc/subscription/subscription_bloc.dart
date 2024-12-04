@@ -39,12 +39,47 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     Emitter<SubscriptionState> emit,
   ) async {
     emit(SubscriptionLoading());
-    final result =
-        await _subscriptionRepository.getActiveSubscriptions(event.userId);
+
+    final result = await _subscriptionRepository.getSubscriptions(event.userId);
 
     result.fold(
       (failure) => emit(SubscriptionError(failure.message)),
-      (subscriptions) => emit(_createLoadedState(subscriptions)),
+      (subscriptions) {
+        // 결제일별 구독 그룹화 (활성 구독만)
+        final billingDaySubscriptions = <int, List<Subscription>>{};
+        for (var subscription in subscriptions.where((s) => s.isActive)) {
+          if (!billingDaySubscriptions.containsKey(subscription.billingDay)) {
+            billingDaySubscriptions[subscription.billingDay] = [];
+          }
+          billingDaySubscriptions[subscription.billingDay]!.add(subscription);
+        }
+
+        // 카테고리별 총액 계산 (활성 구독만)
+        final categoryTotals = <String, double>{};
+        double monthlyTotal = 0;
+        double yearlyTotal = 0;
+
+        for (var subscription in subscriptions.where((s) => s.isActive)) {
+          monthlyTotal += subscription.amount;
+          yearlyTotal += subscription.billingCycle.toLowerCase() == 'monthly'
+              ? subscription.amount * 12
+              : subscription.amount;
+
+          categoryTotals.update(
+            subscription.category,
+            (value) => value + subscription.amount,
+            ifAbsent: () => subscription.amount,
+          );
+        }
+
+        emit(SubscriptionLoaded(
+          subscriptions: subscriptions,
+          monthlyTotal: monthlyTotal,
+          yearlyTotal: yearlyTotal,
+          categoryTotals: categoryTotals,
+          billingDaySubscriptions: billingDaySubscriptions,
+        ));
+      },
     );
   }
 

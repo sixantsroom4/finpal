@@ -172,13 +172,24 @@ class _SubscriptionPageState extends State<SubscriptionPage>
   }
 
   Widget _buildAllSubscriptionsList(SubscriptionLoaded state) {
+    // 모든 구독을 카테고리별로 그룹화
     final subscriptionsByCategory = <String, List<Subscription>>{};
+
+    // 활성 및 일시정지된 모든 구독을 포함
     for (var subscription in state.subscriptions) {
       if (!subscriptionsByCategory.containsKey(subscription.category)) {
         subscriptionsByCategory[subscription.category] = [];
       }
       subscriptionsByCategory[subscription.category]!.add(subscription);
     }
+
+    // 각 카테고리 내에서 활성 구독을 먼저 보여주도록 정렬
+    subscriptionsByCategory.forEach((category, subscriptions) {
+      subscriptions.sort((a, b) {
+        if (a.isActive == b.isActive) return 0;
+        return a.isActive ? -1 : 1; // 활성 구독을 먼저 표시
+      });
+    });
 
     return ListView.builder(
       padding: const EdgeInsets.all(16),

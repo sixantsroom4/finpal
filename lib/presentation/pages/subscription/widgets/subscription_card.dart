@@ -38,6 +38,11 @@ class SubscriptionCard extends StatelessWidget {
         AppLanguage.korean: '$daysUntilBilling일 후 결제',
         AppLanguage.japanese: '支払いまで残り$daysUntilBilling日',
       },
+      'paused': {
+        AppLanguage.english: 'Paused',
+        AppLanguage.korean: '일시정지',
+        AppLanguage.japanese: '一時停止',
+      },
     };
     return labels[key]?[language] ?? labels[key]?[AppLanguage.korean] ?? key;
   }
@@ -71,42 +76,78 @@ class SubscriptionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-          child: Icon(
-            _getSubscriptionIcon(subscription.category),
-            color: Theme.of(context).colorScheme.primary,
-          ),
-        ),
-        title: Text(subscription.name),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              _getLocalizedLabel(context, 'billing_day_format'),
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            if (daysUntilBilling != null)
-              Text(
-                daysUntilBilling == 0
-                    ? _getLocalizedLabel(context, 'billing_today')
-                    : _getLocalizedLabel(context, 'billing_days_left'),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: daysUntilBilling == 0
-                          ? Theme.of(context).colorScheme.error
-                          : Colors.grey,
-                    ),
+    return Opacity(
+      opacity: subscription.isActive ? 1.0 : 0.6, // 일시정지 시 흐리게
+      child: Card(
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        child: ListTile(
+          leading: Stack(
+            children: [
+              CircleAvatar(
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                child: Icon(
+                  _getSubscriptionIcon(subscription.category),
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
-          ],
+              if (!subscription.isActive)
+                Positioned.fill(
+                  child: CircleAvatar(
+                    backgroundColor: Colors.black38,
+                    child: Icon(
+                      Icons.pause,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          title: Row(
+            children: [
+              Text(subscription.name),
+              if (!subscription.isActive)
+                Container(
+                  margin: const EdgeInsets.only(left: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    _getLocalizedLabel(context, 'paused'),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+            ],
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _getLocalizedLabel(context, 'billing_day_format'),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              if (daysUntilBilling != null)
+                Text(
+                  daysUntilBilling == 0
+                      ? _getLocalizedLabel(context, 'billing_today')
+                      : _getLocalizedLabel(context, 'billing_days_left'),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: daysUntilBilling == 0
+                            ? Theme.of(context).colorScheme.error
+                            : Colors.grey,
+                      ),
+                ),
+            ],
+          ),
+          trailing: Text(
+            _getLocalizedAmount(context, subscription.amount),
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          onTap: onTap,
         ),
-        trailing: Text(
-          _getLocalizedAmount(context, subscription.amount),
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        onTap: onTap,
       ),
     );
   }
