@@ -15,13 +15,39 @@ import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/core/constants/app_languages.dart';
 import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
 
-class ReceiptScanResultPage extends StatelessWidget {
+class ReceiptScanResultPage extends StatefulWidget {
   final String imagePath;
 
   const ReceiptScanResultPage({
     super.key,
     required this.imagePath,
   });
+
+  @override
+  State<ReceiptScanResultPage> createState() => _ReceiptScanResultPageState();
+}
+
+class _ReceiptScanResultPageState extends State<ReceiptScanResultPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startScanningReceipt();
+    });
+  }
+
+  void _startScanningReceipt() {
+    debugPrint('영수증 스캔 시작');
+    final authState = context.read<AuthBloc>().state;
+    if (authState is Authenticated) {
+      debugPrint('사용자 인증됨: ${authState.user.id}');
+      context.read<ReceiptBloc>().add(ScanReceipt(
+            imagePath: widget.imagePath,
+            userId: authState.user.id,
+            userCurrency: authState.user.settings?['currency'] ?? 'KRW',
+          ));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,14 +61,6 @@ class ReceiptScanResultPage extends StatelessWidget {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.message)),
             );
-            if (state.message == _getLocalizedSuccessMessage(context)) {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const ReceiptPage(),
-                ),
-              );
-            }
           }
           if (state is ReceiptError) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -104,7 +122,7 @@ class ReceiptScanResultPage extends StatelessWidget {
     final language = context.read<AppLanguageBloc>().state.language;
     const Map<AppLanguage, String> titles = {
       AppLanguage.english: 'Receipt Analysis Result',
-      AppLanguage.korean: '영수증 분석 결과',
+      AppLanguage.korean: '영수증 분석 결',
       AppLanguage.japanese: 'レシート分析結果',
     };
     return titles[language] ?? titles[AppLanguage.korean]!;
@@ -161,12 +179,12 @@ class ReceiptScanResultPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           GestureDetector(
-            onTap: () => _showFullScreenImage(context, imagePath),
+            onTap: () => _showFullScreenImage(context, widget.imagePath),
             child: Hero(
               tag: 'receipt_image',
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.file(File(imagePath)),
+                child: Image.file(File(widget.imagePath)),
               ),
             ),
           ),
@@ -387,7 +405,7 @@ class ReceiptScanResultPage extends StatelessWidget {
     const Map<AppLanguage, String> errors = {
       AppLanguage.english: 'An error occurred while analyzing the receipt.',
       AppLanguage.korean: '영수증 분석 중 오류가 발생했습니다.',
-      AppLanguage.japanese: 'レシートの分析中にエラーが発生しました。',
+      AppLanguage.japanese: 'レシートの分析中にラーが発生しました。',
     };
     return errors[language] ?? errors[AppLanguage.korean]!;
   }

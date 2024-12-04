@@ -68,7 +68,7 @@ class ScanReceiptFab extends StatelessWidget {
       'select_from_gallery': {
         AppLanguage.english: 'Select from Gallery',
         AppLanguage.korean: '갤러리에서 선택',
-        AppLanguage.japanese: 'ギャラリーから選択',
+        AppLanguage.japanese: 'ギラリーから選択',
       },
       'error_processing_image': {
         AppLanguage.english: 'An error occurred while processing the image: ',
@@ -80,55 +80,32 @@ class ScanReceiptFab extends StatelessWidget {
   }
 
   Future<void> _pickImage(ImageSource source, BuildContext context) async {
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
-
     try {
       debugPrint('===== 이미지 선택 시작 =====');
       final picker = ImagePicker();
       debugPrint('ImagePicker 인스턴스 생성됨');
 
-      try {
-        final image = await picker.pickImage(
-          source: source,
-          maxWidth: 1800,
-          maxHeight: 1800,
-          imageQuality: 85,
-        );
-        debugPrint('pickImage 시도 완료');
+      final image = await picker.pickImage(
+        source: source,
+        maxWidth: 1800,
+        maxHeight: 1800,
+        imageQuality: 85,
+      );
+      debugPrint('pickImage 시도 완료');
 
-        if (!context.mounted) return;
-
-        if (image == null) {
-          debugPrint('이미지 선택 취소됨');
-          return;
-        }
-
-        debugPrint('선택된 이미지 경로: ${image.path}');
-
-        final croppedImage = await ImageCropper().cropImage(
-          sourcePath: image.path,
-          aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1.4),
-          compressQuality: 85,
-          compressFormat: ImageCompressFormat.jpg,
-        );
-
-        if (croppedImage != null && context.mounted) {
-          debugPrint('크롭된 이미지 처리 시작: ${croppedImage.path}');
-          await onImageSelected(croppedImage.path);
-          debugPrint('이미지 처리 완료');
-        } else {
-          debugPrint('이미지 크롭 취소됨');
-        }
-      } catch (e, stackTrace) {
-        debugPrint('이미지 선택 중 오류: $e');
-        debugPrint('이미지 선택 스택 트레이스: $stackTrace');
-        rethrow;
+      if (image == null) {
+        debugPrint('이미지 선택 취소됨');
+        return;
       }
-    } catch (e, stackTrace) {
-      debugPrint('이미지 처리 오류: $e');
-      debugPrint('스택 트레이스: $stackTrace');
+
+      debugPrint('선택된 이미지 경로: ${image.path}');
+      debugPrint('onImageSelected 호출 시작');
+      await onImageSelected(image.path);
+      debugPrint('onImageSelected 호출 완료');
+    } catch (e) {
+      debugPrint('이미지 처리 오류 발생: $e');
       if (context.mounted) {
-        scaffoldMessenger.showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('이미지 처리 중 오류가 발생했습니다: ${e.toString()}')),
         );
       }

@@ -24,7 +24,7 @@ class ReceiptPreviewPage extends StatelessWidget {
         title: Text(_getLocalizedTitle(context)),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(context, false),
             child: Text(_getLocalizedLabel(context, 'retake')),
           ),
         ],
@@ -80,24 +80,6 @@ class ReceiptPreviewPage extends StatelessWidget {
   }
 
   void _analyzeReceipt(BuildContext context) {
-    final authState = context.read<AuthBloc>().state;
-    if (authState is Authenticated) {
-      context.read<ReceiptBloc>().add(
-            ScanReceipt(
-              imagePath: imagePath,
-              userId: authState.user.id,
-              userCurrency: authState.user.currency,
-            ),
-          );
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ReceiptScanResultPage(
-            imagePath: imagePath,
-          ),
-        ),
-      );
-    }
+    Navigator.pop(context, true);
   }
 }

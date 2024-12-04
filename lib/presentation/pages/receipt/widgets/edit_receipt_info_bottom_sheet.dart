@@ -27,6 +27,8 @@ class _EditReceiptInfoBottomSheetState
     extends State<EditReceiptInfoBottomSheet> {
   late TextEditingController _merchantNameController;
   late TextEditingController _totalAmountController;
+  late DateTime _selectedDate;
+  late DateTime _originalDate;
   late List<ReceiptItem> _items;
   final _formKey = GlobalKey<FormState>();
 
@@ -38,6 +40,8 @@ class _EditReceiptInfoBottomSheetState
     _totalAmountController = TextEditingController(
       text: NumberFormat('#,###').format(widget.receipt.totalAmount),
     );
+    _selectedDate = widget.receipt.date;
+    _originalDate = widget.receipt.date;
     _items = List.from(widget.receipt.items);
   }
 
@@ -104,6 +108,16 @@ class _EditReceiptInfoBottomSheetState
         AppLanguage.korean: '저장',
         AppLanguage.japanese: '保存',
       },
+      'receipt_date': {
+        AppLanguage.english: 'Receipt Date',
+        AppLanguage.korean: '영수증 날짜',
+        AppLanguage.japanese: 'レシート日付',
+      },
+      'original_date': {
+        AppLanguage.english: 'Original date',
+        AppLanguage.korean: '원본 날짜',
+        AppLanguage.japanese: '元の日付',
+      },
     };
     return labels[key]?[language] ?? labels[key]?[AppLanguage.korean] ?? key;
   }
@@ -117,6 +131,77 @@ class _EditReceiptInfoBottomSheetState
       'EUR': '€ ',
     };
     return currencySymbols[currency] ?? currencySymbols['KRW']!;
+  }
+
+  Widget _buildDateSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          _getLocalizedLabel(context, 'receipt_date'),
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 8),
+        InkWell(
+          onTap: () => _showDateTimePicker(context),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  DateFormat('yyyy-MM-dd HH:mm').format(_selectedDate),
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                if (_selectedDate != _originalDate)
+                  Tooltip(
+                    message: _getLocalizedLabel(context, 'original_date'),
+                    child: Text(
+                      '(${DateFormat('yyyy-MM-dd HH:mm').format(_originalDate)})',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.grey,
+                          ),
+                    ),
+                  ),
+                const Icon(Icons.calendar_today),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _showDateTimePicker(BuildContext context) async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+    );
+
+    if (pickedDate != null) {
+      final TimeOfDay? pickedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.fromDateTime(_selectedDate),
+      );
+
+      if (pickedTime != null) {
+        setState(() {
+          _selectedDate = DateTime(
+            pickedDate.year,
+            pickedDate.month,
+            pickedDate.day,
+            pickedTime.hour,
+            pickedTime.minute,
+          );
+        });
+      }
+    }
   }
 
   @override
@@ -158,7 +243,9 @@ class _EditReceiptInfoBottomSheetState
                           ? _getLocalizedLabel(context, 'store_name_required')
                           : null,
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
+                    _buildDateSection(context),
+                    const SizedBox(height: 16),
                     Text(
                       _getLocalizedLabel(context, 'items'),
                       style: Theme.of(context).textTheme.titleMedium,
@@ -292,7 +379,7 @@ class _EditReceiptInfoBottomSheetState
                     ),
                     const SizedBox(width: 16),
                     ElevatedButton(
-                      onPressed: _updateReceipt,
+                      onPressed: _saveReceipt,
                       child: Text(_getLocalizedLabel(context, 'save')),
                     ),
                   ],
@@ -325,17 +412,15 @@ class _EditReceiptInfoBottomSheetState
     _totalAmountController.text = NumberFormat('#,###').format(total);
   }
 
-  void _updateReceipt() {
+  void _saveReceipt() {
     if (_formKey.currentState?.validate() ?? false) {
       final updatedReceipt = widget.receipt.copyWith(
         merchantName: _merchantNameController.text,
-        totalAmount:
-            double.parse(_totalAmountController.text.replaceAll(',', '')),
-        items: _items
-            .map((item) => item.copyWith(
-                  totalPrice: item.price * item.quantity,
-                ))
-            .toList(),
+        date: _selectedDate,
+        totalAmount: double.parse(
+          _totalAmountController.text.replaceAll(',', ''),
+        ),
+        items: _items,
       );
 
       context.read<ReceiptBloc>().add(UpdateReceipt(updatedReceipt));

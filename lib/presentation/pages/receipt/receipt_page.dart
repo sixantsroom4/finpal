@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import '../../bloc/receipt/receipt_bloc.dart';
 import '../../bloc/auth/auth_bloc.dart';
 import 'widgets/scan_receipt_fab.dart';
@@ -18,6 +19,7 @@ import 'package:go_router/go_router.dart';
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/core/constants/app_languages.dart';
 import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
+import 'package:intl/intl.dart';
 
 // Receipt List에 대한 extension 추가
 extension ReceiptListExtension on List<Receipt> {
@@ -45,9 +47,14 @@ class _ReceiptPageState extends State<ReceiptPage> {
   final _numberFormat = NumberFormat('#,###');
   final _imagePicker = ImagePicker();
 
+  // 정렬 관련 상태 추가
+  SortOption _sortOption = SortOption.date;
+  bool _ascending = false;
+
   @override
   void initState() {
     super.initState();
+    initializeDateFormatting();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadReceipts();
     });
@@ -67,213 +74,253 @@ class _ReceiptPageState extends State<ReceiptPage> {
       appBar: AppBar(
         title: Text(_getLocalizedTitle(context)),
         actions: [
-          IconButton(
+          PopupMenuButton<SortOption>(
             icon: const Icon(Icons.sort),
-            onPressed: () => _showSortOptions(context),
+            onSelected: _handleSortChange,
+            itemBuilder: (context) => [
+              _buildSortMenuItem(SortOption.date, Icons.calendar_today),
+              _buildSortMenuItem(SortOption.amount, Icons.attach_money),
+              _buildSortMenuItem(SortOption.store, Icons.store),
+            ],
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _scanReceipt(context),
-        tooltip: _getLocalizedTooltip(context),
-        child: const Icon(Icons.document_scanner),
-      ),
-      body: BlocConsumer<ReceiptBloc, ReceiptState>(
-        listener: (context, state) {
-          if (state is ReceiptError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                  content: Text(_getLocalizedError(context, state.message))),
-            );
-          }
-          if (state is ReceiptOperationSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                  content: Text(_getLocalizedSuccess(context, state.message))),
-            );
-          }
-        },
+      body: BlocBuilder<ReceiptBloc, ReceiptState>(
         builder: (context, state) {
-          if (state is ReceiptLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+          if (state is ReceiptLoaded) {
+            if (state.receipts.isEmpty) {
+              return _buildEmptyState(context);
+            }
 
-          if (state is ReceiptEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    _getLocalizedEmptyTitle(context),
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    _getLocalizedEmptySubtitle(context),
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey,
-                        ),
-                  ),
-                ],
-              ),
-            );
-          }
+            final sortedReceipts = _sortReceipts(state.receipts);
+            final groupedReceipts = _groupReceiptsByYearMonth(sortedReceipts);
 
-          return CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: Card(
-                  margin: const EdgeInsets.all(16),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(_getLocalizedLabel(context, 'this_month')),
-                            Text(
-                              _getLocalizedCount(
-                                  context, state.receipts.length),
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                          ],
-                        ),
-                        const Divider(),
-                        // 통화별 총액 표시 부분 수정
-                        ...state.receipts.groupByCurrency().entries.map(
-                              (entry) => Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 4),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(_getLocalizedLabel(
-                                        context, 'total_amount')),
-                                    Text(
-                                      _getLocalizedAmount(
-                                          context, entry.value, entry.key),
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium
-                                          ?.copyWith(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .primary,
-                                          ),
-                                    ),
-                                  ],
-                                ),
+            return CustomScrollView(
+              slivers: [
+                // 월별 요약 카드
+                SliverToBoxAdapter(
+                  child: Card(
+                    margin: const EdgeInsets.all(16),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(_getLocalizedLabel(context, 'this_month')),
+                              Text(
+                                _getLocalizedCount(
+                                    context, state.receipts.length),
+                                style: Theme.of(context).textTheme.titleMedium,
                               ),
-                            ),
-                      ],
+                            ],
+                          ),
+                          const Divider(),
+                          ...state.receipts.groupByCurrency().entries.map(
+                                (entry) =>
+                                    _buildCurrencyTotalRow(context, entry),
+                              ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-
-              // 영수증 그리드
-              SliverPadding(
-                padding: const EdgeInsets.all(16),
-                sliver: SliverGrid(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 16,
-                    crossAxisSpacing: 16,
-                    childAspectRatio: 0.7,
-                  ),
+                // 연도/월별 그룹화된 영수증 목록
+                SliverList(
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
-                      final receipt = state.receipts[index];
-                      return ReceiptGridItem(
-                        receipt: receipt,
-                        onTap: () => _showReceiptDetails(context, receipt),
+                      final yearMonth = groupedReceipts.keys.elementAt(index);
+                      final receipts = groupedReceipts[yearMonth]!;
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (index == 0 || _isNewYear(index, groupedReceipts))
+                            _buildYearDivider(yearMonth),
+                          _buildMonthDivider(context, yearMonth, receipts),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                mainAxisSpacing: 16,
+                                crossAxisSpacing: 16,
+                                childAspectRatio: 0.7,
+                              ),
+                              itemCount: receipts.length,
+                              itemBuilder: (context, idx) {
+                                final receipt = receipts[idx];
+                                return ReceiptGridItem(
+                                  receipt: receipt,
+                                  onTap: () {
+                                    debugPrint('영수증 상세 페이지로 이동 시도');
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            ReceiptDetailsPage(
+                                                receiptId: receipt.id),
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                          ),
+                        ],
                       );
                     },
-                    childCount: state.receipts.length,
+                    childCount: groupedReceipts.length,
                   ),
                 ),
-              ),
-            ],
-          );
+              ],
+            );
+          }
+          return const Center(child: CircularProgressIndicator());
+        },
+      ),
+      floatingActionButton: ScanReceiptFab(
+        onImageSelected: (String imagePath) async {
+          debugPrint('ReceiptPage - onImageSelected 시작: $imagePath');
+          try {
+            if (mounted) {
+              debugPrint('ReceiptPreviewPage로 이동 시도');
+              final shouldProceed = await Navigator.push<bool>(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      ReceiptPreviewPage(imagePath: imagePath),
+                ),
+              );
+
+              debugPrint('ReceiptPreviewPage 결과: $shouldProceed');
+
+              if (shouldProceed == true && mounted) {
+                debugPrint('ReceiptScanResultPage로 이동 시도');
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        ReceiptScanResultPage(imagePath: imagePath),
+                    fullscreenDialog: true,
+                  ),
+                );
+                debugPrint('ReceiptScanResultPage 완료');
+
+                if (mounted) {
+                  debugPrint('영수증 목록 새로고침');
+                  _loadReceipts();
+                }
+              } else {
+                debugPrint('영수증 스캔 취소됨');
+              }
+            }
+          } catch (e) {
+            debugPrint('영수증 처리 중 오류 발생: $e');
+          }
         },
       ),
     );
   }
 
-  void _showSortOptions(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => Column(
-        mainAxisSize: MainAxisSize.min,
+  // 정렬 관련 메서드
+  List<Receipt> _sortReceipts(List<Receipt> receipts) {
+    final List<Receipt> sorted = List.from(receipts);
+
+    switch (_sortOption) {
+      case SortOption.date:
+        sorted.sort((a, b) =>
+            _ascending ? a.date.compareTo(b.date) : b.date.compareTo(a.date));
+        break;
+      case SortOption.amount:
+        sorted.sort((a, b) {
+          if (a.currency == b.currency) {
+            return _ascending
+                ? a.totalAmount.compareTo(b.totalAmount)
+                : b.totalAmount.compareTo(a.totalAmount);
+          }
+          return a.currency.compareTo(b.currency);
+        });
+        break;
+      case SortOption.store:
+        sorted.sort((a, b) => _ascending
+            ? a.merchantName.compareTo(b.merchantName)
+            : b.merchantName.compareTo(a.merchantName));
+        break;
+    }
+
+    return sorted;
+  }
+
+  PopupMenuItem<SortOption> _buildSortMenuItem(
+      SortOption option, IconData icon) {
+    return PopupMenuItem(
+      value: option,
+      child: Row(
         children: [
-          ListTile(
-            leading: const Icon(Icons.date_range),
-            title: Text(_getLocalizedLabel(context, 'sort_by_date')),
-            onTap: () {
-              context.read<ReceiptBloc>().add(
-                    SortReceipts(SortOption.date),
-                  );
-              Navigator.pop(context);
-            },
+          Icon(
+            icon,
+            color:
+                _sortOption == option ? Theme.of(context).primaryColor : null,
           ),
-          ListTile(
-            leading: const Icon(Icons.store),
-            title: Text(_getLocalizedLabel(context, 'sort_by_store')),
-            onTap: () {
-              context.read<ReceiptBloc>().add(
-                    SortReceipts(SortOption.store),
-                  );
-              Navigator.pop(context);
-            },
+          const SizedBox(width: 8),
+          Text(_getLocalizedLabel(context, 'sort_by_${option.name}')),
+          if (_sortOption == option)
+            Icon(_ascending ? Icons.arrow_upward : Icons.arrow_downward),
+        ],
+      ),
+    );
+  }
+
+  void _handleSortChange(SortOption option) {
+    setState(() {
+      if (_sortOption == option) {
+        _ascending = !_ascending;
+      } else {
+        _sortOption = option;
+        _ascending = false;
+      }
+    });
+  }
+
+  // 빈 상태 위젯
+  Widget _buildEmptyState(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            _getLocalizedEmptyTitle(context),
+            style: Theme.of(context).textTheme.titleMedium,
           ),
-          ListTile(
-            leading: const Icon(Icons.attach_money),
-            title: Text(_getLocalizedLabel(context, 'sort_by_amount')),
-            onTap: () {
-              context.read<ReceiptBloc>().add(
-                    SortReceipts(SortOption.amount),
-                  );
-              Navigator.pop(context);
-            },
+          const SizedBox(height: 16),
+          Text(
+            _getLocalizedEmptySubtitle(context),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.grey,
+                ),
           ),
         ],
       ),
     );
   }
 
-  void _showReceiptDetails(BuildContext context, Receipt receipt) {
-    context.go('/receipts/${receipt.id}');
-  }
-
-  Future<void> _scanReceipt(BuildContext context) async {
+  // 네비게이션
+  void _navigateToReceiptDetails(BuildContext context, Receipt receipt) {
+    debugPrint('영수증 상세 페이지로 이동 시도');
     try {
-      final image = await ImagePicker().pickImage(
-        source: ImageSource.camera,
-        maxWidth: 1800,
-        maxHeight: 1800,
-        imageQuality: 85,
-      );
-
-      if (image != null && context.mounted) {
-        final shouldRetake = await Navigator.push<bool>(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ReceiptPreviewPage(
-              imagePath: image.path,
-            ),
-          ),
-        );
-
-        if (shouldRetake == true && context.mounted) {
-          _scanReceipt(context); // 재촬영
-        }
-      }
+      context.push('/receipt/details', extra: receipt);
     } catch (e) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('영수증 스캔 중 오류가 발생했습니다: ${e.toString()}')),
+      debugPrint('라우팅 에러: $e');
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ReceiptDetailsPage(receiptId: receipt.id),
+        ),
       );
     }
   }
@@ -293,7 +340,7 @@ class _ReceiptPageState extends State<ReceiptPage> {
     const Map<AppLanguage, String> tooltips = {
       AppLanguage.english: 'Scan Receipt',
       AppLanguage.korean: '영수증 스캔',
-      AppLanguage.japanese: 'レシートをスキャン',
+      AppLanguage.japanese: 'レシートをスャン',
     };
     return tooltips[language] ?? tooltips[AppLanguage.korean]!;
   }
@@ -325,7 +372,7 @@ class _ReceiptPageState extends State<ReceiptPage> {
     const Map<AppLanguage, String> texts = {
       AppLanguage.english: 'No Receipts',
       AppLanguage.korean: '저장된 영수증이 없습니다',
-      AppLanguage.japanese: '保存されたレシートがありません',
+      AppLanguage.japanese: '保存さたレシートがありません',
     };
     return texts[language] ?? texts[AppLanguage.korean]!;
   }
@@ -346,7 +393,7 @@ class _ReceiptPageState extends State<ReceiptPage> {
       'this_month': {
         AppLanguage.english: 'This Month',
         AppLanguage.korean: '이번 달 영수증',
-        AppLanguage.japanese: '今月のレシート',
+        AppLanguage.japanese: '今月のレシト',
       },
       'total_amount': {
         AppLanguage.english: 'Total Amount',
@@ -408,4 +455,158 @@ class _ReceiptPageState extends State<ReceiptPage> {
         return '$formattedAmount$symbol';
     }
   }
+
+  Widget _buildYearDivider(DateTime yearMonth) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: Row(
+        children: [
+          Text(
+            yearMonth.year.toString(),
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+          Expanded(
+            child: Divider(
+              color: Colors.grey[300],
+              thickness: 1,
+              indent: 16,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMonthDivider(
+      BuildContext context, DateTime yearMonth, List<Receipt> receipts) {
+    final currencyGroups = _groupByCurrency(receipts);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                DateFormat('MMMM',
+                        context.read<AppLanguageBloc>().state.language.code)
+                    .format(yearMonth),
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              Expanded(
+                child: Divider(
+                  color: Colors.grey[300],
+                  thickness: 1,
+                  indent: 16,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Wrap(
+            spacing: 8,
+            children: currencyGroups.entries.map((entry) {
+              return Chip(
+                label: Text(
+                  _getLocalizedAmount(context, entry.value, entry.key),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Map<DateTime, List<Receipt>> _groupReceiptsByYearMonth(
+      List<Receipt> receipts) {
+    final grouped = <DateTime, List<Receipt>>{};
+
+    for (var receipt in receipts) {
+      final yearMonth = DateTime(receipt.date.year, receipt.date.month);
+      grouped.update(
+        yearMonth,
+        (list) => list..add(receipt),
+        ifAbsent: () => [receipt],
+      );
+    }
+
+    return Map.fromEntries(grouped.entries.toList()
+      ..sort((a, b) =>
+          _ascending ? a.key.compareTo(b.key) : b.key.compareTo(a.key)));
+  }
+
+  Map<String, double> _groupByCurrency(List<Receipt> receipts) {
+    final currencyTotals = <String, double>{};
+
+    for (var receipt in receipts) {
+      currencyTotals.update(
+        receipt.currency,
+        (total) => total + receipt.totalAmount,
+        ifAbsent: () => receipt.totalAmount,
+      );
+    }
+
+    return currencyTotals;
+  }
+
+  bool _isNewYear(int index, Map<DateTime, List<Receipt>> groupedReceipts) {
+    if (index == 0) return true;
+    final currentYear = groupedReceipts.keys.elementAt(index).year;
+    final previousYear = groupedReceipts.keys.elementAt(index - 1).year;
+    return currentYear != previousYear;
+  }
+
+  Widget _buildCurrencyTotalRow(
+      BuildContext context, MapEntry<String, double> entry) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(_getLocalizedLabel(context, 'total_amount')),
+          Text(
+            _getLocalizedAmount(context, entry.value, entry.key),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ReceiptListItem 위젯 추가 (클래스 외부에)
+class ReceiptListItem extends StatelessWidget {
+  final Receipt receipt;
+  final VoidCallback onTap;
+
+  const ReceiptListItem({
+    Key? key,
+    required this.receipt,
+    required this.onTap,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      title: Text(receipt.merchantName),
+      subtitle: Text(DateFormat('yyyy-MM-dd').format(receipt.date)),
+      trailing: Text('${receipt.currency} ${receipt.totalAmount}'),
+      onTap: onTap,
+    );
+  }
+}
+
+// 정렬 옵션 enum 추가
+enum SortOption {
+  date,
+  amount,
+  store,
 }
