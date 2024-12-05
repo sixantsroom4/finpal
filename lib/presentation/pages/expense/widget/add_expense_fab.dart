@@ -20,9 +20,17 @@ class AddExpenseFab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FloatingActionButton(
-      onPressed: () => _showAddExpenseDialog(context),
-      tooltip: _getLocalizedTooltip(context),
-      child: const Icon(Icons.add),
+      onPressed: () => _showAddExpenseBottomSheet(context),
+      backgroundColor: const Color(0xFF2C3E50),
+      child: const Icon(
+        Icons.add,
+        color: Colors.white,
+        size: 28,
+      ),
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
     );
   }
 
@@ -36,7 +44,7 @@ class AddExpenseFab extends StatelessWidget {
     return tooltips[language] ?? tooltips[AppLanguage.korean]!;
   }
 
-  void _showAddExpenseDialog(BuildContext context) {
+  void _showAddExpenseBottomSheet(BuildContext context) {
     // 지출 추가 다이얼로그 표시
     showModalBottomSheet(
       context: context,

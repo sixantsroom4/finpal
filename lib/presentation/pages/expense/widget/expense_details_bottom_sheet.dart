@@ -24,96 +24,184 @@ class ExpenseDetailsBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(25),
+        ),
+      ),
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                _getLocalizedTitle(context),
+          // 드래그 핸들
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+
+          // 금액 표시
+          Center(
+            child: Text(
+              _getLocalizedAmount(context, expense.amount),
+              style: const TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF2C3E50),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // 상세 정보 리스트
+          _buildDetailItem(
+            context,
+            Icons.description_outlined,
+            '설명',
+            expense.description,
+          ),
+          _buildDetailItem(
+            context,
+            Icons.category_outlined,
+            '카테고리',
+            _getLocalizedCategory(context, expense.category),
+          ),
+          _buildDetailItem(
+            context,
+            Icons.calendar_today_outlined,
+            '날짜',
+            _getLocalizedDate(context, expense.date),
+          ),
+
+          const SizedBox(height: 24),
+
+          // 영수증 버튼 (영수증이 있는 경우에만 표시)
+          if (expense.receiptId != null) ...[
+            OutlinedButton.icon(
+              onPressed: () => context.push('/receipts/${expense.receiptId}'),
+              icon: const Icon(
+                Icons.receipt_outlined,
+                color: Color(0xFF2C3E50),
+              ),
+              label: Text(
+                _getLocalizedLabel(context, 'view_receipt'),
                 style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2C3E50),
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: () => Navigator.pop(context),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                minimumSize: const Size(double.infinity, 0),
+                side: const BorderSide(color: Color(0xFF2C3E50)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+
+          // 수정/삭제 버튼 Row
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _editExpense(context),
+                  icon: const Icon(
+                    Icons.edit_outlined,
+                    color: Colors.blue,
+                  ),
+                  label: Text(
+                    _getLocalizedLabel(context, 'edit'),
+                    style: const TextStyle(color: Colors.blue),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    side: const BorderSide(color: Colors.blue),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _deleteExpense(context),
+                  icon: const Icon(
+                    Icons.delete_outline,
+                    color: Colors.red,
+                  ),
+                  label: Text(
+                    _getLocalizedLabel(context, 'delete'),
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    side: const BorderSide(color: Colors.red),
+                    backgroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
-          const Divider(),
-          _DetailItem(
-            title: _getLocalizedLabel(context, 'amount'),
-            value: _getLocalizedAmount(context, expense.amount),
-          ),
-          _DetailItem(
-            title: _getLocalizedLabel(context, 'description'),
-            value: expense.description,
-          ),
-          _DetailItem(
-            title: _getLocalizedLabel(context, 'category'),
-            value: _getLocalizedCategory(context, expense.category),
-          ),
-          _DetailItem(
-            title: _getLocalizedLabel(context, 'date'),
-            value: _getLocalizedDate(context, expense.date),
-          ),
-          if (expense.isShared)
-            _DetailItem(
-              title: _getLocalizedLabel(context, 'shared'),
-              value: _getLocalizedSharedText(
-                  context, expense.sharedWith?.length ?? 0),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailItem(
+    BuildContext context,
+    IconData icon,
+    String label,
+    String value,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF2C3E50).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
             ),
-          if (expense.receiptId != null)
-            BlocBuilder<ReceiptBloc, ReceiptState>(
-              builder: (context, state) {
-                return Padding(
-                  padding: const EdgeInsets.only(top: 16.0),
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      context.go('/receipts/${expense.receiptId}');
-                    },
-                    icon: const Icon(Icons.receipt_long),
-                    label: Text(_getLocalizedLabel(context, 'view_receipt')),
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 45),
-                    ),
-                  ),
-                );
-              },
+            child: Icon(
+              icon,
+              color: const Color(0xFF2C3E50),
+              size: 20,
             ),
-          Padding(
-            padding: const EdgeInsets.only(top: 16.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      _showEditExpenseBottomSheet(context);
-                    },
-                    icon: const Icon(Icons.edit),
-                    label: Text(_getLocalizedLabel(context, 'edit')),
-                  ),
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _showDeleteConfirmDialog(context),
-                    icon: const Icon(Icons.delete),
-                    label: Text(_getLocalizedLabel(context, 'delete')),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                    ),
-                  ),
+              ),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),
@@ -329,7 +417,7 @@ class ExpenseDetailsBottomSheet extends StatelessWidget {
     const Map<AppLanguage, String> messages = {
       AppLanguage.english:
           'Are you sure you want to delete this expense?\nDeleted expenses cannot be recovered.',
-      AppLanguage.korean: '이 지출을 삭제하시겠습니까?\n삭제된 지출은 복구할 수 없습니다.',
+      AppLanguage.korean: '이 지출을 삭하시겠습니까?\n삭제된 지출은 복구할 수 없습니다.',
       AppLanguage.japanese: 'この支出を削除しますか？\n削除された支出は復元できません。',
     };
     return messages[language] ?? messages[AppLanguage.korean]!;
@@ -352,45 +440,18 @@ class ExpenseDetailsBottomSheet extends StatelessWidget {
       builder: (context) => EditExpenseBottomSheet(expense: expense),
     );
   }
-}
 
-class _DetailItem extends StatelessWidget {
-  final String title;
-  final String value;
+  void _editExpense(BuildContext context) {
+    Navigator.pop(context);
+    _showEditExpenseBottomSheet(context);
+  }
 
-  const _DetailItem({
-    required this.title,
-    required this.value,
-  });
+  void _deleteExpense(BuildContext context) {
+    Navigator.pop(context);
+    _showDeleteConfirmDialog(context);
+  }
 
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 80,
-            child: Text(
-              title,
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 14,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+  String _getLocalizedText(BuildContext context, String key) {
+    return _getLocalizedLabel(context, key);
   }
 }
