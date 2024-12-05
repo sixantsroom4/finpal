@@ -71,34 +71,109 @@ class SubscriptionStatisticsCard extends StatelessWidget {
     final yearlyTotals = _calculateYearlyTotalsByCurrency();
 
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF2C3E50), Color(0xFF3498DB)],
+          ),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 월간 구독료
             Text(
               _getLocalizedLabel(context, 'monthly_total'),
-              style: Theme.of(context).textTheme.titleMedium,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.white70,
+                fontWeight: FontWeight.w500,
+              ),
             ),
             const SizedBox(height: 8),
-            // 통화별 월간 구독료 표시
-            ...monthlyTotals.entries.map((entry) => Text(
-                  _formatAmount(context, entry.value, entry.key),
-                  style: Theme.of(context).textTheme.headlineSmall,
+            ...monthlyTotals.entries.map((entry) => Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(
+                    _formatAmount(context, entry.value, entry.key),
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
                 )),
-            const Divider(height: 24),
-            Text(
-              _getLocalizedLabel(context, 'yearly_total'),
-              style: Theme.of(context).textTheme.titleMedium,
+
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: Divider(color: Colors.white24),
             ),
-            const SizedBox(height: 8),
-            // 통화별 연간 구독료 표시
-            ...yearlyTotals.entries.map((entry) => Text(
-                  _formatAmount(context, entry.value, entry.key),
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
+
+            // 연간 총액
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _getLocalizedLabel(context, 'yearly_total'),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.white70,
+                        fontWeight: FontWeight.w500,
                       ),
-                )),
+                    ),
+                    const SizedBox(height: 8),
+                    ...yearlyTotals.entries.map((entry) => Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: Text(
+                            _formatAmount(context, entry.value, entry.key),
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        )),
+                  ],
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.calendar_today_outlined,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${DateTime.now().year}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),

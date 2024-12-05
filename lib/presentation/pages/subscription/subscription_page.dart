@@ -3,6 +3,7 @@ import 'package:finpal/domain/entities/subscription.dart';
 import 'package:finpal/presentation/bloc/auth/auth_state.dart';
 import 'package:finpal/presentation/bloc/subscription/subscription_event.dart';
 import 'package:finpal/presentation/bloc/subscription/subscription_state.dart';
+import 'package:finpal/presentation/pages/subscription/widgets/add_subscription_bottom_sheet.dart';
 import 'package:finpal/presentation/pages/subscription/widgets/subscription_details_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -97,13 +98,28 @@ class _SubscriptionPageState extends State<SubscriptionPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_getLocalizedLabel(context, 'subscription_management')),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: [
-            Tab(text: _getLocalizedLabel(context, 'all_subscriptions')),
-            Tab(text: _getLocalizedLabel(context, 'upcoming_payments')),
-          ],
+        backgroundColor: const Color(0xFF2C3E50),
+        elevation: 0,
+        title: Text(
+          _getLocalizedLabel(context, 'subscription_management'),
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(48),
+          child: TabBar(
+            controller: _tabController,
+            indicatorColor: Colors.white,
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white70,
+            tabs: [
+              Tab(text: _getLocalizedLabel(context, 'all_subscriptions')),
+              Tab(text: _getLocalizedLabel(context, 'upcoming_payments')),
+            ],
+          ),
         ),
       ),
       body: BlocConsumer<SubscriptionBloc, SubscriptionState>(
@@ -121,7 +137,11 @@ class _SubscriptionPageState extends State<SubscriptionPage>
         },
         builder: (context, state) {
           if (state is SubscriptionLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2C3E50)),
+              ),
+            );
           }
 
           if (state is! SubscriptionLoaded) {
@@ -129,17 +149,30 @@ class _SubscriptionPageState extends State<SubscriptionPage>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    _getLocalizedLabel(context, 'no_subscriptions'),
-                    style: Theme.of(context).textTheme.titleMedium,
+                  Icon(
+                    Icons.subscriptions_outlined,
+                    size: 64,
+                    color: Colors.grey[400],
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    _getLocalizedLabel(context, 'no_subscriptions_description'),
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey,
+                    _getLocalizedLabel(context, 'no_subscriptions'),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: const Color(0xFF2C3E50),
+                          fontWeight: FontWeight.w500,
                         ),
-                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                    child: Text(
+                      _getLocalizedLabel(
+                          context, 'no_subscriptions_description'),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.grey[600],
+                          ),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ],
               ),
@@ -148,11 +181,13 @@ class _SubscriptionPageState extends State<SubscriptionPage>
 
           return Column(
             children: [
-              // 통계 카드
-              SubscriptionStatisticsCard(
-                subscriptions: state.subscriptions,
+              // 통계 카드 개선
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: SubscriptionStatisticsCard(
+                  subscriptions: state.subscriptions,
+                ),
               ),
-
               // 구독 목록
               Expanded(
                 child: TabBarView(
@@ -167,7 +202,11 @@ class _SubscriptionPageState extends State<SubscriptionPage>
           );
         },
       ),
-      floatingActionButton: const AddSubscriptionFab(),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showAddSubscriptionDialog(context),
+        backgroundColor: const Color(0xFF2C3E50),
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
     );
   }
 
@@ -272,6 +311,36 @@ class _SubscriptionPageState extends State<SubscriptionPage>
       builder: (context) => SubscriptionDetailsBottomSheet(
         subscription: subscription,
       ),
+    );
+  }
+
+  // 카테고리 섹션 헤더 개선
+  Widget _buildCategoryHeader(BuildContext context, String category) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xFF2C3E50).withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          category,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF2C3E50),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showAddSubscriptionDialog(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => const AddSubscriptionBottomSheet(),
     );
   }
 }

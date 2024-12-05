@@ -77,76 +77,99 @@ class SubscriptionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Opacity(
-      opacity: subscription.isActive ? 1.0 : 0.6, // 일시정지 시 흐리게
+      opacity: subscription.isActive ? 1.0 : 0.6,
       child: Card(
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        child: ListTile(
-          leading: Stack(
-            children: [
-              CircleAvatar(
-                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                child: Icon(
-                  _getSubscriptionIcon(subscription.category),
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
-              if (!subscription.isActive)
-                Positioned.fill(
-                  child: CircleAvatar(
-                    backgroundColor: Colors.black38,
-                    child: Icon(
-                      Icons.pause,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          title: Row(
-            children: [
-              Text(subscription.name),
-              if (!subscription.isActive)
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                // 아이콘 부분
                 Container(
-                  margin: const EdgeInsets.only(left: 8),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.grey[300],
+                    color: const Color(0xFF2C3E50).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text(
-                    _getLocalizedLabel(context, 'paused'),
-                    style: Theme.of(context).textTheme.bodySmall,
+                  child: Icon(
+                    _getSubscriptionIcon(subscription.category),
+                    color: const Color(0xFF2C3E50),
                   ),
                 ),
-            ],
-          ),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                _getLocalizedLabel(context, 'billing_day_format'),
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              if (daysUntilBilling != null)
-                Text(
-                  daysUntilBilling == 0
-                      ? _getLocalizedLabel(context, 'billing_today')
-                      : _getLocalizedLabel(context, 'billing_days_left'),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: daysUntilBilling == 0
-                            ? Theme.of(context).colorScheme.error
-                            : Colors.grey,
+                const SizedBox(width: 16),
+                // 정보 부분
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            subscription.name,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF2C3E50),
+                            ),
+                          ),
+                          if (!subscription.isActive)
+                            Container(
+                              margin: const EdgeInsets.only(left: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[200],
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                _getLocalizedLabel(context, 'paused'),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _getLocalizedAmount(context, subscription.amount),
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF2C3E50),
+                        ),
+                      ),
+                      if (daysUntilBilling != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          daysUntilBilling == 0
+                              ? _getLocalizedLabel(context, 'billing_today')
+                              : _getLocalizedLabel(
+                                  context, 'billing_days_left'),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: daysUntilBilling == 0
+                                ? Colors.red
+                                : Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
-            ],
+              ],
+            ),
           ),
-          trailing: Text(
-            _getLocalizedAmount(context, subscription.amount),
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          onTap: onTap,
         ),
       ),
     );
