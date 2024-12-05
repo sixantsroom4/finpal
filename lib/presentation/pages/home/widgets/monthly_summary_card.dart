@@ -73,7 +73,7 @@ class MonthlySummaryCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        DateFormat('MM월').format(DateTime.now()),
+                        _getLocalizedMonth(context),
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w500,
@@ -213,5 +213,20 @@ class MonthlySummaryCard extends StatelessWidget {
   bool _isCurrentMonth(DateTime date) {
     final now = DateTime.now();
     return date.year == now.year && date.month == now.month;
+  }
+
+  String _getLocalizedMonth(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    final now = DateTime.now();
+
+    switch (language) {
+      case AppLanguage.english:
+        return DateFormat('MMMM').format(now); // "January", "February" etc.
+      case AppLanguage.japanese:
+        return DateFormat('M月').format(now); // "1月", "2月" etc.
+      case AppLanguage.korean:
+      default:
+        return DateFormat('MM월').format(now); // "01월", "02월" etc.
+    }
   }
 }
