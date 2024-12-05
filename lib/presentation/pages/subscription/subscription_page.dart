@@ -13,6 +13,7 @@ import 'widgets/subscription_card.dart';
 import 'widgets/subscription_statistics_card.dart';
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/core/constants/app_languages.dart';
+import 'package:intl/intl.dart';
 
 class SubscriptionPage extends StatefulWidget {
   const SubscriptionPage({super.key});
@@ -108,19 +109,6 @@ class _SubscriptionPageState extends State<SubscriptionPage>
             fontWeight: FontWeight.w500,
           ),
         ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(48),
-          child: TabBar(
-            controller: _tabController,
-            indicatorColor: Colors.white,
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.white70,
-            tabs: [
-              Tab(text: _getLocalizedLabel(context, 'all_subscriptions')),
-              Tab(text: _getLocalizedLabel(context, 'upcoming_payments')),
-            ],
-          ),
-        ),
       ),
       body: BlocConsumer<SubscriptionBloc, SubscriptionState>(
         listener: (context, state) {
@@ -181,22 +169,14 @@ class _SubscriptionPageState extends State<SubscriptionPage>
 
           return Column(
             children: [
-              // 통계 카드 개선
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: SubscriptionStatisticsCard(
                   subscriptions: state.subscriptions,
                 ),
               ),
-              // 구독 목록
               Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _buildAllSubscriptionsList(state),
-                    _buildUpcomingSubscriptionsList(state),
-                  ],
-                ),
+                child: _buildAllSubscriptionsList(state),
               ),
             ],
           );
@@ -259,50 +239,6 @@ class _SubscriptionPageState extends State<SubscriptionPage>
     );
   }
 
-  Widget _buildUpcomingSubscriptionsList(SubscriptionLoaded state) {
-    final now = DateTime.now();
-    final upcomingSubscriptions = state.billingDaySubscriptions.entries
-        .where((entry) => _isUpcoming(entry.key, now.day))
-        .expand((entry) => entry.value)
-        .toList()
-      ..sort((a, b) => a.billingDay.compareTo(b.billingDay));
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: upcomingSubscriptions.length,
-      itemBuilder: (context, index) {
-        final subscription = upcomingSubscriptions[index];
-        final daysUntilBilling = _calculateDaysUntilBilling(
-          subscription.billingDay,
-          now.day,
-        );
-
-        return SubscriptionCard(
-          subscription: subscription,
-          daysUntilBilling: daysUntilBilling,
-          onTap: () => _showSubscriptionDetails(context, subscription),
-        );
-      },
-    );
-  }
-
-  bool _isUpcoming(int billingDay, int currentDay) {
-    // 다음 7일 이내에 결제 예정인 구독 필터링
-    final daysUntilBilling = _calculateDaysUntilBilling(billingDay, currentDay);
-    return daysUntilBilling <= 7;
-  }
-
-  int _calculateDaysUntilBilling(int billingDay, int currentDay) {
-    if (billingDay >= currentDay) {
-      return billingDay - currentDay;
-    } else {
-      // 다음 달의 결제일까지 남은 일수 계산
-      final now = DateTime.now();
-      final lastDayOfMonth = DateTime(now.year, now.month + 1, 0).day;
-      return lastDayOfMonth - currentDay + billingDay;
-    }
-  }
-
   void _showSubscriptionDetails(
       BuildContext context, Subscription subscription) {
     showModalBottomSheet(
@@ -310,28 +246,6 @@ class _SubscriptionPageState extends State<SubscriptionPage>
       isScrollControlled: true,
       builder: (context) => SubscriptionDetailsBottomSheet(
         subscription: subscription,
-      ),
-    );
-  }
-
-  // 카테고리 섹션 헤더 개선
-  Widget _buildCategoryHeader(BuildContext context, String category) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: const Color(0xFF2C3E50).withOpacity(0.1),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          category,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF2C3E50),
-          ),
-        ),
       ),
     );
   }
