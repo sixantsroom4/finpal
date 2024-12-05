@@ -43,39 +43,92 @@ class _BudgetSettingsPageState extends State<BudgetSettingsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_getLocalizedTitle(context)),
+        title: Text(
+          _getLocalizedTitle(context),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        backgroundColor: const Color(0xFF2C3E50),
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextFormField(
-                controller: _budgetController,
-                decoration: InputDecoration(
-                  labelText: _getLocalizedLabel(context, 'monthly_budget'),
-                  border: const OutlineInputBorder(),
-                  suffix: Text(_getLocalizedCurrency(context)),
-                ),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value?.isEmpty ?? true) {
-                    return _getLocalizedError(context, 'budget_required');
-                  }
-                  if (double.tryParse(value!.replaceAll(',', '')) == null) {
-                    return _getLocalizedError(context, 'invalid_amount');
-                  }
-                  return null;
-                },
+      body: SingleChildScrollView(
+        child: Card(
+          margin: const EdgeInsets.all(16),
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _getLocalizedLabel(context, 'monthly_budget'),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2C3E50),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  TextFormField(
+                    controller: _budgetController,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: _getLocalizedLabel(context, 'enter_budget'),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      prefixIcon: Container(
+                        padding: const EdgeInsets.all(8),
+                        child: const Icon(
+                          Icons.attach_money,
+                          color: Color(0xFF2C3E50),
+                        ),
+                      ),
+                      suffix: Text(_getLocalizedCurrency(context)),
+                    ),
+                    validator: (value) {
+                      if (value?.isEmpty ?? true) {
+                        return _getLocalizedError(context, 'budget_required');
+                      }
+                      if (double.tryParse(value!.replaceAll(',', '')) == null) {
+                        return _getLocalizedError(context, 'invalid_amount');
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: _updateBudget,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2C3E50),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: Text(
+                        _getLocalizedLabel(context, 'save'),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _updateBudget,
-                child: Text(_getLocalizedLabel(context, 'save')),
-              ),
-            ],
+            ),
           ),
         ),
       ),

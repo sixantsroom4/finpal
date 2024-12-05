@@ -4,6 +4,7 @@ import 'package:finpal/presentation/bloc/app_settings/app_settings_state.dart';
 import 'package:finpal/presentation/bloc/user_registration/user_registration_bloc.dart';
 import 'package:finpal/presentation/bloc/user_registration/user_registration_event.dart';
 import 'package:finpal/presentation/bloc/user_registration/user_registration_state.dart';
+import 'package:finpal/presentation/pages/settings/widget/setting_item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:finpal/core/constants/app_languages.dart';
@@ -24,94 +25,67 @@ class AppSettingsSection extends StatelessWidget {
               builder: (context, settingsState) {
                 final String currentCurrency = settingsState.currency;
 
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 12),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF2C3E50),
-                        borderRadius: BorderRadius.only(
-                          bottomLeft: Radius.circular(15),
-                          bottomRight: Radius.circular(15),
+                return Card(
+                  margin: const EdgeInsets.all(16),
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF2C3E50),
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(15),
+                            topRight: Radius.circular(15),
+                          ),
+                        ),
+                        child: Text(
+                          _getLocalizedLabel(context, 'settings'),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
-                      child: Text(
-                        _getLocalizedLabel(context, 'settings'),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                      SettingItem(
+                        icon: Icons.language,
+                        iconColor: const Color(0xFF2C3E50),
+                        iconBackgroundColor:
+                            const Color(0xFF2C3E50).withOpacity(0.1),
+                        title: _getLocalizedLabel(context, 'language'),
+                        subtitle: _getLocalizedLanguageName(context),
+                        trailing: const Icon(
+                          Icons.chevron_right,
+                          color: Color(0xFF2C3E50),
                         ),
+                        onTap: () => _showLanguageDialog(context),
                       ),
-                    ),
-                    Card(
-                      margin: const EdgeInsets.all(16),
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
+                      const Divider(height: 1),
+                      SettingItem(
+                        icon: Icons.attach_money,
+                        iconColor: const Color(0xFF2C3E50),
+                        iconBackgroundColor:
+                            const Color(0xFF2C3E50).withOpacity(0.1),
+                        title: _getLocalizedLabel(context, 'currency'),
+                        subtitle:
+                            _getLocalizedCurrency(context, currentCurrency),
+                        trailing: const Icon(
+                          Icons.chevron_right,
+                          color: Color(0xFF2C3E50),
+                        ),
+                        onTap: () => _showCurrencyDialog(context),
                       ),
-                      child: Column(
-                        children: [
-                          ListTile(
-                            leading: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF2C3E50).withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: const Icon(
-                                Icons.language,
-                                color: Color(0xFF2C3E50),
-                              ),
-                            ),
-                            title: Text(
-                              _getLocalizedLabel(context, 'language'),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w500,
-                                color: Color(0xFF2C3E50),
-                              ),
-                            ),
-                            subtitle: Text(_getLocalizedLanguageName(context)),
-                            trailing: const Icon(
-                              Icons.chevron_right,
-                              color: Color(0xFF2C3E50),
-                            ),
-                            onTap: () => _showLanguageDialog(context),
-                          ),
-                          const Divider(height: 1),
-                          ListTile(
-                            leading: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF2C3E50).withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: const Icon(
-                                Icons.attach_money,
-                                color: Color(0xFF2C3E50),
-                              ),
-                            ),
-                            title: Text(
-                              _getLocalizedLabel(context, 'currency'),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w500,
-                                color: Color(0xFF2C3E50),
-                              ),
-                            ),
-                            subtitle: Text(_getLocalizedCurrency(
-                                context, currentCurrency)),
-                            trailing: const Icon(
-                              Icons.chevron_right,
-                              color: Color(0xFF2C3E50),
-                            ),
-                            onTap: () => _showCurrencyDialog(context),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 );
               },
             );

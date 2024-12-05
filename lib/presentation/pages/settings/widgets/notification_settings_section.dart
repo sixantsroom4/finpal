@@ -41,43 +41,65 @@ class NotificationSettingsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 16, top: 16, bottom: 8),
-          child: Text(
-            _getLocalizedLabel(context, 'notifications'),
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Colors.grey,
+    return Card(
+      margin: const EdgeInsets.all(16),
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: const BoxDecoration(
+              color: Color(0xFF2C3E50),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(15),
+                topRight: Radius.circular(15),
+              ),
+            ),
+            child: Text(
+              _getLocalizedLabel(context, 'notifications'),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
             ),
           ),
-        ),
-        SettingItem(
-          icon: Icons.notifications,
-          title: _getLocalizedLabel(context, 'budget_alert'),
-          subtitle: _getLocalizedLabel(context, 'budget_alert_desc'),
-          trailing: Switch(
-            value: true, // TODO: 실제 값으로 변경
-            onChanged: (value) {
-              // TODO: 알림 설정 변경 구현
-            },
+          SettingItem(
+            icon: Icons.notifications,
+            iconColor: const Color(0xFF2C3E50),
+            iconBackgroundColor: const Color(0xFF2C3E50).withOpacity(0.1),
+            title: _getLocalizedLabel(context, 'budget_alert'),
+            subtitle: _getLocalizedLabel(context, 'budget_alert_desc'),
+            trailing: Switch(
+              value: true,
+              activeColor: const Color(0xFF2C3E50),
+              onChanged: (value) {
+                // TODO: 알림 설정 변경 구현
+              },
+            ),
           ),
-        ),
-        SettingItem(
-          icon: Icons.subscriptions,
-          title: _getLocalizedLabel(context, 'subscription_alert'),
-          subtitle: _getLocalizedLabel(context, 'subscription_alert_desc'),
-          trailing: Switch(
-            value: true, // TODO: 실제 값으로 변경
-            onChanged: (value) {
-              // TODO: 알림 설정 변경 구현
-            },
+          const Divider(height: 1),
+          SettingItem(
+            icon: Icons.subscriptions,
+            iconColor: const Color(0xFF2C3E50),
+            iconBackgroundColor: const Color(0xFF2C3E50).withOpacity(0.1),
+            title: _getLocalizedLabel(context, 'subscription_alert'),
+            subtitle: _getLocalizedLabel(context, 'subscription_alert_desc'),
+            trailing: Switch(
+              value: true,
+              activeColor: const Color(0xFF2C3E50),
+              onChanged: (value) {
+                // TODO: 알림 설정 변경 구현
+              },
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

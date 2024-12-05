@@ -55,7 +55,7 @@ class DataManagementSection extends StatelessWidget {
         AppLanguage.english:
             'All data will be permanently deleted. Do you want to continue?',
         AppLanguage.korean: '모든 데이터가 영구적으로 삭제됩니다. 계속하시겠습니까?',
-        AppLanguage.japanese: '全てのデータが永久に削除されます。続行しますか？',
+        AppLanguage.japanese: '全てのデータが��久に削除されます。続行しますか？',
       },
       'cancel': {
         AppLanguage.english: 'Cancel',
@@ -78,34 +78,69 @@ class DataManagementSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SettingsSection(
-      title: _getLocalizedLabel(context, 'data_management'),
-      children: [
-        SettingItem(
-          icon: Icons.file_download,
-          title: _getLocalizedLabel(context, 'export_data'),
-          subtitle: _getLocalizedLabel(context, 'export_data_subtitle'),
-          onTap: () => _exportData(context),
-        ),
-        SettingItem(
-          icon: Icons.cloud_upload,
-          title: _getLocalizedLabel(context, 'backup_data'),
-          subtitle: _getLocalizedLabel(context, 'backup_data_subtitle'),
-          trailing: Switch(
-            value: true, // TODO: 실제 값으로 변경
-            onChanged: (value) {
-              // TODO: 백업 설정 변경 구현
-            },
+    return Card(
+      margin: const EdgeInsets.all(16),
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: const BoxDecoration(
+              color: Color(0xFF2C3E50),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(15),
+                topRight: Radius.circular(15),
+              ),
+            ),
+            child: Text(
+              _getLocalizedLabel(context, 'data_management'),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
           ),
-        ),
-        SettingItem(
-          icon: Icons.delete_outline,
-          title: _getLocalizedLabel(context, 'reset_data'),
-          subtitle: _getLocalizedLabel(context, 'reset_data_subtitle'),
-          textColor: Colors.red,
-          onTap: () => _showResetDataDialog(context),
-        ),
-      ],
+          SettingItem(
+            icon: Icons.file_download,
+            iconColor: const Color(0xFF2C3E50),
+            iconBackgroundColor: const Color(0xFF2C3E50).withOpacity(0.1),
+            title: _getLocalizedLabel(context, 'export_data'),
+            subtitle: _getLocalizedLabel(context, 'export_data_subtitle'),
+            onTap: () => _exportData(context),
+          ),
+          const Divider(height: 1),
+          SettingItem(
+            icon: Icons.cloud_upload,
+            iconColor: const Color(0xFF2C3E50),
+            iconBackgroundColor: const Color(0xFF2C3E50).withOpacity(0.1),
+            title: _getLocalizedLabel(context, 'backup_data'),
+            subtitle: _getLocalizedLabel(context, 'backup_data_subtitle'),
+            trailing: Switch(
+              value: true,
+              activeColor: const Color(0xFF2C3E50),
+              onChanged: (value) {
+                // TODO: 백업 설정 변경 구현
+              },
+            ),
+          ),
+          const Divider(height: 1),
+          SettingItem(
+            icon: Icons.delete_outline,
+            iconColor: Colors.red,
+            iconBackgroundColor: Colors.red.withOpacity(0.1),
+            title: _getLocalizedLabel(context, 'reset_data'),
+            subtitle: _getLocalizedLabel(context, 'reset_data_subtitle'),
+            textColor: Colors.red,
+            onTap: () => _showResetDataDialog(context),
+          ),
+        ],
+      ),
     );
   }
 

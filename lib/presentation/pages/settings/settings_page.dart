@@ -24,7 +24,16 @@ class SettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_getLocalizedLabel(context, 'settings')),
+        title: Text(
+          _getLocalizedLabel(context, 'settings'),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        backgroundColor: const Color(0xFF2C3E50),
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: BlocBuilder<AuthBloc, AuthState>(
         builder: (context, state) {
@@ -44,11 +53,50 @@ class SettingsPage extends StatelessWidget {
               const Divider(),
               const DataManagementSection(),
               const Divider(),
-              ListTile(
-                leading: const Icon(Icons.account_balance_wallet),
-                title: Text(_getLocalizedBudgetTitle(context)),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push('/settings/budget'),
+              Card(
+                margin: const EdgeInsets.all(16),
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF2C3E50),
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(15),
+                          topRight: Radius.circular(15),
+                        ),
+                      ),
+                      child: Text(
+                        _getLocalizedBudgetTitle(context),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    SettingItem(
+                      icon: Icons.account_balance_wallet,
+                      iconColor: const Color(0xFF2C3E50),
+                      iconBackgroundColor:
+                          const Color(0xFF2C3E50).withOpacity(0.1),
+                      title: _getLocalizedLabel(context, 'monthly_budget'),
+                      subtitle: _getLocalizedLabel(context, 'budget_settings'),
+                      trailing: const Icon(
+                        Icons.chevron_right,
+                        color: Color(0xFF2C3E50),
+                      ),
+                      onTap: () => context.push('/settings/budget'),
+                    ),
+                  ],
+                ),
               ),
               _buildLogoutButton(context),
               _buildDeleteAccountButton(context),
@@ -127,7 +175,7 @@ class SettingsPage extends StatelessWidget {
   }
 
   void _showLogoutDialog(BuildContext context) {
-    // 로그아웃 다이얼로그 구현
+    // 로그아웃 다이얼로그 구
   }
 
   void _showDeleteAccountDialog(BuildContext context) {
