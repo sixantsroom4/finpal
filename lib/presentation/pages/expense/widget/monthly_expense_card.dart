@@ -73,39 +73,87 @@ class _MonthlyExpenseCardState extends State<MonthlyExpenseCard> {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.all(16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      elevation: 8,
+      shadowColor: const Color(0xFF2C3E50).withOpacity(0.15),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(25),
+      ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              const Color(0xFF2C3E50),
+              const Color(0xFF2C3E50).withOpacity(0.9),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(25),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF2C3E50).withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                IconButton(
-                  icon: const Icon(Icons.chevron_left),
-                  onPressed: () => _changeMonth(-1),
-                ),
-                Text(
-                  _getLocalizedDate(context, _selectedDate),
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.chevron_right),
-                  onPressed: () {
-                    final nextMonth = DateTime(
-                      _selectedDate.year,
-                      _selectedDate.month + 1,
-                    );
-                    final maxDate = DateTime(
-                      DateTime.now().year,
-                      DateTime.now().month + 3,
-                    );
-                    if (nextMonth.isBefore(maxDate) ||
-                        nextMonth.isAtSameMomentAs(maxDate)) {
-                      _changeMonth(1);
-                    }
-                  },
+                Row(
+                  children: [
+                    Text(
+                      DateFormat('yyyy년 M월').format(_selectedDate),
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(
+                            Icons.chevron_left,
+                            color: Colors.white54,
+                            size: 20,
+                          ),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          onPressed: () => _changeMonth(-1),
+                        ),
+                        IconButton(
+                          icon: const Icon(
+                            Icons.chevron_right,
+                            color: Colors.white54,
+                            size: 20,
+                          ),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          onPressed: () {
+                            final nextMonth = DateTime(
+                              _selectedDate.year,
+                              _selectedDate.month + 1,
+                            );
+                            final maxDate = DateTime(
+                              DateTime.now().year,
+                              DateTime.now().month + 3,
+                            );
+                            if (nextMonth.isBefore(maxDate) ||
+                                nextMonth.isAtSameMomentAs(maxDate)) {
+                              _changeMonth(1);
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -124,11 +172,6 @@ class _MonthlyExpenseCardState extends State<MonthlyExpenseCard> {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text(
-                        _getLocalizedExpenseLabel(context),
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 8),
                       ...currencyTotals.entries
                           .map((entry) => Padding(
                                 padding:
@@ -139,22 +182,20 @@ class _MonthlyExpenseCardState extends State<MonthlyExpenseCard> {
                                   children: [
                                     Text(
                                       entry.key,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium,
+                                      style: const TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 16,
+                                      ),
                                     ),
                                     Text(
                                       _getLocalizedAmount(
                                           context, entry.value, entry.key),
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .primary,
-                                          ),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 0.5,
+                                      ),
                                     ),
                                   ],
                                 ),

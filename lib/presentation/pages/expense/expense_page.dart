@@ -43,7 +43,28 @@ class _ExpensePageState extends State<ExpensePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_getLocalizedTitle(context)),
+        backgroundColor: const Color(0xFF2C3E50),
+        elevation: 0,
+        title: Text(
+          _getLocalizedTitle(context),
+          style: const TextStyle(
+            color: Colors.white70,
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(20),
+          child: Container(
+            height: 20,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(
+                top: Radius.circular(30),
+              ),
+            ),
+          ),
+        ),
       ),
       body: Column(
         children: [
@@ -79,6 +100,22 @@ class _ExpensePageState extends State<ExpensePage> {
                                 _getLocalizedAllCategory(context),
                             onSelected: (selected) => _updateCategory(
                                 _getLocalizedAllCategory(context)),
+                            style: ChipTheme.of(context).copyWith(
+                              backgroundColor:
+                                  const Color(0xFF2C3E50).withOpacity(0.05),
+                              selectedColor: const Color(0xFF2C3E50),
+                              labelStyle: TextStyle(
+                                color: _selectedCategory ==
+                                        _getLocalizedAllCategory(context)
+                                    ? Colors.white
+                                    : const Color(0xFF2C3E50),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 8),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                            ),
                           ),
                           ...state.categoryTotals.keys.map(
                             (category) => ExpenseFilterChip(
@@ -86,6 +123,21 @@ class _ExpensePageState extends State<ExpensePage> {
                               selected: _selectedCategory == category,
                               onSelected: (selected) =>
                                   _updateCategory(category),
+                              style: ChipTheme.of(context).copyWith(
+                                backgroundColor:
+                                    const Color(0xFF2C3E50).withOpacity(0.05),
+                                selectedColor: const Color(0xFF2C3E50),
+                                labelStyle: TextStyle(
+                                  color: _selectedCategory == category
+                                      ? Colors.white
+                                      : const Color(0xFF2C3E50),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 8),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                              ),
                             ),
                           ),
                         ],
@@ -93,9 +145,13 @@ class _ExpensePageState extends State<ExpensePage> {
                     ),
                     Expanded(
                       child: ListView.separated(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 16,
+                        ),
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(height: 12),
                         itemCount: state.expenses.length,
-                        separatorBuilder: (context, index) => const Divider(),
                         itemBuilder: (context, index) {
                           final expense = state.expenses[index];
                           if (_selectedCategory !=
@@ -104,13 +160,20 @@ class _ExpensePageState extends State<ExpensePage> {
                             return const SizedBox.shrink();
                           }
                           return ListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 8,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
                             leading: CircleAvatar(
-                              backgroundColor: Theme.of(context)
-                                  .colorScheme
-                                  .primaryContainer,
+                              backgroundColor:
+                                  const Color(0xFF2C3E50).withOpacity(0.1),
                               child: Icon(
                                 _getCategoryIcon(expense.category),
-                                color: Theme.of(context).colorScheme.primary,
+                                color: const Color(0xFF2C3E50),
+                                size: 20,
                               ),
                             ),
                             title: Text(expense.description),
@@ -194,7 +257,7 @@ class _ExpensePageState extends State<ExpensePage> {
     const Map<AppLanguage, String> messages = {
       AppLanguage.english: 'No expense history.',
       AppLanguage.korean: '지출 내역이 없습니다.',
-      AppLanguage.japanese: '支出履歴がありません。',
+      AppLanguage.japanese: '支履歴がありません。',
     };
     return messages[language] ?? messages[AppLanguage.korean]!;
   }
