@@ -38,43 +38,76 @@ class _ProfileMenuListState extends State<ProfileMenuList> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        ListTile(
-          leading: const Icon(Icons.settings_outlined),
-          title: Text(_getLocalizedLabel(context, 'app_settings')),
-          trailing: const Icon(Icons.chevron_right),
+        _buildMenuItem(
+          context: context,
+          icon: Icons.settings_outlined,
+          label: 'app_settings',
           onTap: () => context.go('/settings'),
         ),
-        ListTile(
-          leading: const Icon(Icons.account_circle_outlined),
-          title: Text(_getLocalizedLabel(context, 'account_settings')),
-          trailing: const Icon(Icons.chevron_right),
+        _buildMenuItem(
+          context: context,
+          icon: Icons.account_circle_outlined,
+          label: 'account_settings',
           onTap: () => context.push('/settings/account'),
         ),
-        const Divider(),
-        ListTile(
-          leading: const Icon(Icons.help_outline),
-          title: Text(_getLocalizedLabel(context, 'customer_service')),
-          trailing: const Icon(Icons.chevron_right),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 24),
+          child: Divider(height: 32),
+        ),
+        _buildMenuItem(
+          context: context,
+          icon: Icons.help_outline,
+          label: 'customer_service',
           onTap: () {
             // TODO: 고객 센터 페이지로 이동
           },
         ),
-        ListTile(
-          leading: const Icon(Icons.description_outlined),
-          title: Text(_getLocalizedLabel(context, 'terms_and_policies')),
-          trailing: const Icon(Icons.chevron_right),
+        _buildMenuItem(
+          context: context,
+          icon: Icons.description_outlined,
+          label: 'terms_and_policies',
           onTap: () => _showTermsBottomSheet(context),
         ),
-        const Divider(),
-        ListTile(
-          leading: const Icon(Icons.logout, color: Colors.red),
-          title: Text(
-            _getLocalizedLabel(context, 'logout'),
-            style: const TextStyle(color: Colors.red),
-          ),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 24),
+          child: Divider(height: 32),
+        ),
+        _buildMenuItem(
+          context: context,
+          icon: Icons.logout,
+          label: 'logout',
+          isDestructive: true,
           onTap: () => _showLogoutDialog(context),
         ),
       ],
+    );
+  }
+
+  Widget _buildMenuItem({
+    required BuildContext context,
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    bool isDestructive = false,
+  }) {
+    final color = isDestructive ? Colors.red : const Color(0xFF2C3E50);
+
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+      leading: Icon(icon, color: color),
+      title: Text(
+        _getLocalizedLabel(context, label),
+        style: TextStyle(
+          fontSize: 16,
+          color: color,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      trailing: Icon(
+        Icons.chevron_right,
+        color: isDestructive ? Colors.red : Colors.grey[400],
+      ),
+      onTap: onTap,
     );
   }
 
@@ -109,7 +142,7 @@ class _ProfileMenuListState extends State<ProfileMenuList> {
       'terms_title': {
         AppLanguage.english: 'Terms and Policies',
         AppLanguage.korean: '약관 및 정책',
-        AppLanguage.japanese: '利用規約とポリシー',
+        AppLanguage.japanese: '利用規約と��リシー',
       },
       'logout_title': {
         AppLanguage.english: 'Logout',

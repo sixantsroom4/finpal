@@ -16,39 +16,61 @@ class ProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
+    return Container(
+      padding: const EdgeInsets.all(24),
       child: Column(
         children: [
           // 프로필 이미지
-          CircleAvatar(
-            radius: 50,
-            backgroundImage:
-                user.photoUrl != null ? NetworkImage(user.photoUrl!) : null,
-            child: user.photoUrl == null
-                ? Text(
-                    user.displayName[0].toUpperCase(),
-                    style: const TextStyle(fontSize: 32),
-                  )
-                : null,
+          Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF2C3E50).withOpacity(0.2),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: CircleAvatar(
+              radius: 50,
+              backgroundColor: const Color(0xFF2C3E50).withOpacity(0.1),
+              backgroundImage:
+                  user.photoUrl != null ? NetworkImage(user.photoUrl!) : null,
+              child: user.photoUrl == null
+                  ? Text(
+                      user.displayName[0].toUpperCase(),
+                      style: const TextStyle(
+                        fontSize: 32,
+                        color: Color(0xFF2C3E50),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    )
+                  : null,
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           // 사용자 이름
           Text(
             user.displayName,
-            style: Theme.of(context).textTheme.titleLarge,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF2C3E50),
+            ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
           // 이메일
           Text(
             user.email,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey,
-                ),
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey[600],
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           // 프로필 편집 버튼
-          OutlinedButton(
+          OutlinedButton.icon(
             onPressed: () {
               showModalBottomSheet(
                 context: context,
@@ -56,7 +78,18 @@ class ProfileHeader extends StatelessWidget {
                 builder: (context) => EditProfileBottomSheet(user: user),
               );
             },
-            child: Text(_getLocalizedEditButtonText(context)),
+            icon: const Icon(Icons.edit_outlined, color: Color(0xFF2C3E50)),
+            label: Text(
+              _getLocalizedEditButtonText(context),
+              style: const TextStyle(color: Color(0xFF2C3E50)),
+            ),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              side: const BorderSide(color: Color(0xFF2C3E50)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
           ),
         ],
       ),

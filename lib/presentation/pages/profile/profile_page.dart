@@ -18,24 +18,50 @@ class ProfilePage extends StatelessWidget {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
         if (state is! Authenticated) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2C3E50)),
+            ),
+          );
         }
 
         final user = state.user;
 
         return Scaffold(
           appBar: AppBar(
-            title: Text(_getLocalizedTitle(context)),
+            backgroundColor: const Color(0xFF2C3E50),
+            elevation: 0,
+            title: Text(
+              _getLocalizedTitle(context),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(20),
+              child: Container(
+                height: 20,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(30),
+                  ),
+                ),
+              ),
+            ),
           ),
           body: RefreshIndicator(
             onRefresh: () async {
               context.read<AuthBloc>().add(AuthCheckRequested());
             },
+            color: const Color(0xFF2C3E50),
             child: ListView(
               children: [
                 ProfileHeader(user: user),
                 const SizedBox(height: 16),
-                const Divider(),
+                const Divider(height: 1),
                 const ProfileMenuList(),
               ],
             ),

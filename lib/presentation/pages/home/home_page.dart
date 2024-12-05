@@ -127,6 +127,9 @@ class _HomePageState extends State<HomePage> {
             );
           }
 
+          // 데이터 로드
+          _loadData();
+
           return RefreshIndicator(
             onRefresh: () async => _loadData(),
             color: const Color(0xFF2C3E50),
