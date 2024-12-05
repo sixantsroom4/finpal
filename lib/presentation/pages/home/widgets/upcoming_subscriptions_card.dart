@@ -1,5 +1,6 @@
 // lib/presentation/pages/home/widgets/upcoming_subscriptions_card.dart
 import 'package:finpal/presentation/bloc/subscription/subscription_state.dart';
+import 'package:finpal/presentation/pages/home/widgets/upcoming_payments_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -69,65 +70,50 @@ class UpcomingSubscriptionsCard extends StatelessWidget {
     return BlocBuilder<SubscriptionBloc, SubscriptionState>(
       builder: (context, state) {
         if (state is! SubscriptionLoaded) {
-          return const Card(
-            child: Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Center(child: CircularProgressIndicator()),
-            ),
-          );
+          return const SizedBox.shrink();
         }
 
-        final upcomingSubscriptions =
-            _getUpcomingSubscriptions(state.billingDaySubscriptions);
+        // 다가오는 결제 계산 (구독 페이지의 로직 사용)
+        final now = DateTime.now();
+        final upcomingSubscriptions = state.billingDaySubscriptions.entries
+            .where((entry) => _isUpcoming(entry.key, now.day))
+            .expand((entry) => entry.value)
+            .toList()
+          ..sort((a, b) {
+            final daysUntilA =
+                _calculateDaysUntilBilling(a.billingDay, now.day);
+            final daysUntilB =
+                _calculateDaysUntilBilling(b.billingDay, now.day);
+            return daysUntilA.compareTo(daysUntilB);
+          });
 
-        if (upcomingSubscriptions.isEmpty) {
-          return Card(
-            elevation: 2,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        _getLocalizedLabel(context, 'upcoming_payments'),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      Text(
-                        _getLocalizedAmount(context, state.monthlyTotal),
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.blue,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Center(
-                    child: Text(
-                      _getLocalizedLabel(context, 'no_upcoming_payments'),
-                      style: const TextStyle(
-                        color: Colors.grey,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
+        // 통화별 총액 계산
+        final totalsByCurrency = <String, double>{};
+        for (var subscription in upcomingSubscriptions) {
+          if (subscription.billingCycle.toLowerCase() == 'monthly') {
+            totalsByCurrency.update(
+              subscription.currency,
+              (value) => value + subscription.amount,
+              ifAbsent: () => subscription.amount,
+            );
+          }
         }
 
         return Card(
-          elevation: 2,
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF2C3E50), Color(0xFF34495E)],
+              ),
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -138,24 +124,47 @@ class UpcomingSubscriptionsCard extends StatelessWidget {
                       _getLocalizedLabel(context, 'upcoming_payments'),
                       style: const TextStyle(
                         fontSize: 16,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
                       ),
                     ),
-                    Text(
-                      _getLocalizedAmount(context, state.monthlyTotal),
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.blue,
-                      ),
+                    // 통화별 총액 표시
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        ...totalsByCurrency.entries.map((entry) => Text(
+                              _formatAmount(context, entry.value, entry.key),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            )),
+                      ],
                     ),
                   ],
                 ),
                 const SizedBox(height: 16),
-                ...upcomingSubscriptions.map(
-                  (subscription) =>
-                      _SubscriptionTile(subscription: subscription),
-                ),
+                // 결제 예정 목록
+                ...upcomingSubscriptions.map((subscription) {
+                  final daysLeft = _calculateDaysUntilBilling(
+                    subscription.billingDay,
+                    DateTime.now().day,
+                  );
+                  return UpcomingPayment(
+                    subscription: subscription,
+                    daysLeft: daysLeft,
+                  );
+                }).map((payment) => _buildPaymentItem(context, payment)),
+                if (upcomingSubscriptions.isEmpty)
+                  Center(
+                    child: Text(
+                      _getLocalizedLabel(context, 'no_upcoming_payments'),
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.7),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -164,38 +173,31 @@ class UpcomingSubscriptionsCard extends StatelessWidget {
     );
   }
 
-  List<Subscription> _getUpcomingSubscriptions(
-      Map<int, List<Subscription>> billingDaySubscriptions) {
-    final now = DateTime.now();
-    final currentDay = now.day;
-
-    // 다음 7일 동안의 결제 예정 구독들을 가져옴
-    final List<Subscription> upcoming = [];
-    for (var i = 0; i < 7; i++) {
-      final checkDay = (currentDay + i) % 31;
-      if (billingDaySubscriptions.containsKey(checkDay)) {
-        upcoming.addAll(billingDaySubscriptions[checkDay]!);
-      }
+  int _calculateDaysUntilBilling(int billingDay, int currentDay) {
+    if (billingDay > currentDay) {
+      return billingDay - currentDay;
+    } else {
+      // 다음 달의 결제까지 남은 일수 계산
+      final lastDayOfMonth =
+          DateTime(DateTime.now().year, DateTime.now().month + 1, 0).day;
+      return lastDayOfMonth - currentDay + billingDay;
     }
-
-    // 결제일 기준으로 정렬
-    upcoming.sort((a, b) => a.billingDay.compareTo(b.billingDay));
-
-    // 최대 3개만 반환
-    return upcoming.take(3).toList();
   }
-}
 
-class _SubscriptionTile extends StatelessWidget {
-  final Subscription subscription;
+  String _formatAmount(BuildContext context, double amount, String currency) {
+    final formattedAmount = NumberFormat('#,###').format(amount);
+    final currencySymbols = {
+      'KRW': '원',
+      'JPY': '¥',
+      'USD': '\$',
+      'EUR': '€',
+    };
+    final symbol = currencySymbols[currency] ?? currencySymbols['KRW']!;
+    return '$symbol$formattedAmount';
+  }
 
-  const _SubscriptionTile({
-    required this.subscription,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final daysUntilBilling = _calculateDaysUntilBilling();
+  Widget _buildPaymentItem(BuildContext context, UpcomingPayment payment) {
+    final daysUntilBilling = payment.daysLeft;
     final isToday = daysUntilBilling == 0;
 
     return Padding(
@@ -207,12 +209,13 @@ class _SubscriptionTile extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: _getCategoryColor(subscription.category).withOpacity(0.1),
+              color: _getCategoryColor(payment.subscription.category)
+                  .withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
-              _getCategoryIcon(subscription.category),
-              color: _getCategoryColor(subscription.category),
+              _getCategoryIcon(payment.subscription.category),
+              color: _getCategoryColor(payment.subscription.category),
               size: 20,
             ),
           ),
@@ -223,7 +226,7 @@ class _SubscriptionTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  subscription.name,
+                  payment.subscription.name,
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
@@ -241,7 +244,7 @@ class _SubscriptionTile extends StatelessWidget {
           ),
           // 금액
           Text(
-            _getLocalizedAmount(context, subscription.amount),
+            _getLocalizedAmount(context, payment.subscription.amount),
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
@@ -250,19 +253,6 @@ class _SubscriptionTile extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  int _calculateDaysUntilBilling() {
-    final now = DateTime.now();
-    final currentDay = now.day;
-
-    if (subscription.billingDay > currentDay) {
-      return subscription.billingDay - currentDay;
-    } else {
-      // 다음 달의 결제일까지 남은 일수 계산
-      final lastDayOfMonth = DateTime(now.year, now.month + 1, 0).day;
-      return lastDayOfMonth - currentDay + subscription.billingDay;
-    }
   }
 
   Color _getCategoryColor(String category) {
@@ -295,28 +285,8 @@ class _SubscriptionTile extends StatelessWidget {
     }
   }
 
-  String _getLocalizedAmount(BuildContext context, double amount) {
-    final currency = context.read<AppSettingsBloc>().state.currency;
-    final formattedAmount = NumberFormat('#,###').format(amount);
-
-    final currencySymbols = {
-      'KRW': '원',
-      'JPY': '¥',
-      'USD': '\$',
-      'EUR': '€',
-    };
-
-    final symbol = currencySymbols[currency] ?? currencySymbols['KRW']!;
-
-    switch (currency) {
-      case 'USD':
-      case 'EUR':
-        return '$symbol$formattedAmount';
-      case 'JPY':
-        return '¥$formattedAmount';
-      case 'KRW':
-      default:
-        return '$formattedAmount$symbol';
-    }
+  bool _isUpcoming(int billingDay, int currentDay) {
+    final daysUntilBilling = _calculateDaysUntilBilling(billingDay, currentDay);
+    return daysUntilBilling <= 7; // 7일 이내 결제 예정
   }
 }

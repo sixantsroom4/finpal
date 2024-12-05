@@ -6,6 +6,7 @@ import 'package:finpal/presentation/bloc/expense/expense_state.dart';
 import 'package:finpal/presentation/pages/expense/widget/budget_settings_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 
 class MonthlySummaryCard extends StatelessWidget {
   const MonthlySummaryCard({super.key});
@@ -15,100 +16,100 @@ class MonthlySummaryCard extends StatelessWidget {
     return BlocBuilder<ExpenseBloc, ExpenseState>(
       builder: (context, state) {
         if (state is! ExpenseLoaded) {
-          return const Card(
-            child: Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Center(child: CircularProgressIndicator()),
-            ),
-          );
+          return const SizedBox.shrink();
         }
 
-        final monthlyBudget = state.monthlyBudget;
+        // 현재 유저의 통화 설정 가져오기
+        final userCurrency = context.read<AppSettingsBloc>().state.currency;
 
-        if (monthlyBudget <= 0) {
-          return Card(
-            elevation: 2,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _getLocalizedTitle(context),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _getLocalizedAmount(context, state.totalAmount),
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const BudgetSettingsPage(),
-                        ),
-                      );
-                    },
-                    child: Text(_getLocalizedSetBudgetButton(context)),
-                  ),
-                ],
-              ),
-            ),
-          );
+        // 통화별 총액 계산
+        final totalsByCurrency = <String, double>{};
+        for (var expense in state.expenses) {
+          if (_isCurrentMonth(expense.date)) {
+            totalsByCurrency.update(
+              expense.currency,
+              (value) => value + expense.amount,
+              ifAbsent: () => expense.amount,
+            );
+          }
         }
-
-        final remainingBudget = monthlyBudget - state.totalAmount;
-        final spendingRatio = state.totalAmount / monthlyBudget;
 
         return Card(
-          elevation: 2,
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF2C3E50), Color(0xFF3498DB)],
+              ),
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  _getLocalizedTitle(context),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  _getLocalizedAmount(context, state.totalAmount),
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      _getLocalizedLabel(context, 'monthly_expenses'),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        DateFormat('MM월').format(DateTime.now()),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
-                LinearProgressIndicator(
-                  value: spendingRatio.clamp(0.0, 1.0),
-                  backgroundColor: Colors.grey[200],
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    state.totalAmount > monthlyBudget
-                        ? Colors.red
-                        : Colors.blue,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  _getLocalizedRemainingBudget(context, remainingBudget),
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 14,
-                  ),
-                ),
+                ...totalsByCurrency.entries.map((entry) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            entry.key, // 통화 코드
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 14,
+                            ),
+                          ),
+                          Text(
+                            _formatAmount(entry.value, entry.key),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )),
+                if (state.monthlyBudget > 0) ...[
+                  const Divider(color: Colors.white24, height: 32),
+                  _buildBudgetProgress(context, state, userCurrency),
+                ],
               ],
             ),
           ),
@@ -117,18 +118,74 @@ class MonthlySummaryCard extends StatelessWidget {
     );
   }
 
-  String _getLocalizedTitle(BuildContext context) {
-    final language = context.read<AppLanguageBloc>().state.language;
-    const Map<AppLanguage, String> titles = {
-      AppLanguage.english: 'This Month\'s Expenses',
-      AppLanguage.korean: '이번 달 지출',
-      AppLanguage.japanese: '今月の支出',
-    };
-    return titles[language] ?? titles[AppLanguage.korean]!;
+  Widget _buildBudgetProgress(
+      BuildContext context, ExpenseLoaded state, String currency) {
+    final totalExpenses = state.expenses
+        .where((e) => _isCurrentMonth(e.date) && e.currency == currency)
+        .fold(0.0, (sum, expense) => sum + expense.amount);
+
+    final progress = totalExpenses / state.monthlyBudget;
+    final isOverBudget = progress > 1;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              _getLocalizedLabel(context, 'budget_remaining'),
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 14,
+              ),
+            ),
+            Text(
+              _formatAmount(state.monthlyBudget - totalExpenses, currency),
+              style: TextStyle(
+                color: isOverBudget ? Colors.red[300] : Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: progress,
+            backgroundColor: Colors.white24,
+            valueColor: AlwaysStoppedAnimation<Color>(
+              isOverBudget ? Colors.red[300]! : Colors.green[300]!,
+            ),
+            minHeight: 8,
+          ),
+        ),
+      ],
+    );
   }
 
-  String _getLocalizedAmount(BuildContext context, double amount) {
-    final currency = context.read<AppSettingsBloc>().state.currency;
+  String _getLocalizedLabel(BuildContext context, String key) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    const Map<AppLanguage, Map<String, String>> labels = {
+      AppLanguage.english: {
+        'monthly_expenses': 'This Month\'s Expenses',
+        'budget_remaining': 'Budget Remaining',
+      },
+      AppLanguage.korean: {
+        'monthly_expenses': '이번 달 지출',
+        'budget_remaining': '예산 남은 금액',
+      },
+      AppLanguage.japanese: {
+        'monthly_expenses': '今月の支出',
+        'budget_remaining': '予算残高',
+      },
+    };
+    return labels[language]?[key] ?? labels[AppLanguage.korean]![key]!;
+  }
+
+  String _formatAmount(double amount, String currency) {
     final formattedAmount = amount.toStringAsFixed(0);
 
     final currencySymbols = {
@@ -153,38 +210,8 @@ class MonthlySummaryCard extends StatelessWidget {
     }
   }
 
-  String _getLocalizedSetBudgetButton(BuildContext context) {
-    final language = context.read<AppLanguageBloc>().state.language;
-    const Map<AppLanguage, String> buttons = {
-      AppLanguage.english: 'Set Monthly Budget',
-      AppLanguage.korean: '월 예산을 설정해주세요',
-      AppLanguage.japanese: '月予算を設定してください',
-    };
-    return buttons[language] ?? buttons[AppLanguage.korean]!;
-  }
-
-  String _getLocalizedRemainingBudget(BuildContext context, double remaining) {
-    final language = context.read<AppLanguageBloc>().state.language;
-    final currency = context.read<AppSettingsBloc>().state.currency;
-    final formattedRemaining = remaining.toStringAsFixed(0);
-
-    final currencySymbols = {
-      'KRW': '원',
-      'JPY': '¥',
-      'USD': '\$',
-      'EUR': '€',
-    };
-
-    final symbol = currencySymbols[currency] ?? currencySymbols['KRW']!;
-
-    final Map<AppLanguage, String Function(String, String)> messages = {
-      AppLanguage.english: (amount, symbol) =>
-          '$symbol$amount remaining in budget',
-      AppLanguage.korean: (amount, symbol) => '월 예산까지 $amount$symbol 남았습니다',
-      AppLanguage.japanese: (amount, symbol) => '月予算まで$symbol$amount残っています',
-    };
-
-    return messages[language]?.call(formattedRemaining, symbol) ??
-        messages[AppLanguage.korean]!.call(formattedRemaining, symbol);
+  bool _isCurrentMonth(DateTime date) {
+    final now = DateTime.now();
+    return date.year == now.year && date.month == now.month;
   }
 }

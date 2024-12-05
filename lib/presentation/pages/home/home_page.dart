@@ -15,6 +15,9 @@ import 'widgets/expense_category_chart.dart';
 import '../../bloc/expense/expense_bloc.dart';
 import '../../bloc/expense/expense_event.dart';
 import '../../bloc/expense/expense_state.dart';
+import '../../bloc/subscription/subscription_bloc.dart';
+import '../../bloc/subscription/subscription_event.dart';
+import '../../bloc/subscription/subscription_state.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -40,8 +43,11 @@ class _HomePageState extends State<HomePage> {
         ..add(LoadExpenses(userId))
         ..add(UpdateMonthlyBudget(
           userId: userId,
-          amount: 0.0, // 이 값은 무시되고 Firebase에서 실제 값을 가져옵니다
+          amount: 0.0,
         ));
+
+      // 구독 데이터 로드 추가
+      context.read<SubscriptionBloc>().add(LoadActiveSubscriptions(userId));
     }
   }
 
@@ -49,13 +55,34 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('FinPal'),
+        backgroundColor: const Color(0xFF2C3E50),
+        elevation: 0,
+        title: const Text(
+          'FinPal',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings),
+            icon: const Icon(Icons.settings, color: Colors.white),
             onPressed: () => context.go('/settings'),
           ),
         ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(20),
+          child: Container(
+            height: 20,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(
+                top: Radius.circular(30),
+              ),
+            ),
+          ),
+        ),
       ),
       body: BlocBuilder<AuthBloc, AuthState>(
         builder: (context, state) {
@@ -64,13 +91,36 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(_getLocalizedLoginMessage(context)),
+                  Icon(
+                    Icons.account_circle_outlined,
+                    size: 64,
+                    color: Colors.grey[400],
+                  ),
                   const SizedBox(height: 16),
-                  ElevatedButton(
+                  Text(
+                    _getLocalizedLoginMessage(context),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: const Color(0xFF2C3E50),
+                          fontWeight: FontWeight.w500,
+                        ),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
                     onPressed: () {
                       context.read<AuthBloc>().add(AuthGoogleSignInRequested());
                     },
-                    child: Text(_getLocalizedGoogleSignIn(context)),
+                    icon: const Icon(Icons.login),
+                    label: Text(_getLocalizedGoogleSignIn(context)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2C3E50),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -79,27 +129,36 @@ class _HomePageState extends State<HomePage> {
 
           return RefreshIndicator(
             onRefresh: () async => _loadData(),
+            color: const Color(0xFF2C3E50),
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+                    child: Text(
                       _getLocalizedGreeting(context, state.user.displayName),
-                      style: Theme.of(context).textTheme.titleLarge,
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF2C3E50),
+                      ),
                     ),
-                    const SizedBox(height: 24),
-                    const MonthlySummaryCard(),
-                    const SizedBox(height: 16),
-                    const ExpenseChartsView(),
-                    const SizedBox(height: 16),
-                    const UpcomingSubscriptionsCard(),
-                    // const SizedBox(height: 16),
-                    // const RecentExpensesList(),
-                  ],
-                ),
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: MonthlySummaryCard(),
+                  ),
+                  const SizedBox(height: 16),
+                  const ExpenseChartsView(),
+                  const SizedBox(height: 16),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: UpcomingSubscriptionsCard(),
+                  ),
+                  const SizedBox(height: 24),
+                ],
               ),
             ),
           );
