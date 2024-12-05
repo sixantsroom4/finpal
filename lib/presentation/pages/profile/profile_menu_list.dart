@@ -142,7 +142,7 @@ class _ProfileMenuListState extends State<ProfileMenuList> {
       'terms_title': {
         AppLanguage.english: 'Terms and Policies',
         AppLanguage.korean: '약관 및 정책',
-        AppLanguage.japanese: '利用規約と��リシー',
+        AppLanguage.japanese: '利用規約とポリシー',
       },
       'logout_title': {
         AppLanguage.english: 'Logout',
