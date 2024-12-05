@@ -305,13 +305,13 @@ class _ReceiptPageState extends State<ReceiptPage> {
   void _navigateToReceiptDetails(BuildContext context, Receipt receipt) {
     debugPrint('영수증 상세 페이지로 이동 시도');
     try {
-      context.push('/receipt/details', extra: receipt);
+      context.go('/receipts/details', extra: receipt);
     } catch (e) {
       debugPrint('라우팅 에러: $e');
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => ReceiptDetailsPage(receiptId: receipt.id),
+          builder: (context) => ReceiptDetailsPage(receipt: receipt),
         ),
       );
     }

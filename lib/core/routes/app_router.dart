@@ -2,6 +2,7 @@
 import 'dart:async';
 
 import 'package:finpal/core/constants/app_languages.dart';
+import 'package:finpal/domain/entities/receipt.dart';
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/presentation/pages/expense/widget/budget_settings_page.dart';
 import 'package:finpal/presentation/pages/onboarding/terms_page.dart';
@@ -59,12 +60,17 @@ class AppRouter {
             GoRoute(
               path: '/receipts',
               builder: (context, state) => const ReceiptPage(),
-            ),
-            GoRoute(
-              path: '/receipts/:id',
-              builder: (context, state) => ReceiptDetailsPage(
-                receiptId: state.pathParameters['id']!,
-              ),
+              routes: [
+                GoRoute(
+                  path: 'details',
+                  builder: (context, state) {
+                    final receipt = state.extra as Receipt?;
+                    return receipt != null
+                        ? ReceiptDetailsPage(receipt: receipt)
+                        : const ReceiptPage();
+                  },
+                ),
+              ],
             ),
             GoRoute(
               path: '/subscriptions',
