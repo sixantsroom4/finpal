@@ -14,6 +14,7 @@ import 'widgets/edit_receipt_info_bottom_sheet.dart';
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/core/constants/app_languages.dart';
 import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
+import 'package:finpal/core/utils/currency_utils.dart';
 
 class ReceiptScanResultPage extends StatefulWidget {
   final String imagePath;
@@ -53,7 +54,28 @@ class _ReceiptScanResultPageState extends State<ReceiptScanResultPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_getLocalizedTitle(context)),
+        backgroundColor: const Color(0xFF2C3E50),
+        elevation: 0,
+        title: Text(
+          _getLocalizedTitle(context),
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(20),
+          child: Container(
+            height: 20,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(
+                top: Radius.circular(30),
+              ),
+            ),
+          ),
+        ),
       ),
       body: BlocConsumer<ReceiptBloc, ReceiptState>(
         listener: (context, state) {
@@ -70,7 +92,48 @@ class _ReceiptScanResultPageState extends State<ReceiptScanResultPage> {
         },
         builder: (context, state) {
           if (state is ReceiptScanInProgress) {
-            return _buildLoadingState(context);
+            return Container(
+              color: Colors.white,
+              width: double.infinity,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2C3E50).withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const CircularProgressIndicator(
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Color(0xFF2C3E50)),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  Text(
+                    _getLocalizedLabel(context, 'analyzing'),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF2C3E50),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    _getLocalizedLabel(context, 'please_wait'),
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 48),
+                  // 분석 단계 표시
+                  _buildAnalysisStep('step_scanning', true),
+                  _buildAnalysisStep('step_extracting', false),
+                  _buildAnalysisStep('step_processing', false),
+                ],
+              ),
+            );
           }
 
           if (state is ReceiptScanSuccess || state is ReceiptLoaded) {
@@ -94,23 +157,23 @@ class _ReceiptScanResultPageState extends State<ReceiptScanResultPage> {
     );
   }
 
-  Widget _buildLoadingState(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+  Widget _buildAnalysisStep(String step, bool isCompleted) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 8),
+      child: Row(
         children: [
-          const CircularProgressIndicator(),
-          const SizedBox(height: 24),
-          Text(
-            _getLocalizedLabel(context, 'analyzing'),
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          Icon(
+            isCompleted ? Icons.check_circle : Icons.circle_outlined,
+            color: isCompleted ? Colors.green : Colors.grey[400],
+            size: 24,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(width: 16),
           Text(
-            _getLocalizedLabel(context, 'please_wait'),
+            step,
             style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
+              fontSize: 16,
+              color: isCompleted ? const Color(0xFF2C3E50) : Colors.grey[600],
+              fontWeight: isCompleted ? FontWeight.w500 : FontWeight.normal,
             ),
           ),
         ],
@@ -171,59 +234,66 @@ class _ReceiptScanResultPageState extends State<ReceiptScanResultPage> {
   }
 
   Widget _buildResultState(BuildContext context, Receipt receipt) {
-    final formatter = _getCurrencyFormatter(context);
-
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          GestureDetector(
-            onTap: () => _showFullScreenImage(context, widget.imagePath),
-            child: Hero(
-              tag: 'receipt_image',
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.file(File(widget.imagePath)),
-              ),
+          Card(
+            elevation: 4,
+            shadowColor: const Color(0xFF2C3E50).withOpacity(0.1),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Image.file(File(widget.imagePath)),
             ),
           ),
           const SizedBox(height: 24),
           Card(
-            elevation: 2,
+            elevation: 4,
+            shadowColor: const Color(0xFF2C3E50).withOpacity(0.1),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(20),
             ),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      CircleAvatar(
-                        backgroundColor:
-                            Theme.of(context).colorScheme.primaryContainer,
-                        child: Icon(Icons.store,
-                            color: Theme.of(context).colorScheme.primary),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF2C3E50).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.store,
+                          color: Color(0xFF2C3E50),
+                        ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 16),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               receipt.merchantName,
-                              style: Theme.of(context).textTheme.titleLarge,
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF2C3E50),
+                              ),
                             ),
                             Text(
                               _getLocalizedDate(context, receipt.date),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(
-                                    color: Colors.grey[600],
-                                  ),
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey[600],
+                              ),
                             ),
                           ],
                         ),
@@ -234,28 +304,15 @@ class _ReceiptScanResultPageState extends State<ReceiptScanResultPage> {
                   if (receipt.items.isNotEmpty) ...[
                     Text(
                       _getLocalizedLabel(context, 'items'),
-                      style: Theme.of(context).textTheme.titleMedium,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF2C3E50),
+                      ),
                     ),
-                    const SizedBox(height: 12),
-                    ...receipt.items.map((item) => Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                flex: 2,
-                                child: Text(item.name),
-                              ),
-                              Text(
-                                  '${formatter.format(item.price)} x ${item.quantity}'),
-                              const SizedBox(width: 8),
-                              Text(
-                                formatter.format(item.totalPrice),
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ],
-                          ),
-                        )),
+                    const SizedBox(height: 16),
+                    ...receipt.items
+                        .map((item) => _buildItemRow(context, item)),
                     const Divider(height: 32),
                   ],
                   Row(
@@ -263,67 +320,68 @@ class _ReceiptScanResultPageState extends State<ReceiptScanResultPage> {
                     children: [
                       Text(
                         _getLocalizedLabel(context, 'total'),
-                        style: Theme.of(context).textTheme.titleMedium,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF2C3E50),
+                        ),
                       ),
                       Text(
-                        formatter.format(receipt.totalAmount),
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              color: Theme.of(context).colorScheme.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        _getLocalizedAmount(context, receipt.totalAmount),
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF2C3E50),
+                        ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
-                  if (receipt.expenseId == null) ...[
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          builder: (context) => CreateExpenseFromReceipt(
-                            receipt: receipt,
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.add_card),
-                      label:
-                          Text(_getLocalizedLabel(context, 'create_expense')),
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: const Size(double.infinity, 48),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    OutlinedButton.icon(
-                      onPressed: () {
-                        showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          builder: (context) => EditReceiptInfoBottomSheet(
-                            receipt: receipt,
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.edit),
-                      label: Text(_getLocalizedLabel(context, 'edit_receipt')),
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size(double.infinity, 48),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    OutlinedButton.icon(
-                      onPressed: () => _retakeReceipt(context),
-                      icon: const Icon(Icons.camera_alt),
-                      label:
-                          Text(_getLocalizedLabel(context, 'retake_receipt')),
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size(double.infinity, 48),
-                      ),
-                    ),
-                  ],
                 ],
               ),
             ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _showEditReceipt(context, receipt),
+                  icon: const Icon(Icons.edit, color: Color(0xFF2C3E50)),
+                  label: Text(
+                    _getLocalizedLabel(context, 'edit_receipt'),
+                    style: const TextStyle(color: Color(0xFF2C3E50)),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: const BorderSide(color: Color(0xFF2C3E50)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => _createExpense(context, receipt),
+                  icon: const Icon(Icons.add_card, color: Colors.white),
+                  label: Text(
+                    _getLocalizedLabel(context, 'create_expense'),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2C3E50),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -444,5 +502,46 @@ class _ReceiptScanResultPageState extends State<ReceiptScanResultPage> {
     };
 
     return formatters[currency] ?? formatters['KRW']!;
+  }
+
+  String _getLocalizedAmount(BuildContext context, double amount) {
+    final currency = context.read<AppSettingsBloc>().state.currency;
+    final formatter = NumberFormat('#,###');
+    final formattedAmount = formatter.format(amount);
+    return '$formattedAmount${CurrencyUtils.getCurrencySymbol(currency)}';
+  }
+
+  Widget _buildItemRow(BuildContext context, ReceiptItem item) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Expanded(flex: 2, child: Text(item.name)),
+          Text(
+              '${_getLocalizedAmount(context, item.price)} x ${item.quantity}'),
+          const SizedBox(width: 8),
+          Text(
+            _getLocalizedAmount(context, item.totalPrice),
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditReceipt(BuildContext context, Receipt receipt) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => EditReceiptInfoBottomSheet(receipt: receipt),
+    );
+  }
+
+  void _createExpense(BuildContext context, Receipt receipt) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => CreateExpenseFromReceipt(receipt: receipt),
+    );
   }
 }

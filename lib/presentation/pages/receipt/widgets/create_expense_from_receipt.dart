@@ -38,66 +38,105 @@ class _CreateExpenseFromReceiptState extends State<CreateExpenseFromReceipt> {
 
   @override
   Widget build(BuildContext context) {
-    final language = context.read<AppLanguageBloc>().state.language;
-
     return Container(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-        left: 16,
-        right: 16,
-        top: 16,
+      padding: EdgeInsets.fromLTRB(
+          24, 16, 24, MediaQuery.of(context).viewInsets.bottom + 24),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(25),
+        ),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            _getLocalizedLabel(context, 'create_expense'),
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _descriptionController,
-            decoration: InputDecoration(
-              labelText: _getLocalizedLabel(context, 'description'),
-              border: const OutlineInputBorder(),
-            ),
-          ),
-          const SizedBox(height: 16),
-          DropdownButtonFormField<String>(
-            value: _selectedCategory,
-            decoration: InputDecoration(
-              labelText: _getLocalizedLabel(context, 'category'),
-              border: const OutlineInputBorder(),
-            ),
-            items: _getLocalizedCategories(context),
-            onChanged: (value) {
-              if (value != null) {
-                setState(() {
-                  _selectedCategory = value;
-                });
-              }
-            },
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(_getLocalizedLabel(context, 'cancel')),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 드래그 핸들
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: _createExpense,
-                  child: Text(_getLocalizedLabel(context, 'create')),
+            ),
+
+            // 제목
+            Text(
+              _getLocalizedLabel(context, 'create_expense'),
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF2C3E50),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // 내용 입력
+            TextFormField(
+              controller: _descriptionController,
+              decoration: InputDecoration(
+                labelText: _getLocalizedLabel(context, 'description'),
+                prefixIcon: const Icon(Icons.description_outlined,
+                    color: Color(0xFF2C3E50)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide:
+                      const BorderSide(color: Color(0xFF2C3E50), width: 2),
                 ),
               ),
-            ],
-          ),
-        ],
+            ),
+            const SizedBox(height: 16),
+
+            // 카테고리 선택
+            DropdownButtonFormField<String>(
+              value: _selectedCategory,
+              decoration: InputDecoration(
+                labelText: _getLocalizedLabel(context, 'category'),
+                prefixIcon: const Icon(Icons.category_outlined,
+                    color: Color(0xFF2C3E50)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              items: _getLocalizedCategories(context),
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() {
+                    _selectedCategory = value;
+                  });
+                }
+              },
+            ),
+            const SizedBox(height: 24),
+
+            // 버튼
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(_getLocalizedLabel(context, 'cancel')),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _createExpense,
+                    child: Text(_getLocalizedLabel(context, 'create')),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -17,8 +17,22 @@ class ScanReceiptFab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FloatingActionButton.extended(
-      icon: const Icon(Icons.document_scanner),
-      label: Text(_getLocalizedLabel(context, 'scan_receipt')),
+      icon: const Icon(
+        Icons.document_scanner,
+        color: Colors.white,
+      ),
+      label: Text(
+        _getLocalizedLabel(context, 'scan_receipt'),
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      backgroundColor: const Color(0xFF2C3E50),
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
       onPressed: () => _showScanOptions(context),
     );
   }

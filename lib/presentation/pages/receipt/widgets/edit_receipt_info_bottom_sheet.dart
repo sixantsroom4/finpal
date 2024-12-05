@@ -211,181 +211,288 @@ class _EditReceiptInfoBottomSheetState
       minChildSize: 0.5,
       maxChildSize: 0.9,
       builder: (_, controller) => Container(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-          left: 16,
-          right: 16,
-          top: 16,
-        ),
+        padding: EdgeInsets.fromLTRB(
+            24, 16, 24, MediaQuery.of(context).viewInsets.bottom + 24),
         decoration: const BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(25),
+          ),
         ),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              Text(
-                _getLocalizedLabel(context, 'edit_receipt'),
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: ListView(
-                  controller: controller,
-                  children: [
-                    TextFormField(
-                      controller: _merchantNameController,
-                      decoration: InputDecoration(
-                        labelText: _getLocalizedLabel(context, 'store_name'),
+        child: SingleChildScrollView(
+          controller: controller,
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 드래그 핸들
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+
+                // 제목
+                Text(
+                  _getLocalizedLabel(context, 'edit_receipt'),
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF2C3E50),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // 가게명 입력
+                TextFormField(
+                  controller: _merchantNameController,
+                  decoration: InputDecoration(
+                    labelText: _getLocalizedLabel(context, 'store_name'),
+                    prefixIcon:
+                        const Icon(Icons.store, color: Color(0xFF2C3E50)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide:
+                          const BorderSide(color: Color(0xFF2C3E50), width: 2),
+                    ),
+                  ),
+                  validator: (value) => value?.isEmpty ?? true
+                      ? _getLocalizedLabel(context, 'store_name_required')
+                      : null,
+                ),
+                const SizedBox(height: 16),
+
+                // 날짜 선택
+                InkWell(
+                  onTap: () => _showDateTimePicker(context),
+                  child: InputDecorator(
+                    decoration: InputDecoration(
+                      labelText: _getLocalizedLabel(context, 'date'),
+                      prefixIcon: const Icon(Icons.calendar_today,
+                          color: Color(0xFF2C3E50)),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      validator: (value) => value?.isEmpty ?? true
-                          ? _getLocalizedLabel(context, 'store_name_required')
-                          : null,
                     ),
-                    const SizedBox(height: 16),
-                    _buildDateSection(context),
-                    const SizedBox(height: 16),
-                    Text(
-                      _getLocalizedLabel(context, 'items'),
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    ..._items.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final item = entry.value;
-                      return Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                flex: 2,
-                                child: TextFormField(
-                                  initialValue: item.name,
-                                  decoration: InputDecoration(
-                                    labelText: _getLocalizedLabel(
-                                        context, 'item_name'),
-                                  ),
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _items[index] =
-                                          item.copyWith(name: value);
-                                    });
-                                  },
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: TextFormField(
-                                  initialValue: item.price.toString(),
-                                  decoration: InputDecoration(
-                                    labelText: _getLocalizedLabel(
-                                        context, 'unit_price'),
-                                  ),
-                                  keyboardType: TextInputType.number,
-                                  inputFormatters: [
-                                    FilteringTextInputFormatter.digitsOnly,
-                                  ],
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _items[index] = item.copyWith(
-                                        price: double.tryParse(value) ?? 0,
-                                      );
-                                    });
-                                    _updateTotalAmount();
-                                  },
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              SizedBox(
-                                width: 60,
-                                child: TextFormField(
-                                  initialValue: item.quantity.toString(),
-                                  decoration: InputDecoration(
-                                    labelText:
-                                        _getLocalizedLabel(context, 'quantity'),
-                                  ),
-                                  keyboardType: TextInputType.number,
-                                  inputFormatters: [
-                                    FilteringTextInputFormatter.digitsOnly,
-                                  ],
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _items[index] = item.copyWith(
-                                        quantity: int.tryParse(value) ?? 1,
-                                      );
-                                    });
-                                    _updateTotalAmount();
-                                  },
-                                ),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.delete),
-                                onPressed: () {
-                                  setState(() {
-                                    _items.removeAt(index);
-                                  });
-                                  _updateTotalAmount();
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                    OutlinedButton.icon(
-                      onPressed: _addNewItem,
-                      icon: const Icon(Icons.add),
-                      label: Text(_getLocalizedLabel(context, 'add_item')),
-                    ),
-                    const SizedBox(height: 24),
-                    TextFormField(
-                      controller: _totalAmountController,
-                      decoration: InputDecoration(
-                        labelText: _getLocalizedLabel(context, 'total'),
-                        prefixText: _getCurrencySymbol(context),
-                      ),
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        TextInputFormatter.withFunction((oldValue, newValue) {
-                          if (newValue.text.isEmpty) return newValue;
-                          final number = int.parse(newValue.text);
-                          final newString =
-                              NumberFormat('#,###').format(number);
-                          return TextEditingValue(
-                            text: newString,
-                            selection: TextSelection.collapsed(
-                                offset: newString.length),
-                          );
-                        }),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(DateFormat('yyyy-MM-dd HH:mm')
+                            .format(_selectedDate)),
+                        const Icon(Icons.arrow_drop_down,
+                            color: Color(0xFF2C3E50)),
                       ],
-                      validator: (value) => value?.isEmpty ?? true
-                          ? _getLocalizedLabel(context, 'total_required')
-                          : null,
                     ),
-                  ],
+                  ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: Text(_getLocalizedLabel(context, 'cancel')),
+                const SizedBox(height: 16),
+
+                // 총액 입력
+                TextFormField(
+                  controller: _totalAmountController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: _getLocalizedLabel(context, 'total'),
+                    prefixIcon: const Icon(Icons.attach_money,
+                        color: Color(0xFF2C3E50)),
+                    suffixText: _getCurrencySymbol(context),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    const SizedBox(width: 16),
-                    ElevatedButton(
-                      onPressed: _saveReceipt,
-                      child: Text(_getLocalizedLabel(context, 'save')),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide:
+                          const BorderSide(color: Color(0xFF2C3E50), width: 2),
                     ),
-                  ],
+                  ),
+                  validator: (value) => value?.isEmpty ?? true
+                      ? _getLocalizedLabel(context, 'total_required')
+                      : null,
                 ),
-              ),
-            ],
+                const SizedBox(height: 24),
+
+                // 항목 섹션
+                Text(
+                  _getLocalizedLabel(context, 'items'),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF2C3E50),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: _items.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final item = _items[index];
+                    return Card(
+                      elevation: 2,
+                      color: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextFormField(
+                                    initialValue: item.name,
+                                    decoration: InputDecoration(
+                                      labelText: _getLocalizedLabel(
+                                          context, 'item_name'),
+                                      prefixIcon: const Icon(
+                                          Icons.shopping_bag_outlined,
+                                          color: Color(0xFF2C3E50)),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _items[index] =
+                                            item.copyWith(name: value);
+                                      });
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                IconButton(
+                                  icon: const Icon(Icons.delete_outline,
+                                      color: Colors.red),
+                                  onPressed: () {
+                                    setState(() {
+                                      _items.removeAt(index);
+                                    });
+                                    _updateTotalAmount();
+                                  },
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextFormField(
+                                    initialValue: item.price.toString(),
+                                    decoration: InputDecoration(
+                                      labelText: _getLocalizedLabel(
+                                          context, 'unit_price'),
+                                      prefixIcon: const Icon(Icons.attach_money,
+                                          color: Color(0xFF2C3E50)),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    keyboardType: TextInputType.number,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _items[index] = item.copyWith(
+                                          price: double.tryParse(value) ?? 0,
+                                        );
+                                      });
+                                      _updateTotalAmount();
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                SizedBox(
+                                  width: 100,
+                                  child: TextFormField(
+                                    initialValue: item.quantity.toString(),
+                                    decoration: InputDecoration(
+                                      labelText: _getLocalizedLabel(
+                                          context, 'quantity'),
+                                      prefixIcon: const Icon(Icons.numbers,
+                                          color: Color(0xFF2C3E50)),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    keyboardType: TextInputType.number,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _items[index] = item.copyWith(
+                                          quantity: int.tryParse(value) ?? 1,
+                                        );
+                                      });
+                                      _updateTotalAmount();
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+
+                // 항목 추가 버튼
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: OutlinedButton.icon(
+                      onPressed: _addNewItem,
+                      icon: const Icon(Icons.add, color: Color(0xFF2C3E50)),
+                      label: Text(
+                        _getLocalizedLabel(context, 'add_item'),
+                        style: const TextStyle(color: Color(0xFF2C3E50)),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        side: const BorderSide(color: Color(0xFF2C3E50)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // 저장 버튼
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _saveReceipt,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2C3E50),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      _getLocalizedLabel(context, 'save'),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

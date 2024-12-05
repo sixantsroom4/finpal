@@ -106,35 +106,6 @@ class _ReceiptPageState extends State<ReceiptPage> {
 
             return CustomScrollView(
               slivers: [
-                // 월별 요약 카드
-                SliverToBoxAdapter(
-                  child: Card(
-                    margin: const EdgeInsets.all(16),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(_getLocalizedLabel(context, 'this_month')),
-                              Text(
-                                _getLocalizedCount(
-                                    context, state.receipts.length),
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                            ],
-                          ),
-                          const Divider(),
-                          ...state.receipts.groupByCurrency().entries.map(
-                                (entry) =>
-                                    _buildCurrencyTotalRow(context, entry),
-                              ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
                 // 연도/월별 그룹화된 영수증 목록
                 SliverList(
                   delegate: SliverChildBuilderDelegate(
@@ -165,17 +136,8 @@ class _ReceiptPageState extends State<ReceiptPage> {
                                 final receipt = receipts[idx];
                                 return ReceiptGridItem(
                                   receipt: receipt,
-                                  onTap: () {
-                                    debugPrint('영수증 상세 페이지로 이동 시도');
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            ReceiptDetailsPage(
-                                                receiptId: receipt.id),
-                                      ),
-                                    );
-                                  },
+                                  onTap: () => _navigateToReceiptDetails(
+                                      context, receipt),
                                 );
                               },
                             ),
@@ -269,18 +231,38 @@ class _ReceiptPageState extends State<ReceiptPage> {
       SortOption option, IconData icon) {
     return PopupMenuItem(
       value: option,
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            color:
-                _sortOption == option ? Theme.of(context).primaryColor : null,
-          ),
-          const SizedBox(width: 8),
-          Text(_getLocalizedLabel(context, 'sort_by_${option.name}')),
-          if (_sortOption == option)
-            Icon(_ascending ? Icons.arrow_upward : Icons.arrow_downward),
-        ],
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color:
+                  _sortOption == option ? const Color(0xFF2C3E50) : Colors.grey,
+              size: 20,
+            ),
+            const SizedBox(width: 12),
+            Text(
+              _getLocalizedLabel(context, 'sort_by_${option.name}'),
+              style: TextStyle(
+                color: _sortOption == option
+                    ? const Color(0xFF2C3E50)
+                    : Colors.grey[600],
+                fontWeight:
+                    _sortOption == option ? FontWeight.w500 : FontWeight.normal,
+              ),
+            ),
+            if (_sortOption == option)
+              Padding(
+                padding: const EdgeInsets.only(left: 4),
+                child: Icon(
+                  _ascending ? Icons.arrow_upward : Icons.arrow_downward,
+                  color: const Color(0xFF2C3E50),
+                  size: 16,
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -382,7 +364,7 @@ class _ReceiptPageState extends State<ReceiptPage> {
     const Map<AppLanguage, String> texts = {
       AppLanguage.english: 'No Receipts',
       AppLanguage.korean: '저장된 영수증이 없습니다',
-      AppLanguage.japanese: '保存さたレシートがありません',
+      AppLanguage.japanese: '保存さたレシートがあません',
     };
     return texts[language] ?? texts[AppLanguage.korean]!;
   }
@@ -594,12 +576,26 @@ class _ReceiptPageState extends State<ReceiptPage> {
   // AppBar 수정
   AppBar _buildAppBar() {
     return AppBar(
-      title: Text(_getLocalizedTitle(context)),
+      backgroundColor: const Color(0xFF2C3E50),
+      elevation: 0,
+      title: Text(
+        _getLocalizedTitle(context),
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 20,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
       actions: [
+        // 정렬 버튼
         PopupMenuButton<SortOption>(
           icon: Stack(
             children: [
-              const Icon(Icons.sort),
+              const Icon(
+                Icons.sort,
+                color: Colors.white,
+                size: 24,
+              ),
               if (_sortOption != SortOption.date) // 기본값이 아닐 때만 표시
                 Positioned(
                   right: 0,
@@ -607,8 +603,8 @@ class _ReceiptPageState extends State<ReceiptPage> {
                   child: Container(
                     width: 8,
                     height: 8,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor,
+                    decoration: const BoxDecoration(
+                      color: Colors.green,
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -621,8 +617,26 @@ class _ReceiptPageState extends State<ReceiptPage> {
             _buildSortMenuItem(SortOption.amount, Icons.attach_money),
             _buildSortMenuItem(SortOption.store, Icons.store),
           ],
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          color: Colors.white,
+          elevation: 4,
+          offset: const Offset(0, 40),
         ),
       ],
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(20),
+        child: Container(
+          height: 20,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(30),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
