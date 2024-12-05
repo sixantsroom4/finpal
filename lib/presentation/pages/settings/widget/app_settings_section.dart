@@ -11,6 +11,7 @@ import 'package:finpal/core/constants/app_languages.dart';
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/core/utils/language_utils.dart';
 import 'package:finpal/core/utils/currency_utils.dart';
+import 'package:flutter_phoenix/flutter_phoenix.dart';
 
 class AppSettingsSection extends StatelessWidget {
   const AppSettingsSection({super.key});
@@ -126,6 +127,9 @@ class AppSettingsSection extends StatelessWidget {
                             .read<AppLanguageBloc>()
                             .add(AppLanguageChanged(language));
                         Navigator.pop(context);
+
+                        // 앱 전체 새로고침
+                        Phoenix.rebirth(context);
                       },
                     ),
                   ))

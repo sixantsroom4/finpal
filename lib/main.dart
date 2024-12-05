@@ -22,6 +22,7 @@ import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'core/utils/firebase_migration_utils.dart';
+import 'package:flutter_phoenix/flutter_phoenix.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -64,15 +65,19 @@ Future<void> main() async {
   await FirebaseMigrationUtils.runMigrations();
 
   runApp(
-    MultiBlocProvider(
-      providers: [
-        BlocProvider<AuthBloc>(create: (_) => authBloc),
-        BlocProvider<AppLanguageBloc>(create: (_) => di.sl<AppLanguageBloc>()),
-        BlocProvider<UserRegistrationBloc>(
-            create: (_) => di.sl<UserRegistrationBloc>()),
-        BlocProvider<AppSettingsBloc>(create: (_) => di.sl<AppSettingsBloc>()),
-      ],
-      child: MyApp(authBloc: authBloc),
+    Phoenix(
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider<AuthBloc>(create: (_) => authBloc),
+          BlocProvider<AppLanguageBloc>(
+              create: (_) => di.sl<AppLanguageBloc>()),
+          BlocProvider<UserRegistrationBloc>(
+              create: (_) => di.sl<UserRegistrationBloc>()),
+          BlocProvider<AppSettingsBloc>(
+              create: (_) => di.sl<AppSettingsBloc>()),
+        ],
+        child: MyApp(authBloc: authBloc),
+      ),
     ),
   );
 }
