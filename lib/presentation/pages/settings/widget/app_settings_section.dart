@@ -27,30 +27,89 @@ class AppSettingsSection extends StatelessWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Padding(
-                      padding:
-                          const EdgeInsets.only(left: 16, top: 16, bottom: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF2C3E50),
+                        borderRadius: BorderRadius.only(
+                          bottomLeft: Radius.circular(15),
+                          bottomRight: Radius.circular(15),
+                        ),
+                      ),
                       child: Text(
                         _getLocalizedLabel(context, 'settings'),
                         style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.grey,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
                         ),
                       ),
                     ),
-                    ListTile(
-                      leading: const Icon(Icons.language),
-                      title: Text(_getLocalizedLabel(context, 'language')),
-                      subtitle: Text(_getLocalizedLanguageName(context)),
-                      onTap: () => _showLanguageDialog(context),
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.attach_money),
-                      title: Text(_getLocalizedLabel(context, 'currency')),
-                      subtitle:
-                          Text(_getLocalizedCurrency(context, currentCurrency)),
-                      onTap: () => _showCurrencyDialog(context),
+                    Card(
+                      margin: const EdgeInsets.all(16),
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Column(
+                        children: [
+                          ListTile(
+                            leading: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF2C3E50).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(
+                                Icons.language,
+                                color: Color(0xFF2C3E50),
+                              ),
+                            ),
+                            title: Text(
+                              _getLocalizedLabel(context, 'language'),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFF2C3E50),
+                              ),
+                            ),
+                            subtitle: Text(_getLocalizedLanguageName(context)),
+                            trailing: const Icon(
+                              Icons.chevron_right,
+                              color: Color(0xFF2C3E50),
+                            ),
+                            onTap: () => _showLanguageDialog(context),
+                          ),
+                          const Divider(height: 1),
+                          ListTile(
+                            leading: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF2C3E50).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(
+                                Icons.attach_money,
+                                color: Color(0xFF2C3E50),
+                              ),
+                            ),
+                            title: Text(
+                              _getLocalizedLabel(context, 'currency'),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFF2C3E50),
+                              ),
+                            ),
+                            subtitle: Text(_getLocalizedCurrency(
+                                context, currentCurrency)),
+                            trailing: const Icon(
+                              Icons.chevron_right,
+                              color: Color(0xFF2C3E50),
+                            ),
+                            onTap: () => _showCurrencyDialog(context),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 );
@@ -66,21 +125,36 @@ class AppSettingsSection extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(_getLocalizedLabel(context, 'select_language')),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+        ),
+        title: Text(
+          _getLocalizedLabel(context, 'select_language'),
+          style: const TextStyle(
+            color: Color(0xFF2C3E50),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: AppLanguage.values
-              .map(
-                (language) => ListTile(
-                  title: Text(getLanguageDisplayName(language)),
-                  onTap: () {
-                    context
-                        .read<AppLanguageBloc>()
-                        .add(AppLanguageChanged(language));
-                    Navigator.pop(context);
-                  },
-                ),
-              )
+              .map((language) => Card(
+                    child: ListTile(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      title: Text(
+                        getLanguageDisplayName(language),
+                        style: const TextStyle(color: Color(0xFF2C3E50)),
+                      ),
+                      onTap: () {
+                        context
+                            .read<AppLanguageBloc>()
+                            .add(AppLanguageChanged(language));
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ))
               .toList(),
         ),
       ),
@@ -151,27 +225,39 @@ class AppSettingsSection extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(_getLocalizedLabel(context, 'select_currency')),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+        ),
+        title: Text(
+          _getLocalizedLabel(context, 'select_currency'),
+          style: const TextStyle(
+            color: Color(0xFF2C3E50),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildCurrencyItem(context, 'KRW'),
-            _buildCurrencyItem(context, 'JPY'),
-            _buildCurrencyItem(context, 'USD'),
-            _buildCurrencyItem(context, 'EUR'),
-          ],
+          children: ['KRW', 'JPY', 'USD', 'EUR']
+              .map((currency) => Card(
+                    child: ListTile(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      title: Text(
+                        _getLocalizedCurrency(context, currency),
+                        style: const TextStyle(color: Color(0xFF2C3E50)),
+                      ),
+                      onTap: () {
+                        context
+                            .read<AppSettingsBloc>()
+                            .add(UpdateCurrency(currency));
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ))
+              .toList(),
         ),
       ),
-    );
-  }
-
-  Widget _buildCurrencyItem(BuildContext context, String currency) {
-    return ListTile(
-      title: Text(_getLocalizedCurrency(context, currency)),
-      onTap: () {
-        context.read<AppSettingsBloc>().add(UpdateCurrency(currency));
-        Navigator.pop(context);
-      },
     );
   }
 
