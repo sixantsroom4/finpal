@@ -1,4 +1,5 @@
 // lib/main.dart
+import 'package:finpal/core/services/injection_container.dart';
 import 'package:finpal/domain/repositories/auth_repository.dart';
 import 'package:finpal/presentation/bloc/auth/auth_bloc.dart';
 import 'package:finpal/presentation/bloc/auth/auth_event.dart';
@@ -68,7 +69,7 @@ Future<void> main() async {
     Phoenix(
       child: MultiBlocProvider(
         providers: [
-          BlocProvider<AuthBloc>(create: (_) => authBloc),
+          BlocProvider<AuthBloc>.value(value: authBloc),
           BlocProvider<AppLanguageBloc>(
               create: (_) => di.sl<AppLanguageBloc>()),
           BlocProvider<UserRegistrationBloc>(
@@ -117,7 +118,7 @@ class MyApp extends StatelessWidget {
           builder: (context, child) {
             return BlocBuilder<AuthBloc, AuthState>(
               builder: (context, state) {
-                debugPrint('현재 인증 상태: $state');
+                debugPrint('현재 인 상태: $state');
                 return child ?? const Center(child: Text('화면을 불러 수 없습니다.'));
               },
             );

@@ -34,3 +34,8 @@ class AuthException implements Exception {
   String toString() =>
       'AuthException: $message${code != null ? ' (code: $code)' : ''}';
 }
+
+class CustomerServiceException implements Exception {
+  final String message;
+  CustomerServiceException(this.message);
+}

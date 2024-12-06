@@ -3,44 +3,54 @@ import * as admin from 'firebase-admin';
 
 admin.initializeApp();
 
-export const createSubscriptionExpenses = functions.pubsub
-  .schedule('0 0 * * *')
-  .timeZone('Asia/Seoul')
-  .onRun(async (context: functions.EventContext) => {
-    const now = new Date();
-    const today = now.getDate();
+interface EmailData {
+  to: string;
+  template: {
+    name: string;
+    data: {
+      category: string;
+      title: string;
+      content: string;
+      imageUrls: string[];
+      userId: string;
+      timestamp: any;
+      status: string;
+    };
+  };
+}
+
+export const sendInquiryEmail = functions.firestore
+  .onDocumentCreated('inquiries/{docId}', async (event) => {
+    if (!event.data) return;
+    
+    const data = event.data.data() as EmailData;
+    if (!data) return;
 
     try {
-      const subscriptionsSnapshot = await admin.firestore()
-        .collection('subscriptions')
-        .where('billingDay', '==', today)
-        .where('isActive', '==', true)
-        .get();
+      await admin.firestore().collection('mail').add({
+        to: data.to,
+        from: 'noreply@finpal-app.firebaseapp.com',
+        message: {
+          subject: '[Finpal] 문의가 접수되었습니다',
+          text: `카테고리: ${data.template.data.category}\n제목: ${data.template.data.title}\n내용: ${data.template.data.content}`,
+          html: `
+            <h2>문의가 접수되었습니다</h2>
+            <p>카테고리: ${data.template.data.category}</p>
+            <p>제목: ${data.template.data.title}</p>
+            <p>내용: ${data.template.data.content}</p>
+          `
+        }
+      });
 
-      const batch = admin.firestore().batch();
-
-      for (const doc of subscriptionsSnapshot.docs) {
-        const subscription = doc.data();
-        
-        const expenseRef = admin.firestore().collection('expenses').doc();
-        batch.set(expenseRef, {
-          id: expenseRef.id,
-          amount: subscription.amount,
-          description: `${subscription.name} 구독료`,
-          category: subscription.category,
-          date: now.toISOString(),
-          userId: subscription.userId,
-          isSubscription: true,
-          subscriptionId: subscription.id,
-          createdAt: now.toISOString()
-        });
-      }
-
-      await batch.commit();
-      console.log(`${subscriptionsSnapshot.size}개의 구독 지출이 생성되었습니다.`);
-      return null;
-    } catch (error) {
-      console.error('구독 지출 생성 중 오류 발생:', error);
-      throw new functions.https.HttpsError('internal', '구독 지출 생성에 실패했습니다.');
+      await event.data.ref.update({
+        status: 'sent',
+        sentAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+    } catch (error: any) {
+      console.error('Error sending email:', error);
+      await event.data.ref.update({
+        status: 'error',
+        error: error.message as string,
+      });
     }
-  }); 
+  });

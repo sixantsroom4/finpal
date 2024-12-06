@@ -18,6 +18,9 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:finpal/domain/repositories/auth_repository.dart';
 import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
+import 'package:finpal/presentation/bloc/customer_service/customer_service_bloc.dart';
+import 'package:finpal/domain/repositories/customer_service_repository.dart';
+import 'package:finpal/data/repositories/customer_service_repository_impl.dart';
 
 final sl = GetIt.instance;
 
@@ -79,6 +82,28 @@ Future<void> init() async {
         sl<AuthRepository>(),
       ));
 
+  // CustomerServiceBloc
+  if (!sl.isRegistered<CustomerServiceBloc>()) {
+    initCustomerService();
+  }
+
   // Main initialization
   await initMain();
+}
+
+void initCustomerService() {
+  // Bloc
+  sl.registerFactory(
+    () => CustomerServiceBloc(repository: sl()),
+  );
+
+  // Repository
+  if (!sl.isRegistered<CustomerServiceRepository>()) {
+    sl.registerLazySingleton<CustomerServiceRepository>(
+      () => CustomerServiceRepositoryImpl(
+        firestore: sl(),
+        storage: sl(),
+      ),
+    );
+  }
 }

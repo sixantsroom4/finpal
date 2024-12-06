@@ -1,1 +1,5 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"finpal-82a3e","appId":"1:415977829213:android:4e0a2934885f37f281aeb4","fileOutput":"android/app/google-services.json"}},"ios":{"default":{"projectId":"finpal-82a3e","appId":"1:415977829213:ios:08dc48d3a09a814d81aeb4","uploadDebugSymbols":false,"fileOutput":"ios/Runner/GoogleService-Info.plist"}},"dart":{"lib/firebase_options.dart":{"projectId":"finpal-82a3e","configurations":{"android":"1:415977829213:android:4e0a2934885f37f281aeb4","ios":"1:415977829213:ios:08dc48d3a09a814d81aeb4"}}}}}}
+{
+  "functions": {
+    "source": "functions"
+  }
+}

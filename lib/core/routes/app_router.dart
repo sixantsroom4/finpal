@@ -22,6 +22,7 @@ import '../../presentation/pages/settings/settings_page.dart';
 import '../../presentation/pages/common/loading_page.dart';
 import '../../presentation/pages/settings/account/account_settings_page.dart';
 import '../../presentation/pages/user_registration/user_registration_page.dart';
+import '../../presentation/pages/customer_service/customer_service_page.dart';
 
 class AppRouter {
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -93,6 +94,12 @@ class AppRouter {
                   builder: (context, state) => const AccountSettingsPage(),
                 ),
               ],
+            ),
+            GoRoute(
+              path: '/customer-service',
+              builder: (context, state) {
+                return CustomerServicePage();
+              },
             ),
           ],
         ),
