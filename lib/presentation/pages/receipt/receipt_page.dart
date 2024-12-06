@@ -21,6 +21,7 @@ import 'package:finpal/core/constants/app_languages.dart';
 import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'widgets/empty_receipt_view.dart';
 
 // Receipt List에 대한 extension 추가
 extension ReceiptListExtension on List<Receipt> {
@@ -96,11 +97,18 @@ class _ReceiptPageState extends State<ReceiptPage> {
       appBar: _buildAppBar(),
       body: BlocBuilder<ReceiptBloc, ReceiptState>(
         builder: (context, state) {
-          if (state is ReceiptLoaded) {
-            if (state.receipts.isEmpty) {
-              return _buildEmptyState(context);
-            }
+          // 초기 상태나 데이터가 없을 때는 EmptyReceiptView 표시
+          if (state is ReceiptInitial ||
+              (state is ReceiptLoaded && state.receipts.isEmpty)) {
+            return const EmptyReceiptView();
+          }
 
+          // 실제 로딩 중일 때만 로딩 인디케이터 표시
+          if (state is ReceiptLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (state is ReceiptLoaded) {
             final sortedReceipts = _sortReceipts(state.receipts);
             final groupedReceipts = _groupReceiptsByYearMonth(sortedReceipts);
 
@@ -151,7 +159,15 @@ class _ReceiptPageState extends State<ReceiptPage> {
               ],
             );
           }
-          return const Center(child: CircularProgressIndicator());
+
+          // 에러 상태 처리
+          if (state is ReceiptError) {
+            return Center(
+              child: Text(state.message),
+            );
+          }
+
+          return const EmptyReceiptView();
         },
       ),
       floatingActionButton: ScanReceiptFab(
@@ -385,7 +401,7 @@ class _ReceiptPageState extends State<ReceiptPage> {
       'this_month': {
         AppLanguage.english: 'This Month',
         AppLanguage.korean: '이번 달 영수증',
-        AppLanguage.japanese: '今月のレシト',
+        AppLanguage.japanese: '今月のレシート',
       },
       'total_amount': {
         AppLanguage.english: 'Total Amount',

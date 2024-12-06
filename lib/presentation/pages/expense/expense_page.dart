@@ -15,6 +15,7 @@ import 'package:intl/intl.dart';
 import '../../bloc/expense/expense_bloc.dart';
 import '../../bloc/auth/auth_bloc.dart';
 import '../../bloc/app_language/app_language_bloc.dart';
+import 'widgets/empty_expense_view.dart';
 
 class ExpensePage extends StatefulWidget {
   const ExpensePage({super.key});
@@ -72,6 +73,11 @@ class _ExpensePageState extends State<ExpensePage> {
           Expanded(
             child: BlocBuilder<ExpenseBloc, ExpenseState>(
               builder: (context, state) {
+                if (state is ExpenseInitial ||
+                    (state is ExpenseLoaded && state.expenses.isEmpty)) {
+                  return const EmptyExpenseView();
+                }
+
                 if (state is ExpenseLoading) {
                   return const Center(child: CircularProgressIndicator());
                 }
@@ -80,55 +86,28 @@ class _ExpensePageState extends State<ExpensePage> {
                   return Center(child: Text(state.message));
                 }
 
-                if (state is! ExpenseLoaded) {
-                  return Center(
-                    child: Text(_getLocalizedEmptyMessage(context)),
-                  );
-                }
-
-                return Column(
-                  children: [
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      child: Row(
-                        children: [
-                          ExpenseFilterChip(
-                            label: _getLocalizedAllCategory(context),
-                            selected: _selectedCategory ==
-                                _getLocalizedAllCategory(context),
-                            onSelected: (selected) => _updateCategory(
-                                _getLocalizedAllCategory(context)),
-                            style: ChipTheme.of(context).copyWith(
-                              backgroundColor:
-                                  const Color(0xFF2C3E50).withOpacity(0.05),
-                              selectedColor: const Color(0xFF2C3E50),
-                              labelStyle: TextStyle(
-                                color: _selectedCategory ==
-                                        _getLocalizedAllCategory(context)
-                                    ? Colors.white
-                                    : const Color(0xFF2C3E50),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 8),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                            ),
-                          ),
-                          ...state.categoryTotals.keys.map(
-                            (category) => ExpenseFilterChip(
-                              label: _getLocalizedCategory(context, category),
-                              selected: _selectedCategory == category,
-                              onSelected: (selected) =>
-                                  _updateCategory(category),
+                if (state is ExpenseLoaded) {
+                  return Column(
+                    children: [
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        child: Row(
+                          children: [
+                            ExpenseFilterChip(
+                              label: _getLocalizedAllCategory(context),
+                              selected: _selectedCategory ==
+                                  _getLocalizedAllCategory(context),
+                              onSelected: (selected) => _updateCategory(
+                                  _getLocalizedAllCategory(context)),
                               style: ChipTheme.of(context).copyWith(
                                 backgroundColor:
                                     const Color(0xFF2C3E50).withOpacity(0.05),
                                 selectedColor: const Color(0xFF2C3E50),
                                 labelStyle: TextStyle(
-                                  color: _selectedCategory == category
+                                  color: _selectedCategory ==
+                                          _getLocalizedAllCategory(context)
                                       ? Colors.white
                                       : const Color(0xFF2C3E50),
                                 ),
@@ -139,58 +118,84 @@ class _ExpensePageState extends State<ExpensePage> {
                                 ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: ListView.separated(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 16,
-                        ),
-                        separatorBuilder: (context, index) =>
-                            const SizedBox(height: 12),
-                        itemCount: state.expenses.length,
-                        itemBuilder: (context, index) {
-                          final expense = state.expenses[index];
-                          if (_selectedCategory !=
-                                  _getLocalizedAllCategory(context) &&
-                              expense.category != _selectedCategory) {
-                            return const SizedBox.shrink();
-                          }
-                          return ListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 8,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                            leading: CircleAvatar(
-                              backgroundColor:
-                                  const Color(0xFF2C3E50).withOpacity(0.1),
-                              child: Icon(
-                                _getCategoryIcon(expense.category),
-                                color: const Color(0xFF2C3E50),
-                                size: 20,
+                            ...state.categoryTotals.keys.map(
+                              (category) => ExpenseFilterChip(
+                                label: _getLocalizedCategory(context, category),
+                                selected: _selectedCategory == category,
+                                onSelected: (selected) =>
+                                    _updateCategory(category),
+                                style: ChipTheme.of(context).copyWith(
+                                  backgroundColor:
+                                      const Color(0xFF2C3E50).withOpacity(0.05),
+                                  selectedColor: const Color(0xFF2C3E50),
+                                  labelStyle: TextStyle(
+                                    color: _selectedCategory == category
+                                        ? Colors.white
+                                        : const Color(0xFF2C3E50),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 8),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                ),
                               ),
                             ),
-                            title: Text(expense.description),
-                            subtitle: Text(
-                              _getLocalizedDate(context, expense.date),
-                            ),
-                            trailing: AmountDisplay(
-                              amount: expense.amount,
-                              currency: expense.currency,
-                            ),
-                            onTap: () => _showExpenseDetails(context, expense),
-                          );
-                        },
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                );
+                      Expanded(
+                        child: ListView.separated(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 16,
+                          ),
+                          separatorBuilder: (context, index) =>
+                              const SizedBox(height: 12),
+                          itemCount: state.expenses.length,
+                          itemBuilder: (context, index) {
+                            final expense = state.expenses[index];
+                            if (_selectedCategory !=
+                                    _getLocalizedAllCategory(context) &&
+                                expense.category != _selectedCategory) {
+                              return const SizedBox.shrink();
+                            }
+                            return ListTile(
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 8,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              leading: CircleAvatar(
+                                backgroundColor:
+                                    const Color(0xFF2C3E50).withOpacity(0.1),
+                                child: Icon(
+                                  _getCategoryIcon(expense.category),
+                                  color: const Color(0xFF2C3E50),
+                                  size: 20,
+                                ),
+                              ),
+                              title: Text(expense.description),
+                              subtitle: Text(
+                                _getLocalizedDate(context, expense.date),
+                              ),
+                              trailing: AmountDisplay(
+                                amount: expense.amount,
+                                currency: expense.currency,
+                              ),
+                              onTap: () =>
+                                  _showExpenseDetails(context, expense),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  );
+                }
+
+                return const EmptyExpenseView();
               },
             ),
           ),
@@ -250,16 +255,6 @@ class _ExpensePageState extends State<ExpensePage> {
       AppLanguage.japanese: '支出履歴',
     };
     return titles[language] ?? titles[AppLanguage.korean]!;
-  }
-
-  String _getLocalizedEmptyMessage(BuildContext context) {
-    final language = context.read<AppLanguageBloc>().state.language;
-    const Map<AppLanguage, String> messages = {
-      AppLanguage.english: 'No expense history.',
-      AppLanguage.korean: '지출 내역이 없습니다.',
-      AppLanguage.japanese: '支履歴がありません。',
-    };
-    return messages[language] ?? messages[AppLanguage.korean]!;
   }
 
   String _getLocalizedAllCategory(BuildContext context) {

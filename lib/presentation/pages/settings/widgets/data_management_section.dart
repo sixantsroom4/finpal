@@ -55,7 +55,7 @@ class DataManagementSection extends StatelessWidget {
         AppLanguage.english:
             'All data will be permanently deleted. Do you want to continue?',
         AppLanguage.korean: '모든 데이터가 영구적으로 삭제됩니다. 계속하시겠습니까?',
-        AppLanguage.japanese: '全てのデータが��久に削除されます。続行しますか？',
+        AppLanguage.japanese: '全てのデータが永久に削除されます。遂行しますか？',
       },
       'cancel': {
         AppLanguage.english: 'Cancel',

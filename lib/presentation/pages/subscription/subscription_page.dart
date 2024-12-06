@@ -14,6 +14,7 @@ import 'widgets/subscription_statistics_card.dart';
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/core/constants/app_languages.dart';
 import 'package:intl/intl.dart';
+import 'widgets/empty_subscription_view.dart';
 
 class SubscriptionPage extends StatefulWidget {
   const SubscriptionPage({super.key});
@@ -124,6 +125,11 @@ class _SubscriptionPageState extends State<SubscriptionPage>
           }
         },
         builder: (context, state) {
+          if (state is SubscriptionInitial ||
+              (state is SubscriptionLoaded && state.subscriptions.isEmpty)) {
+            return const EmptySubscriptionView();
+          }
+
           if (state is SubscriptionLoading) {
             return const Center(
               child: CircularProgressIndicator(
@@ -132,54 +138,23 @@ class _SubscriptionPageState extends State<SubscriptionPage>
             );
           }
 
-          if (state is! SubscriptionLoaded) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.subscriptions_outlined,
-                    size: 64,
-                    color: Colors.grey[400],
+          if (state is SubscriptionLoaded) {
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: SubscriptionStatisticsCard(
+                    subscriptions: state.subscriptions,
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    _getLocalizedLabel(context, 'no_subscriptions'),
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: const Color(0xFF2C3E50),
-                          fontWeight: FontWeight.w500,
-                        ),
-                  ),
-                  const SizedBox(height: 8),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32),
-                    child: Text(
-                      _getLocalizedLabel(
-                          context, 'no_subscriptions_description'),
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey[600],
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+                Expanded(
+                  child: _buildAllSubscriptionsList(state),
+                ),
+              ],
             );
           }
 
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: SubscriptionStatisticsCard(
-                  subscriptions: state.subscriptions,
-                ),
-              ),
-              Expanded(
-                child: _buildAllSubscriptionsList(state),
-              ),
-            ],
-          );
+          return const EmptySubscriptionView();
         },
       ),
       floatingActionButton: FloatingActionButton(

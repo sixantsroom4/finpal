@@ -96,7 +96,7 @@ class _AddSubscriptionBottomSheetState
       'invalid_amount': {
         AppLanguage.english: 'Please enter a valid amount',
         AppLanguage.korean: '올바른 금액을 입력해주세요',
-        AppLanguage.japanese: '正しい金額を入力してくだ��い',
+        AppLanguage.japanese: '正しい金額を入力してくだい',
       },
     };
     return errors[key]?[language] ?? errors[key]?[AppLanguage.korean] ?? key;
@@ -442,25 +442,42 @@ class _AddSubscriptionBottomSheetState
   }
 
   void _addSubscription() {
-    final authState = context.read<AuthBloc>().state;
-    if (authState is Authenticated) {
-      final currency = context.read<AppSettingsBloc>().state.currency;
+    if (_formKey.currentState?.validate() ?? false) {
+      final authState = context.read<AuthBloc>().state;
+      if (authState is Authenticated) {
+        final currency = context.read<AppSettingsBloc>().state.currency;
 
-      final subscription = SubscriptionModel(
-        id: const Uuid().v4(),
-        name: _nameController.text,
-        amount: double.parse(_amountController.text.replaceAll(',', '')),
-        currency: currency,
-        startDate: DateTime.now(),
-        billingCycle: _selectedBillingCycle,
-        billingDay: _selectedBillingDay,
-        category: _selectedCategory,
-        userId: authState.user.id,
-        isActive: true,
-      );
+        final amountStr = _amountController.text
+            .replaceAll(',', '')
+            .replaceAll(RegExp(r'[^0-9.]'), '');
 
-      context.read<SubscriptionBloc>().add(AddSubscription(subscription));
-      Navigator.pop(context);
+        try {
+          final amount = double.parse(amountStr);
+
+          final subscription = SubscriptionModel(
+            id: const Uuid().v4(),
+            name: _nameController.text,
+            amount: amount,
+            currency: currency,
+            startDate: DateTime.now(),
+            billingCycle: _selectedBillingCycle,
+            billingDay: _selectedBillingDay,
+            category: _selectedCategory,
+            userId: authState.user.id,
+            isActive: true,
+          );
+
+          context.read<SubscriptionBloc>().add(AddSubscription(subscription));
+          Navigator.pop(context);
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(_getLocalizedError(context, 'invalid_amount')),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
     }
   }
 

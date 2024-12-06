@@ -82,12 +82,12 @@ class ScanReceiptFab extends StatelessWidget {
       'select_from_gallery': {
         AppLanguage.english: 'Select from Gallery',
         AppLanguage.korean: '갤러리에서 선택',
-        AppLanguage.japanese: 'ギラリーから選択',
+        AppLanguage.japanese: 'ギャラリーから探す',
       },
       'error_processing_image': {
         AppLanguage.english: 'An error occurred while processing the image: ',
         AppLanguage.korean: '이미지 처리 중 오류가 발생했습니다: ',
-        AppLanguage.japanese: '画像の処理中にエラーが発生しました: ',
+        AppLanguage.japanese: 'An error occurred while processing the image: ',
       },
     };
     return labels[key]?[language] ?? labels[key]?[AppLanguage.korean] ?? key;
