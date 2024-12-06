@@ -22,7 +22,7 @@ class CurrencySettingSection extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '기본 통화 설정',
+              _getLocalizedLabel(context, 'currency_setting'),
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -63,5 +63,17 @@ class CurrencySettingSection extends StatelessWidget {
         );
       },
     );
+  }
+
+  String _getLocalizedLabel(BuildContext context, String key) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    final Map<String, Map<AppLanguage, String>> labels = {
+      'currency_setting': {
+        AppLanguage.english: 'Default Currency',
+        AppLanguage.korean: '기본 통화 설정',
+        AppLanguage.japanese: '基本通貨設定',
+      },
+    };
+    return labels[key]?[language] ?? labels[key]?[AppLanguage.korean] ?? key;
   }
 }

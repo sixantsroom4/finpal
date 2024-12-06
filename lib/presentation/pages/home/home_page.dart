@@ -156,10 +156,11 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: 16),
                   const ExpenseChartsView(),
                   const SizedBox(height: 16),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: UpcomingSubscriptionsCard(),
-                  ),
+                  // const Padding(
+                  //   padding: EdgeInsets.symmetric(horizontal: 16),
+                  //   child: UpcomingSubscriptionsCard(),
+                  // ),
+                  //아직미구현
                   const SizedBox(height: 24),
                 ],
               ),

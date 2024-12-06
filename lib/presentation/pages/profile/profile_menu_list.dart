@@ -44,16 +44,16 @@ class _ProfileMenuListState extends State<ProfileMenuList> {
           label: 'app_settings',
           onTap: () => context.go('/settings'),
         ),
-        _buildMenuItem(
-          context: context,
-          icon: Icons.account_circle_outlined,
-          label: 'account_settings',
-          onTap: () => context.push('/settings/account'),
-        ),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 24),
-          child: Divider(height: 32),
-        ),
+        // _buildMenuItem(
+        //   context: context,
+        //   icon: Icons.account_circle_outlined,
+        //   label: 'account_settings',
+        //   onTap: () => context.push('/settings/account'),
+        // ),
+        // const Padding(
+        //   padding: EdgeInsets.symmetric(horizontal: 24),
+        //   child: Divider(height: 32),
+        // ),
         _buildMenuItem(
           context: context,
           icon: Icons.help_outline,
