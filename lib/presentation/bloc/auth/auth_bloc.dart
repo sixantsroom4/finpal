@@ -1,6 +1,7 @@
 // lib/presentation/bloc/auth/auth_bloc.dart
 import 'dart:async';
 
+import 'package:finpal/core/constants/app_languages.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../domain/repositories/auth_repository.dart';
@@ -46,6 +47,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthPasswordChangeRequested>(_onAuthPasswordChangeRequested);
     on<AuthKakaoSignInRequested>(_onAuthKakaoSignInRequested);
     on<AuthUserRegistrationCompleted>(_onAuthUserRegistrationCompleted);
+    on<DeleteAccount>(_onDeleteAccount);
 
     _authStateSubscription = _authRepository.authStateChanges.listen(
       (user) {
@@ -341,6 +343,30 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
     } catch (e) {
       emit(const AuthFailure('사용자 등록 상태 업데이트에 실패했습니다.'));
+    }
+  }
+
+  void _onDeleteAccount(DeleteAccount event, Emitter<AuthState> emit) async {
+    try {
+      emit(AuthLoading());
+      await _authRepository.deleteAccount();
+      emit(Unauthenticated());
+    } catch (e) {
+      final language = event.language; // 언어 설정 가져오기
+      String errorMessage;
+
+      switch (language) {
+        case AppLanguage.english:
+          errorMessage = 'Failed to delete account';
+        case AppLanguage.japanese:
+          errorMessage = 'アカウントの削除に失敗しました';
+        case AppLanguage.korean:
+        default:
+          errorMessage = '계정 삭제에 실패했습니다';
+      }
+
+      emit(AuthFailure('$errorMessage: ${e.toString()}'));
+      emit(state);
     }
   }
 }

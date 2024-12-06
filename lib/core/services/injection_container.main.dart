@@ -27,6 +27,7 @@ Future<void> initMain() async {
     () => FirebaseAuthRemoteDataSourceImpl(
       firebaseAuth: sl(),
       googleSignIn: sl(),
+      storage: sl(),
       firestore: sl(),
     ),
   );
@@ -46,6 +47,7 @@ Future<void> initMain() async {
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(
       remoteDataSource: sl(),
+      firestore: sl(),
     ),
   );
 

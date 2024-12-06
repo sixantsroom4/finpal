@@ -1,11 +1,15 @@
 // lib/presentation/bloc/auth/auth_event.dart
 import 'package:equatable/equatable.dart';
+import 'package:finpal/core/constants/app_languages.dart';
 
 abstract class AuthEvent extends Equatable {
   const AuthEvent();
 
   @override
   List<Object?> get props => [];
+
+  const factory AuthEvent.deleteAccount({required AppLanguage language}) =
+      DeleteAccount;
 }
 
 class AuthCheckRequested extends AuthEvent {}
@@ -113,4 +117,15 @@ class AuthUserRegistrationCompleted extends AuthEvent {
 
   @override
   List<Object?> get props => [];
+}
+
+class DeleteAccount extends AuthEvent {
+  final AppLanguage language;
+
+  const DeleteAccount({
+    required this.language,
+  });
+
+  @override
+  List<Object?> get props => [language];
 }

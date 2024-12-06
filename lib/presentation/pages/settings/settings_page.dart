@@ -158,6 +158,37 @@ class SettingsPage extends StatelessWidget {
         AppLanguage.korean: '계정 삭제',
         AppLanguage.japanese: 'アカウント削除',
       },
+      'delete_account_title': {
+        AppLanguage.english: 'Delete Account',
+        AppLanguage.korean: '계정 삭제',
+        AppLanguage.japanese: 'アカウント削除',
+      },
+      'delete_account_warning': {
+        AppLanguage.english: 'This action cannot be undone.',
+        AppLanguage.korean: '이 작업은 취소할 수 없습니다.',
+        AppLanguage.japanese: 'この操作は取り消すことができません。',
+      },
+      'delete_account_confirmation': {
+        AppLanguage.english:
+            '• All expenses and receipts\n• Subscription information\n• Account settings and preferences',
+        AppLanguage.korean: '• 모든 지출 및 영수증\n• 구독 정보\n• 계정 설정 및 환경설정',
+        AppLanguage.japanese: '• すべての支出とレシート\n• サブスクリプション情報\n• アカウント設定と環境設定',
+      },
+      'delete': {
+        AppLanguage.english: 'Delete',
+        AppLanguage.korean: '삭제',
+        AppLanguage.japanese: '削除',
+      },
+      'cancel': {
+        AppLanguage.english: 'Cancel',
+        AppLanguage.korean: '취소',
+        AppLanguage.japanese: 'キャンセル',
+      },
+      'logout_confirmation': {
+        AppLanguage.english: 'Are you sure you want to logout?',
+        AppLanguage.korean: '로그아웃 하시겠습니까?',
+        AppLanguage.japanese: 'ログアウトしますか？',
+      },
     };
     return labels[key]?[language] ?? labels[key]?[AppLanguage.korean] ?? key;
   }
@@ -179,6 +210,50 @@ class SettingsPage extends StatelessWidget {
   }
 
   void _showDeleteAccountDialog(BuildContext context) {
-    // 계정 삭제 다이얼로그 구현
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          _getLocalizedLabel(context, 'delete_account_title'),
+          style: const TextStyle(
+            color: Colors.red,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(_getLocalizedLabel(context, 'delete_account_warning')),
+            const SizedBox(height: 16),
+            Text(
+              _getLocalizedLabel(context, 'delete_account_confirmation'),
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              _getLocalizedLabel(context, 'cancel'),
+              style: const TextStyle(color: Colors.grey),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              final language = context.read<AppLanguageBloc>().state.language;
+              context.read<AuthBloc>().add(DeleteAccount(language: language));
+              Navigator.pop(context);
+              context.go('/welcome');
+            },
+            child: Text(
+              _getLocalizedLabel(context, 'delete'),
+              style: const TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

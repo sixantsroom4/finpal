@@ -14,6 +14,7 @@ import 'package:crypto/crypto.dart';
 import 'package:convert/convert.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 abstract class FirebaseAuthRemoteDataSource {
   Stream<UserModel?> get authStateChanges;
@@ -58,14 +59,17 @@ class FirebaseAuthRemoteDataSourceImpl implements FirebaseAuthRemoteDataSource {
   final firebase_auth.FirebaseAuth _firebaseAuth;
   final GoogleSignIn _googleSignIn;
   final FirebaseFirestore _firestore;
+  final FirebaseStorage _storage;
 
   FirebaseAuthRemoteDataSourceImpl({
     required firebase_auth.FirebaseAuth firebaseAuth,
     required GoogleSignIn googleSignIn,
     required FirebaseFirestore firestore,
+    required FirebaseStorage storage,
   })  : _firebaseAuth = firebaseAuth,
         _googleSignIn = googleSignIn,
-        _firestore = firestore;
+        _firestore = firestore,
+        _storage = storage;
 
   @override
   Stream<UserModel?> get authStateChanges =>
@@ -319,19 +323,71 @@ class FirebaseAuthRemoteDataSourceImpl implements FirebaseAuthRemoteDataSource {
   @override
   Future<void> deleteAccount() async {
     try {
-      final firebaseUser = _firebaseAuth.currentUser;
-      if (firebaseUser == null) {
-        throw AuthException('No user signed in');
-      }
+      final user = _firebaseAuth.currentUser;
+      if (user == null) throw AuthException('사용자를 찾을 수 없습니다.');
 
-      // Firestore 데이터 삭제
-      await _firestore.collection('users').doc(firebaseUser.uid).delete();
+      // 1. 로그아웃 처리를 마지막으로 이동
+      // 2. Firestore 데이터 삭제
+      await _deleteUserData(user.uid);
 
-      // Firebase Auth 계정 삭제
-      await firebaseUser.delete();
+      // 3. Firebase Auth에서 계정 삭제
+      await user.delete();
+
+      // 4. 마지막으로 로그아웃 처리
+      await _firebaseAuth.signOut();
+      await _googleSignIn.signOut();
     } catch (e) {
-      throw AuthException('Failed to delete account: ${e.toString()}');
+      throw AuthException('계정 삭제 실패: ${e.toString()}');
     }
+  }
+
+  Future<void> _deleteUserData(String userId) async {
+    // Batch 작업으로 모든 사용자 데이터 삭제
+    WriteBatch batch = _firestore.batch();
+
+    // 사용자 문서 삭제
+    batch.delete(_firestore.collection('users').doc(userId));
+
+    // 지출 내역 삭제
+    final expenses = await _firestore
+        .collection('expenses')
+        .where('userId', isEqualTo: userId)
+        .get();
+    for (var doc in expenses.docs) {
+      batch.delete(doc.reference);
+    }
+
+    // 영수증 삭제
+    final receipts = await _firestore
+        .collection('receipts')
+        .where('userId', isEqualTo: userId)
+        .get();
+    for (var doc in receipts.docs) {
+      batch.delete(doc.reference);
+    }
+
+    // 구독 정보 삭제
+    final subscriptions = await _firestore
+        .collection('subscriptions')
+        .where('userId', isEqualTo: userId)
+        .get();
+    for (var doc in subscriptions.docs) {
+      batch.delete(doc.reference);
+    }
+
+    // Storage에서 영수증 이미지 삭제
+    final storageRef = _storage.ref().child('receipts/$userId');
+    try {
+      final items = await storageRef.listAll();
+      for (var item in items.items) {
+        await item.delete();
+      }
+    } catch (e) {
+      debugPrint('Storage 삭제 중 오류: $e');
+    }
+
+    // Batch 실행
+    await batch.commit();
   }
 
   @override
@@ -371,7 +427,7 @@ class FirebaseAuthRemoteDataSourceImpl implements FirebaseAuthRemoteDataSource {
       }
       print('Firebase 인증 성공');
 
-      // 사용자 정보 구성 - 더 안전한 null 처리
+      // 사용��� 정보 구성 - 더 안전한 null 처리
       String email = firebaseUser.email ??
           appleCredential.email ??
           '${firebaseUser.uid}_${DateTime.now().millisecondsSinceEpoch}@tempmail.finpal.com';
@@ -538,7 +594,7 @@ class FirebaseAuthRemoteDataSourceImpl implements FirebaseAuthRemoteDataSource {
         throw AuthException('사용자를 찾을 수 없습니다.');
       }
 
-      // 현재 비밀번호로 재인증
+      // 현재 비밀번호로 재인
       final credential = EmailAuthProvider.credential(
         email: firebaseUser.email!,
         password: currentPassword,
@@ -574,7 +630,7 @@ class FirebaseAuthRemoteDataSourceImpl implements FirebaseAuthRemoteDataSource {
           kakaoToken = await UserApi.instance.loginWithKakaoTalk();
           print('카카오톡으로 로그인 성공');
         } catch (e) {
-          print('카카오톡 로그인 실패, 카카오 계정으로 로그인 시도');
+          print('카카오톡 로그인 실��, 카카오 계으로 로그인 시도');
           kakaoToken = await UserApi.instance.loginWithKakaoAccount();
         }
       } else {

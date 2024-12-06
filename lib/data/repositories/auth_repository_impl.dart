@@ -1,17 +1,21 @@
 // data/repositories/auth_repository_impl.dart
 import 'package:dartz/dartz.dart';
+import 'package:finpal/presentation/bloc/auth/auth_state.dart';
 import '../../core/errors/exceptions.dart';
 import '../../core/errors/failures.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/remote/firebase_auth_remote_data_source.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final FirebaseAuthRemoteDataSource remoteDataSource;
+  final FirebaseFirestore _firestore;
 
   AuthRepositoryImpl({
     required this.remoteDataSource,
-  });
+    required FirebaseFirestore firestore,
+  }) : _firestore = firestore;
 
   @override
   Stream<User?> get authStateChanges => remoteDataSource.authStateChanges;
@@ -200,12 +204,23 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, User>> updateTermsAcceptance(bool accepted) async {
     try {
-      final user = await remoteDataSource.updateTermsAcceptance(accepted);
-      return Right(user);
-    } on AuthException catch (e) {
-      return Left(ServerFailure(e.message));
+      final currentUser = await getCurrentUser();
+      if (currentUser.isLeft()) {
+        return Left(ServerFailure('사용자를 찾을 수 없습니다'));
+      }
+
+      final user = currentUser.getOrElse(() => throw Exception());
+      if (user == null) {
+        return Left(ServerFailure('사용자를 찾을 수 없습니다'));
+      }
+
+      await _firestore.collection('users').doc(user.id).update({
+        'hasAcceptedTerms': accepted,
+      });
+
+      return Right(user.copyWith(hasAcceptedTerms: accepted));
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure('약관 동의 상태 업데이트 실패: ${e.toString()}'));
     }
   }
 
