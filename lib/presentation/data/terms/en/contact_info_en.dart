@@ -3,6 +3,6 @@ class ContactInfoEn {
   static const String content = '''
 For inquiries regarding these terms or services, please contact us at:
 Email: support@finpal.com
-Customer Service: 1234-5678
+// Customer Service: 1234-5678
 ''';
 }

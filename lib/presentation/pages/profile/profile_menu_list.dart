@@ -55,12 +55,12 @@ class _ProfileMenuListState extends State<ProfileMenuList> {
         //   child: Divider(height: 32),
         // ),
         //앱계정설정미구현
-        _buildMenuItem(
-          context: context,
-          icon: Icons.help_outline,
-          label: 'customer_service',
-          onTap: () => context.push('/customer-service'),
-        ),
+        // _buildMenuItem(
+        //   context: context,
+        //   icon: Icons.help_outline,
+        //   label: 'customer_service',
+        //   onTap: () => context.push('/customer-service'),
+        // ),
         _buildMenuItem(
           context: context,
           icon: Icons.description_outlined,
