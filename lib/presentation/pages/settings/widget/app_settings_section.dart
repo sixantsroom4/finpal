@@ -123,13 +123,15 @@ class AppSettingsSection extends StatelessWidget {
                         style: const TextStyle(color: Color(0xFF2C3E50)),
                       ),
                       onTap: () {
+                        Navigator.pop(context);
+
                         context
                             .read<AppLanguageBloc>()
                             .add(AppLanguageChanged(language));
-                        Navigator.pop(context);
 
-                        // 앱 전체 새로고침
-                        Phoenix.rebirth(context);
+                        Future.delayed(const Duration(milliseconds: 100), () {
+                          Phoenix.rebirth(context);
+                        });
                       },
                     ),
                   ))
