@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:finpal/core/constants/firebase_schema.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class FirebaseMigrationUtils {
   static Future<void> addCurrencyField() async {
@@ -10,7 +11,10 @@ class FirebaseMigrationUtils {
         await firestore.collection(FirebaseSchema.expenses).get();
     for (var doc in expensesSnapshot.docs) {
       if (doc.data()['currency'] == null) {
-        await doc.reference.update({'currency': 'KRW'});
+        await doc.reference.update({
+          'currency': 'KRW',
+          'userId': FirebaseAuth.instance.currentUser?.uid,
+        });
       }
     }
 
@@ -19,7 +23,10 @@ class FirebaseMigrationUtils {
         await firestore.collection(FirebaseSchema.receipts).get();
     for (var doc in receiptsSnapshot.docs) {
       if (doc.data()['currency'] == null) {
-        await doc.reference.update({'currency': 'KRW'});
+        await doc.reference.update({
+          'currency': 'KRW',
+          'userId': FirebaseAuth.instance.currentUser?.uid,
+        });
       }
     }
 
@@ -28,7 +35,10 @@ class FirebaseMigrationUtils {
         await firestore.collection(FirebaseSchema.subscriptions).get();
     for (var doc in subscriptionsSnapshot.docs) {
       if (doc.data()['currency'] == null) {
-        await doc.reference.update({'currency': 'KRW'});
+        await doc.reference.update({
+          'currency': 'KRW',
+          'userId': FirebaseAuth.instance.currentUser?.uid,
+        });
       }
     }
   }

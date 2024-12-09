@@ -18,16 +18,24 @@ import 'core/routes/app_router.dart';
 import 'firebase_options.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'core/utils/firebase_migration_utils.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
+import 'package:flutter/services.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   debugPrint('Flutter binding initialized');
+
+  // 화면 방향을 세로 모드로 고정
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    // DeviceOrientation.portraitDown,  // 뒤집힌 세로모드 필요한 경우
+    // DeviceOrientation.landscapeLeft,  // 가로모드 필요한 경우
+    // DeviceOrientation.landscapeRight,
+  ]);
 
   Bloc.observer = AppBlocObserver();
   debugPrint('BlocObserver registered');
@@ -56,14 +64,30 @@ Future<void> main() async {
   authBloc.add(AuthCheckRequested());
   debugPrint('AuthCheckRequested event added');
 
-  // // 카카오 SDK 초기화
-  // KakaoSdk.init(
-  //   nativeAppKey: dotenv.env['KAKAO_NATIVE_APP_KEY']!,
-  // );
-  // debugPrint('Kakao SDK initialized');
+  // 사용자 인증 상태 확인을 위해 기다림
+  await Future.delayed(const Duration(seconds: 2));
 
-  // 마이그레이션 실행
-  await FirebaseMigrationUtils.runMigrations();
+  // 현재 사용자 확인
+  final currentUser = FirebaseAuth.instance.currentUser;
+  debugPrint('Current user: ${currentUser?.uid ?? 'Not logged in'}');
+
+  // Firebase Auth 초기화 확인
+  FirebaseAuth.instance.authStateChanges().listen((firebaseUser) {
+    if (firebaseUser == null) {
+      debugPrint('사용자가 로그아웃 상태입니다');
+    } else {
+      debugPrint('사용자가 로그인 상태입니다: ${firebaseUser.uid}');
+    }
+  });
+
+  // 사용자가 로그인된 경우에만 마이그레이션 실행
+  if (currentUser != null) {
+    debugPrint('마이그레이션 시작...');
+    await FirebaseMigrationUtils.runMigrations();
+    debugPrint('마이그레이션 완료');
+  } else {
+    debugPrint('마이그레이션 건너뜀: 사용자가 로그인되지 않음');
+  }
 
   runApp(
     Phoenix(
