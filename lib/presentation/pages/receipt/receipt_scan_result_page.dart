@@ -38,10 +38,8 @@ class _ReceiptScanResultPageState extends State<ReceiptScanResultPage> {
   }
 
   void _startScanningReceipt() {
-    debugPrint('영수증 스캔 시작');
     final authState = context.read<AuthBloc>().state;
     if (authState is Authenticated) {
-      debugPrint('사용자 인증됨: ${authState.user.id}');
       context.read<ReceiptBloc>().add(ScanReceipt(
             imagePath: widget.imagePath,
             userId: authState.user.id,

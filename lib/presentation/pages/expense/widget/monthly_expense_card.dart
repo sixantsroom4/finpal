@@ -108,7 +108,7 @@ class _MonthlyExpenseCardState extends State<MonthlyExpenseCard> {
                 Row(
                   children: [
                     Text(
-                      DateFormat('yyyy년 M월').format(_selectedDate),
+                      _getLocalizedDate(context, _selectedDate),
                       style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 16,

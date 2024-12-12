@@ -47,18 +47,12 @@ class ScanReceiptFab extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.camera_alt),
               title: Text(_getLocalizedLabel(context, 'scan_with_camera')),
-              onTap: () {
-                Navigator.pop(context);
-                _pickImage(ImageSource.camera, context);
-              },
+              onTap: () => _pickImage(ImageSource.camera, context),
             ),
             ListTile(
               leading: const Icon(Icons.photo_library),
               title: Text(_getLocalizedLabel(context, 'select_from_gallery')),
-              onTap: () {
-                Navigator.pop(context);
-                _pickImage(ImageSource.gallery, context);
-              },
+              onTap: () => _pickImage(ImageSource.gallery, context),
             ),
           ],
         ),

@@ -11,6 +11,7 @@ import '../../../bloc/receipt/receipt_event.dart';
 import '../../../../core/utils/constants.dart';
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/core/constants/app_languages.dart';
+import 'package:go_router/go_router.dart';
 
 class CreateExpenseFromReceipt extends StatefulWidget {
   final Receipt receipt;
@@ -154,6 +155,12 @@ class _CreateExpenseFromReceiptState extends State<CreateExpenseFromReceipt> {
   void _createExpense() {
     final expenseId = const Uuid().v4();
 
+    // 이미 expenseId가 있는 경우 중복 생성 방지
+    if (widget.receipt.expenseId != null) {
+      Navigator.pop(context);
+      return;
+    }
+
     final expense = ExpenseModel(
       id: expenseId,
       amount: widget.receipt.totalAmount,
@@ -167,18 +174,22 @@ class _CreateExpenseFromReceiptState extends State<CreateExpenseFromReceipt> {
       createdAt: DateTime.now(),
     );
 
+    // 한 번만 이벤트 발생
     context.read<ExpenseBloc>().add(AddExpense(expenseModel: expense));
 
-    // 영수증 업데이트 이벤트 발생 (expenseId 연결)
+    // 영수증 업데이트도 한 번만 발생
     context.read<ReceiptBloc>().add(UpdateReceipt(
           widget.receipt.copyWith(expenseId: expenseId),
         ));
 
-    Navigator.pop(context);
-
+    // 스낵바 표시
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('expense_created')),
+      SnackBar(content: Text(_getLocalizedLabel(context, 'expense_created'))),
     );
+
+    // 현재 페이지들을 모두 닫고 영수증 페이지로 이동
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    context.go('/receipts');
   }
 
   String _getLocalizedLabel(BuildContext context, String key) {
@@ -211,7 +222,7 @@ class _CreateExpenseFromReceiptState extends State<CreateExpenseFromReceipt> {
       },
       'expense_created': {
         AppLanguage.english: 'Expense has been created.',
-        AppLanguage.korean: '지출 내역이 생성되었습니다.',
+        AppLanguage.korean: '지출 내역이 생성되었습다.',
         AppLanguage.japanese: '支出が作成されました。',
       },
     };

@@ -145,6 +145,10 @@ class ReceiptBloc extends Bloc<ReceiptEvent, ReceiptState> {
     UpdateReceipt event,
     Emitter<ReceiptState> emit,
   ) async {
+    if (event.receipt.expenseId != null) {
+      return;
+    }
+
     emit(ReceiptLoading());
     final result = await _receiptRepository.updateReceipt(event.receipt);
 

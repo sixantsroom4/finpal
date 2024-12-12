@@ -233,6 +233,8 @@ class _ExpensePageState extends State<ExpensePage> {
         return Icons.savings;
       case 'travel':
         return Icons.flight;
+      case 'social':
+        return Icons.people;
       default:
         return Icons.attach_money;
     }
@@ -272,7 +274,7 @@ class _ExpensePageState extends State<ExpensePage> {
     final Map<String, Map<AppLanguage, String>> categories = {
       'food': {
         AppLanguage.english: 'Food',
-        AppLanguage.korean: '식비',
+        AppLanguage.korean: '',
         AppLanguage.japanese: '食費',
       },
       'transport': {
@@ -319,6 +321,11 @@ class _ExpensePageState extends State<ExpensePage> {
         AppLanguage.english: 'Travel',
         AppLanguage.korean: '여행',
         AppLanguage.japanese: '旅行',
+      },
+      'social': {
+        AppLanguage.english: 'Social Expenses',
+        AppLanguage.korean: '교제비',
+        AppLanguage.japanese: '交際費',
       },
     };
     return categories[category.toLowerCase()]?[language] ?? category;

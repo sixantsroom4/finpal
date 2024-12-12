@@ -1,4 +1,5 @@
 import 'package:finpal/core/constants/app_languages.dart';
+import 'package:finpal/core/utils/constants.dart';
 import 'package:finpal/data/models/expense_model.dart';
 import 'package:finpal/domain/entities/expense.dart';
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
@@ -195,15 +196,11 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
 
   List<DropdownMenuItem<String>> _getLocalizedCategories(BuildContext context) {
     final language = context.read<AppLanguageBloc>().state.language;
-    const Map<AppLanguage, List<String>> categories = {
-      AppLanguage.english: ['food', 'transportation', 'entertainment'],
-      AppLanguage.korean: ['식비', '교통비', '놀이비'],
-      AppLanguage.japanese: ['食費', '交通費', '娯楽費'],
-    };
-    return categories[language]!.map((category) {
+    return CategoryConstants.categories.entries.map((entry) {
       return DropdownMenuItem<String>(
-        value: category,
-        child: Text(category),
+        value: entry.key,
+        child:
+            Text(CategoryConstants.getLocalizedCategory(entry.key, language)),
       );
     }).toList();
   }
