@@ -33,18 +33,14 @@ class ProfileHeader extends StatelessWidget {
               ],
             ),
             child: CircleAvatar(
-              radius: 50,
-              backgroundColor: const Color(0xFF2C3E50).withOpacity(0.1),
-              backgroundImage:
-                  user.photoUrl != null ? NetworkImage(user.photoUrl!) : null,
-              child: user.photoUrl == null
+              radius: 40,
+              backgroundImage: user.photoUrl?.isNotEmpty == true
+                  ? NetworkImage(user.photoUrl!)
+                  : null,
+              child: user.photoUrl?.isNotEmpty != true
                   ? Text(
                       user.displayName[0].toUpperCase(),
-                      style: const TextStyle(
-                        fontSize: 32,
-                        color: Color(0xFF2C3E50),
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: const TextStyle(fontSize: 32),
                     )
                   : null,
             ),

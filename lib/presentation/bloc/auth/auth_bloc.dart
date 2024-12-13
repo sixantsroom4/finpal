@@ -1,5 +1,7 @@
 // lib/presentation/bloc/auth/auth_bloc.dart
 import 'dart:async';
+import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:finpal/core/constants/app_languages.dart';
 import 'package:flutter/material.dart';
@@ -9,17 +11,22 @@ import 'auth_event.dart';
 import 'auth_state.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image/image.dart' as img;
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository _authRepository;
   StreamSubscription? _authStateSubscription;
   final FirebaseFirestore _firestore;
+  final FirebaseStorage _storage;
 
   AuthBloc({
     required AuthRepository authRepository,
     required FirebaseFirestore firestore,
+    required FirebaseStorage storage,
   })  : _authRepository = authRepository,
         _firestore = firestore,
+        _storage = storage,
         super(AuthInitial()) {
     on<AuthCheckRequested>(_onAuthCheckRequested);
     on<AuthSignedOut>(_onAuthSignedOut);
@@ -28,26 +35,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthEmailSignUpRequested>(_onAuthEmailSignUpRequested);
     on<AuthAppleSignInRequested>(_onAuthAppleSignInRequested);
     on<AuthTermsAcceptanceRequested>(_onAuthTermsAcceptanceRequested);
-    on<AuthProfileUpdateRequested>((event, emit) async {
-      try {
-        final result = await _authRepository.updateUserProfile(
-          displayName: event.displayName,
-          photoUrl: event.photoUrl,
-        );
-
-        result.fold(
-          (failure) => emit(AuthFailure(failure.message)),
-          (user) => emit(Authenticated(user)),
-        );
-      } catch (e) {
-        emit(AuthFailure('프로필 업데이트에 실패했습니다.'));
-      }
-    });
+    on<AuthProfileUpdateRequested>(_onProfileUpdateRequested);
     on<AuthEmailChangeRequested>(_onAuthEmailChangeRequested);
     on<AuthPasswordChangeRequested>(_onAuthPasswordChangeRequested);
     on<AuthKakaoSignInRequested>(_onAuthKakaoSignInRequested);
     on<AuthUserRegistrationCompleted>(_onAuthUserRegistrationCompleted);
     on<DeleteAccount>(_onDeleteAccount);
+    on<UpdateUserProfile>(_onUpdateUserProfile);
 
     _authStateSubscription = _authRepository.authStateChanges.listen(
       (user) {
@@ -152,7 +146,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           if (!user.hasAcceptedTerms) {
             emit(Authenticated(user)); // 약관 동의가 필요한 상태
           } else {
-            emit(Authenticated(user)); // 이미 약관에 동의한 상태
+            emit(Authenticated(user)); // 이미 약관 동의한 상태
           }
         },
       );
@@ -367,6 +361,141 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
       emit(AuthFailure('$errorMessage: ${e.toString()}'));
       emit(state);
+    }
+  }
+
+  Future<void> _onProfileUpdateRequested(
+    AuthProfileUpdateRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    try {
+      if (state is! Authenticated) return;
+      final currentUser = (state as Authenticated).user;
+
+      String? photoUrl = event.photoUrl;
+
+      // 디버그 로그 추가
+      debugPrint('이미지 업로드 시작: ${event.imagePath}');
+
+      if (event.imagePath != null) {
+        final file = File(event.imagePath!);
+        final fileName =
+            '${currentUser.id}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+        final ref = _storage.ref().child('profiles/$fileName');
+
+        try {
+          final bytes = await file.readAsBytes();
+          final image = img.decodeImage(bytes);
+          if (image != null) {
+            final resized = img.copyResize(image, width: 512);
+            final jpg = img.encodeJpg(resized, quality: 85);
+
+            // 업로드 진행상황 로깅
+            debugPrint('이미지 리사이징 완료: ${jpg.length} bytes');
+            await ref.putData(Uint8List.fromList(jpg));
+            debugPrint('Storage 업로드 완료');
+
+            photoUrl = await ref.getDownloadURL();
+            debugPrint('다운로드 URL 획득: $photoUrl');
+          }
+        } catch (e) {
+          debugPrint('이미지 업로드 실패: $e');
+          rethrow;
+        }
+      }
+
+      // 프로필 업데이트
+      final result = await _authRepository.updateProfile(
+        userId: currentUser.id,
+        displayName: event.displayName ?? currentUser.displayName,
+        photoUrl: photoUrl,
+      );
+
+      result.fold(
+        (failure) {
+          debugPrint('프로필 업데이트 실패: ${failure.message}');
+          emit(Authenticated(currentUser, error: failure.message));
+        },
+        (updatedUser) {
+          debugPrint('프로필 업데이트 성공: ${updatedUser.photoUrl}');
+          emit(Authenticated(updatedUser));
+        },
+      );
+    } catch (e) {
+      debugPrint('예외 발생: $e');
+      if (state is Authenticated) {
+        emit(Authenticated(
+          (state as Authenticated).user,
+          error: '프로필 업데이트에 실패했습니다: ${e.toString()}',
+        ));
+      }
+    }
+  }
+
+  Future<void> _onUpdateUserProfile(
+    UpdateUserProfile event,
+    Emitter<AuthState> emit,
+  ) async {
+    try {
+      if (state is! Authenticated) return;
+      final currentUser = (state as Authenticated).user;
+
+      String? photoUrl = event.photoUrl;
+
+      debugPrint('이미지 업로드 시작: ${event.imagePath}');
+
+      if (event.imagePath != null) {
+        final file = File(event.imagePath!);
+        final fileName =
+            '${currentUser.id}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+        final ref = _storage.ref().child('profiles/$fileName');
+
+        try {
+          final bytes = await file.readAsBytes();
+          final image = img.decodeImage(bytes);
+          if (image != null) {
+            final resized = img.copyResize(image, width: 512);
+            final jpg = img.encodeJpg(resized, quality: 85);
+
+            debugPrint('이미지 리사이징 완료: ${jpg.length} bytes');
+            await ref.putData(Uint8List.fromList(jpg));
+            debugPrint('Storage 업로드 완료');
+
+            photoUrl = await ref.getDownloadURL();
+            debugPrint('다운로드 URL 획득: $photoUrl');
+          }
+        } catch (e) {
+          debugPrint('이미지 업로드 실패: $e');
+          rethrow;
+        }
+      }
+
+      final result = await _authRepository.updateProfile(
+        userId: currentUser.id,
+        displayName: event.displayName ?? currentUser.displayName,
+        photoUrl: photoUrl,
+      );
+
+      result.fold(
+        (failure) {
+          debugPrint('프로필 업데이트 실패: ${failure.message}');
+          emit(Authenticated(currentUser, error: failure.message));
+        },
+        (updatedUser) {
+          debugPrint('프로필 업데이트 성공: ${updatedUser.photoUrl}');
+          emit(Authenticated(updatedUser.copyWith(
+            hasAcceptedTerms: currentUser.hasAcceptedTerms,
+          )));
+        },
+      );
+    } catch (e) {
+      debugPrint('예외 발생: $e');
+      if (state is Authenticated) {
+        emit(Authenticated(
+          (state as Authenticated).user,
+          error: '프로필 업데이트에 실패했습니다: ${e.toString()}',
+        ));
+      }
     }
   }
 }

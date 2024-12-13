@@ -47,16 +47,18 @@ class AuthEmailSignUpRequested extends AuthEvent {
 }
 
 class AuthProfileUpdateRequested extends AuthEvent {
-  final String displayName;
+  final String? displayName;
   final String? photoUrl;
+  final String? imagePath;
 
   const AuthProfileUpdateRequested({
-    required this.displayName,
+    this.displayName,
     this.photoUrl,
+    this.imagePath,
   });
 
   @override
-  List<Object?> get props => [displayName, photoUrl];
+  List<Object?> get props => [displayName, photoUrl, imagePath];
 }
 
 class AuthEmailVerificationRequested extends AuthEvent {
@@ -128,4 +130,30 @@ class DeleteAccount extends AuthEvent {
 
   @override
   List<Object?> get props => [language];
+}
+
+class UpdateProfilePhoto extends AuthEvent {
+  final String imagePath;
+
+  const UpdateProfilePhoto({
+    required this.imagePath,
+  });
+
+  @override
+  List<Object?> get props => [imagePath];
+}
+
+class UpdateUserProfile extends AuthEvent {
+  final String? displayName;
+  final String? imagePath;
+  final String? photoUrl;
+
+  const UpdateUserProfile({
+    this.displayName,
+    this.imagePath,
+    this.photoUrl,
+  });
+
+  @override
+  List<Object?> get props => [displayName, imagePath, photoUrl];
 }

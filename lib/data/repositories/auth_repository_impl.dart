@@ -1,6 +1,7 @@
 // data/repositories/auth_repository_impl.dart
 import 'package:dartz/dartz.dart';
 import 'package:finpal/presentation/bloc/auth/auth_state.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import '../../core/errors/exceptions.dart';
 import '../../core/errors/failures.dart';
 import '../../domain/entities/user.dart';
@@ -11,11 +12,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class AuthRepositoryImpl implements AuthRepository {
   final FirebaseAuthRemoteDataSource remoteDataSource;
   final FirebaseFirestore _firestore;
+  final FirebaseStorage _storage;
 
   AuthRepositoryImpl({
     required this.remoteDataSource,
     required FirebaseFirestore firestore,
-  }) : _firestore = firestore;
+    required FirebaseStorage storage,
+  })  : _firestore = firestore,
+        _storage = storage;
 
   @override
   Stream<User?> get authStateChanges => remoteDataSource.authStateChanges;
@@ -25,12 +29,39 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final user = await remoteDataSource.getCurrentUser();
       return Right(user);
-    } on AuthException catch (e) {
-      return Left(ServerFailure(e.message));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, User>> updateProfile({
+    required String userId,
+    String? displayName,
+    String? photoUrl,
+  }) async {
+    try {
+      final user = await remoteDataSource.updateUserProfile(
+        displayName: displayName,
+        photoUrl: photoUrl,
+      );
+      return Right(user);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteAccount() async =>
+      throw UnimplementedError();
+
+  @override
+  Future<Either<Failure, void>> sendPasswordResetEmail(String email) async =>
+      throw UnimplementedError();
+
+  @override
+  Future<Either<Failure, void>> sendVerificationEmail(String email) async =>
+      throw UnimplementedError();
 
   @override
   Future<Either<Failure, User>> signUpWithEmailAndPassword({
@@ -101,38 +132,6 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, void>> sendPasswordResetEmail(String email) async {
-    try {
-      await remoteDataSource.sendPasswordResetEmail(email);
-      return const Right(null);
-    } on AuthException catch (e) {
-      return Left(ServerFailure(e.message));
-    } on NetworkException catch (e) {
-      return Left(NetworkFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
-    }
-  }
-
-  @override
-  Future<Either<Failure, User>> updateUserProfile({
-    String? displayName,
-    String? photoUrl,
-  }) async {
-    try {
-      final user = await remoteDataSource.updateUserProfile(
-        displayName: displayName,
-        photoUrl: photoUrl,
-      );
-      return Right(user);
-    } on AuthException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
-    }
-  }
-
-  @override
   Future<Either<Failure, User>> updateUserSettings({
     required String userId,
     required Map<String, dynamic> settings,
@@ -144,43 +143,6 @@ class AuthRepositoryImpl implements AuthRepository {
       );
       return Right(user);
     } on DatabaseException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
-    }
-  }
-
-  @override
-  Future<Either<Failure, void>> deleteAccount() async {
-    try {
-      await remoteDataSource.deleteAccount();
-      return const Right(null);
-    } on AuthException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
-    }
-  }
-
-  @override
-  Future<Either<Failure, void>> sendVerificationEmail(String email) async {
-    try {
-      await remoteDataSource.sendVerificationEmail(email);
-      return const Right(null);
-    } on AuthException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
-    }
-  }
-
-  @override
-  Future<Either<Failure, void>> verifyEmailCode(
-      String email, String code) async {
-    try {
-      await remoteDataSource.verifyEmailCode(email, code);
-      return const Right(null);
-    } on AuthException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -271,6 +233,33 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(ServerFailure(e.message));
     } on NetworkException catch (e) {
       return Left(NetworkFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, User>> updateUserProfile({
+    String? displayName,
+    String? photoUrl,
+  }) async {
+    try {
+      final user = await remoteDataSource.updateUserProfile(
+        displayName: displayName,
+        photoUrl: photoUrl,
+      );
+      return Right(user);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> verifyEmailCode(
+      String email, String code) async {
+    try {
+      await remoteDataSource.verifyEmailCode(email, code);
+      return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

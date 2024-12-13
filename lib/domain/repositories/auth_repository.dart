@@ -71,4 +71,10 @@ abstract class AuthRepository {
 
   /// 카카오 계정으로 로그인
   Future<Either<Failure, User>> signInWithKakao();
+
+  Future<Either<Failure, User>> updateProfile({
+    required String userId,
+    String? displayName,
+    String? photoUrl,
+  });
 }

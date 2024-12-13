@@ -48,6 +48,7 @@ Future<void> initMain() async {
     () => AuthRepositoryImpl(
       remoteDataSource: sl(),
       firestore: sl(),
+      storage: sl(),
     ),
   );
 
@@ -71,6 +72,7 @@ Future<void> initMain() async {
   sl.registerFactory(() => AuthBloc(
         authRepository: sl(),
         firestore: sl(),
+        storage: sl(),
       ));
 
   sl.registerFactory(() => ExpenseBloc(
