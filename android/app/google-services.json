@@ -7,12 +7,20 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:415977829213:android:4e0a2934885f37f281aeb4",
+        "mobilesdk_app_id": "1:415977829213:android:06bc568eeca7f2ab81aeb4",
         "android_client_info": {
-          "package_name": "com.example.fin"
+          "package_name": "com.example.finpal"
         }
       },
       "oauth_client": [
+        {
+          "client_id": "415977829213-d3p1rt2hmeracri6b6go4mdr9gsffvd5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.finpal",
+            "certificate_hash": "3164ed8e331b6beee8b19ae40a2ca3f67d833c2f"
+          }
+        },
         {
           "client_id": "415977829213-7sh33td5ath89gjihe99c68pv6eo724o.apps.googleusercontent.com",
           "client_type": 3
@@ -43,20 +51,12 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:415977829213:android:06bc568eeca7f2ab81aeb4",
+        "mobilesdk_app_id": "1:415977829213:android:11851f1c5a2c508d81aeb4",
         "android_client_info": {
-          "package_name": "com.example.finpal"
+          "package_name": "com.example.lease"
         }
       },
       "oauth_client": [
-        {
-          "client_id": "415977829213-5b6bdjjhim2tgn0ooiq04nk95ofvcsj3.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.finpal",
-            "certificate_hash": "1ca4e71e0fe21b17ed142914e4df578a78fbb46e"
-          }
-        },
         {
           "client_id": "415977829213-7sh33td5ath89gjihe99c68pv6eo724o.apps.googleusercontent.com",
           "client_type": 3
