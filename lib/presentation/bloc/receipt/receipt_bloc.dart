@@ -10,11 +10,13 @@ import 'receipt_event.dart';
 import 'receipt_state.dart';
 import '../../../domain/entities/receipt.dart';
 import 'dart:async';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class ReceiptBloc extends Bloc<ReceiptEvent, ReceiptState> {
   final ReceiptRepository _receiptRepository;
   final _getIt = GetIt.instance;
   final _receiptController = StreamController<void>.broadcast();
+  final FirebaseStorage _storage = FirebaseStorage.instance;
 
   Stream<void> get receiptStream => _receiptController.stream;
 
@@ -83,6 +85,9 @@ class ReceiptBloc extends Bloc<ReceiptEvent, ReceiptState> {
           currentSortOption: event.sortOption,
         ));
       }
+    });
+    on<CancelReceiptScan>((event, emit) async {
+      await _onCancelReceiptScan(event, emit);
     });
   }
 
@@ -295,6 +300,21 @@ class ReceiptBloc extends Bloc<ReceiptEvent, ReceiptState> {
         ));
       },
     );
+  }
+
+  Future<void> _onCancelReceiptScan(
+    CancelReceiptScan event,
+    Emitter<ReceiptState> emit,
+  ) async {
+    if (event.imageUrl != null) {
+      // Firebase Storage에서 이미지 삭제
+      await _storage.refFromURL(event.imageUrl!).delete();
+    }
+    if (event.receiptId != null) {
+      // Firestore에서 영수증 데이터 삭제
+      await _receiptRepository.deleteReceipt(event.receiptId!);
+    }
+    emit(ReceiptInitial());
   }
 
   Map<String, double> _calculateMerchantTotals(List<Receipt> receipts) {

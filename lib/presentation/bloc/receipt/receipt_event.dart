@@ -119,3 +119,13 @@ class SortReceipts extends ReceiptEvent {
   @override
   List<Object> get props => [sortOption];
 }
+
+class CancelReceiptScan extends ReceiptEvent {
+  final String? imageUrl; // 삭제할 이미지 URL
+  final String? receiptId; // 삭제할 영수증 ID
+
+  const CancelReceiptScan({this.imageUrl, this.receiptId});
+
+  @override
+  List<Object?> get props => [imageUrl, receiptId];
+}

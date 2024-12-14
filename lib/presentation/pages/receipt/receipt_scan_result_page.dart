@@ -55,6 +55,13 @@ class _ReceiptScanResultPageState extends State<ReceiptScanResultPage> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
+        final currentState = context.read<ReceiptBloc>().state;
+        if (currentState is ReceiptScanSuccess) {
+          context.read<ReceiptBloc>().add(CancelReceiptScan(
+                imageUrl: currentState.receipt.imageUrl,
+                receiptId: currentState.receipt.id,
+              ));
+        }
         setState(() => _isCancelled = true);
         Navigator.pop(context);
         return true;
@@ -82,6 +89,20 @@ class _ReceiptScanResultPageState extends State<ReceiptScanResultPage> {
                 ),
               ),
             ),
+          ),
+          leading: IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () {
+              final currentState = context.read<ReceiptBloc>().state;
+              if (currentState is ReceiptScanSuccess) {
+                context.read<ReceiptBloc>().add(CancelReceiptScan(
+                      imageUrl: currentState.receipt.imageUrl,
+                      receiptId: currentState.receipt.id,
+                    ));
+              }
+              setState(() => _isCancelled = true);
+              Navigator.pop(context);
+            },
           ),
         ),
         body: BlocConsumer<ReceiptBloc, ReceiptState>(
@@ -221,7 +242,7 @@ class _ReceiptScanResultPageState extends State<ReceiptScanResultPage> {
       },
       'please_wait': {
         AppLanguage.english: 'Please wait...',
-        AppLanguage.korean: '잠시만 기다려주세요...',
+        AppLanguage.korean: '기다려주세요...',
         AppLanguage.japanese: 'お待ちください...',
       },
       'items': {
@@ -563,5 +584,18 @@ class _ReceiptScanResultPageState extends State<ReceiptScanResultPage> {
       isScrollControlled: true,
       builder: (context) => CreateExpenseFromReceipt(receipt: receipt),
     );
+  }
+
+  void _cancelScan(BuildContext context) {
+    final currentState = context.read<ReceiptBloc>().state;
+    if (currentState is ReceiptScanSuccess) {
+      final receipt = currentState.receipt;
+      context.read<ReceiptBloc>().add(CancelReceiptScan(
+            imageUrl: receipt.imageUrl,
+            receiptId: receipt.id,
+          ));
+    }
+    setState(() => _isCancelled = true);
+    Navigator.pop(context);
   }
 }
