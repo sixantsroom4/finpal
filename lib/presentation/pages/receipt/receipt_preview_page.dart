@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:finpal/presentation/pages/receipt/receipt_scan_result_page.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../bloc/auth/auth_bloc.dart';
@@ -9,7 +9,7 @@ import '../../bloc/receipt/receipt_event.dart';
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/core/constants/app_languages.dart';
 
-class ReceiptPreviewPage extends StatelessWidget {
+class ReceiptPreviewPage extends StatefulWidget {
   final String imagePath;
 
   const ReceiptPreviewPage({
@@ -18,14 +18,59 @@ class ReceiptPreviewPage extends StatelessWidget {
   });
 
   @override
+  State<ReceiptPreviewPage> createState() => _ReceiptPreviewPageState();
+}
+
+class _ReceiptPreviewPageState extends State<ReceiptPreviewPage> {
+  String? _croppedImagePath;
+
+  @override
+  void initState() {
+    super.initState();
+    _cropImage();
+  }
+
+  Future<void> _cropImage() async {
+    final croppedFile = await ImageCropper().cropImage(
+      sourcePath: widget.imagePath,
+      aspectRatio: CropAspectRatio(ratioX: 3, ratioY: 4),
+      uiSettings: [
+        AndroidUiSettings(
+          toolbarTitle: _getLocalizedLabel(context, 'crop_receipt'),
+          toolbarColor: const Color(0xFF2C3E50),
+          toolbarWidgetColor: Colors.white,
+          initAspectRatio: CropAspectRatioPreset.original,
+          lockAspectRatio: false,
+          hideBottomControls: false,
+        ),
+        IOSUiSettings(
+          title: _getLocalizedLabel(context, 'crop_receipt'),
+          doneButtonTitle: _getLocalizedLabel(context, 'done'),
+          cancelButtonTitle: _getLocalizedLabel(context, 'cancel'),
+        ),
+      ],
+    );
+
+    if (croppedFile != null) {
+      setState(() {
+        _croppedImagePath = croppedFile.path;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(_getLocalizedTitle(context)),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(_getLocalizedLabel(context, 'retake')),
+          TextButton.icon(
+            onPressed: _cropImage,
+            icon: const Icon(Icons.crop, color: Colors.white),
+            label: Text(
+              _getLocalizedLabel(context, 'recrop'),
+              style: const TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -33,18 +78,36 @@ class ReceiptPreviewPage extends StatelessWidget {
         children: [
           Expanded(
             child: Image.file(
-              File(imagePath),
+              File(_croppedImagePath ?? widget.imagePath),
               fit: BoxFit.contain,
             ),
           ),
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton(
-              onPressed: () => _analyzeReceipt(context),
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 50),
-              ),
-              child: Text(_getLocalizedLabel(context, 'analyze')),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.red,
+                      side: const BorderSide(color: Colors.red),
+                    ),
+                    child: Text(_getLocalizedLabel(context, 'retake')),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => _analyzeReceipt(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2C3E50),
+                      foregroundColor: Colors.white,
+                    ),
+                    child: Text(_getLocalizedLabel(context, 'analyze')),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -74,6 +137,26 @@ class ReceiptPreviewPage extends StatelessWidget {
         AppLanguage.english: 'Analyze Receipt',
         AppLanguage.korean: '영수증 분석하기',
         AppLanguage.japanese: 'レシートを分析する',
+      },
+      'recrop': {
+        AppLanguage.english: 'Recrop',
+        AppLanguage.korean: '다시 자르기',
+        AppLanguage.japanese: '切り直す',
+      },
+      'crop_receipt': {
+        AppLanguage.english: 'Crop Receipt',
+        AppLanguage.korean: '영수증 자르기',
+        AppLanguage.japanese: 'レシートの切り取り',
+      },
+      'done': {
+        AppLanguage.english: 'Done',
+        AppLanguage.korean: '완료',
+        AppLanguage.japanese: '完了',
+      },
+      'cancel': {
+        AppLanguage.english: 'Cancel',
+        AppLanguage.korean: '취소',
+        AppLanguage.japanese: 'キャンセル',
       },
     };
     return labels[key]?[language] ?? labels[key]?[AppLanguage.korean] ?? key;

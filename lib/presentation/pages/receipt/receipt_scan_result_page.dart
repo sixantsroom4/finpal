@@ -29,6 +29,9 @@ class ReceiptScanResultPage extends StatefulWidget {
 }
 
 class _ReceiptScanResultPageState extends State<ReceiptScanResultPage> {
+  bool _isCancelled = false;
+  String? _currentReceiptId;
+
   @override
   void initState() {
     super.initState();
@@ -50,107 +53,126 @@ class _ReceiptScanResultPageState extends State<ReceiptScanResultPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF2C3E50),
-        elevation: 0,
-        title: Text(
-          _getLocalizedTitle(context),
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(20),
-          child: Container(
-            height: 20,
-            decoration: const BoxDecoration(
+    return WillPopScope(
+      onWillPop: () async {
+        setState(() => _isCancelled = true);
+        Navigator.pop(context);
+        return true;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: const Color(0xFF2C3E50),
+          elevation: 0,
+          title: Text(
+            _getLocalizedTitle(context),
+            style: const TextStyle(
               color: Colors.white,
-              borderRadius: BorderRadius.vertical(
-                top: Radius.circular(30),
+              fontSize: 20,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(20),
+            child: Container(
+              height: 20,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(30),
+                ),
               ),
             ),
           ),
         ),
-      ),
-      body: BlocConsumer<ReceiptBloc, ReceiptState>(
-        listener: (context, state) {
-          if (state is ReceiptOperationSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
-            );
-          }
-          if (state is ReceiptError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
-            );
-          }
-        },
-        builder: (context, state) {
-          if (state is ReceiptScanInProgress) {
-            return Container(
-              color: Colors.white,
-              width: double.infinity,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2C3E50).withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(20),
+        body: BlocConsumer<ReceiptBloc, ReceiptState>(
+          listener: (context, state) {
+            if (_isCancelled) return;
+            if (state is ReceiptOperationSuccess) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(state.message)),
+              );
+            }
+            if (state is ReceiptError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(state.message)),
+              );
+            }
+          },
+          builder: (context, state) {
+            if (_isCancelled) {
+              return const SizedBox.shrink();
+            }
+            if (state is ReceiptScanInProgress) {
+              return Container(
+                color: Colors.white,
+                width: double.infinity,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2C3E50).withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const CircularProgressIndicator(
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(Color(0xFF2C3E50)),
+                      ),
                     ),
-                    child: const CircularProgressIndicator(
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(Color(0xFF2C3E50)),
+                    const SizedBox(height: 32),
+                    Text(
+                      _getLocalizedLabel(context, 'analyzing'),
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF2C3E50),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 32),
-                  Text(
-                    _getLocalizedLabel(context, 'analyzing'),
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF2C3E50),
+                    const SizedBox(height: 12),
+                    Text(
+                      _getLocalizedLabel(context, 'please_wait'),
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey[600],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    _getLocalizedLabel(context, 'please_wait'),
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 48),
-                  // 분석 단계 표시
-                  _buildAnalysisStep('step_scanning', true),
-                  _buildAnalysisStep('step_extracting', false),
-                  _buildAnalysisStep('step_processing', false),
-                ],
-              ),
-            );
-          }
+                    const SizedBox(height: 48),
+                    // 분석 단계 표시
+                    _buildAnalysisStep('step_scanning', true),
+                    _buildAnalysisStep('step_extracting', false),
+                    _buildAnalysisStep('step_processing', false),
+                  ],
+                ),
+              );
+            }
 
-          if (state is ReceiptScanSuccess || state is ReceiptLoaded) {
-            final receipt = state is ReceiptScanSuccess
-                ? state.receipt
-                : (state as ReceiptLoaded).receipts.first;
-            return _buildResultState(context, receipt);
-          }
+            if (state is ReceiptScanSuccess || state is ReceiptLoaded) {
+              Receipt receipt;
+              if (state is ReceiptScanSuccess) {
+                receipt = state.receipt;
+                _currentReceiptId = receipt.id;
+              } else {
+                final loadedState = state as ReceiptLoaded;
+                receipt = loadedState.receipts
+                        .where((r) => r.id == _currentReceiptId)
+                        .firstOrNull ??
+                    loadedState.receipts.first;
+              }
+              return _buildResultState(context, receipt);
+            }
 
-          if (state is ReceiptError) {
+            if (state is ReceiptError) {
+              return Center(
+                child: Text(_getLocalizedError(context, state.message)),
+              );
+            }
+
             return Center(
-              child: Text(_getLocalizedError(context, state.message)),
+              child: Text(_getLocalizedDefaultError(context)),
             );
-          }
-
-          return Center(
-            child: Text(_getLocalizedDefaultError(context)),
-          );
-        },
+          },
+        ),
       ),
     );
   }
@@ -215,7 +237,7 @@ class _ReceiptScanResultPageState extends State<ReceiptScanResultPage> {
       'create_expense': {
         AppLanguage.english: 'Create Expense',
         AppLanguage.korean: '지출 내역 생성',
-        AppLanguage.japanese: '支出を作成',
+        AppLanguage.japanese: '支出作成',
       },
       'edit_receipt': {
         AppLanguage.english: 'Edit Receipt Info',
