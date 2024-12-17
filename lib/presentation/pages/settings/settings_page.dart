@@ -206,7 +206,26 @@ class SettingsPage extends StatelessWidget {
   }
 
   void _showLogoutDialog(BuildContext context) {
-    // 로그아웃 다이얼로그 구
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(_getLocalizedLabel(context, 'logout')),
+        content: Text(_getLocalizedLabel(context, 'logout_confirmation')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(_getLocalizedLabel(context, 'cancel')),
+          ),
+          TextButton(
+            onPressed: () {
+              context.read<AuthBloc>().add(AuthSignedOut());
+              Navigator.pop(context);
+            },
+            child: Text(_getLocalizedLabel(context, 'logout')),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showDeleteAccountDialog(BuildContext context) {
