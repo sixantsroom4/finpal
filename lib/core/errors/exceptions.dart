@@ -1,7 +1,11 @@
 // core/errors/exceptions.dart
 class ServerException implements Exception {
   final String message;
-  ServerException([this.message = 'Server Error occurred']);
+
+  ServerException({required this.message});
+
+  @override
+  String toString() => message;
 }
 
 class CacheException implements Exception {

@@ -5,6 +5,6 @@ abstract class CustomerServiceRepository {
     required String category,
     required String content,
     required String contactEmail,
-    required List<String> imagePaths,
+    List<String>? imagePaths,
   });
 }

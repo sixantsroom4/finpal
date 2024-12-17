@@ -27,40 +27,40 @@ class CustomerServiceRepositoryImpl implements CustomerServiceRepository {
     required String category,
     required String content,
     required String contactEmail,
-    required List<String> imagePaths,
+    List<String>? imagePaths,
   }) async {
     try {
-      // Firestore에 문의 저장
-      final docRef = await _firestore.collection('inquiries').add({
+      debugPrint('문의 저장 시작...');
+
+      // Firebase에 문의 저장
+      await _firestore.collection('customer_inquiries').add({
         'userId': userId,
         'title': title,
         'category': category,
         'content': content,
         'contactEmail': contactEmail,
+        'status': '접수됨',
         'createdAt': FieldValue.serverTimestamp(),
-        'status': 'pending',
-      });
-
-      // 이미지 업로드
-      final imageUrls = await Future.wait(
-        imagePaths.map((path) => _uploadImage(path, docRef.id)),
-      );
-
-      // 문서 업데이트
-      await docRef.update({'imageUrls': imageUrls});
-
-      // 사용자에게 확인 이메일 전송
-      await _sendConfirmationEmail(
-        contactEmail,
-        title,
-        content,
-        category,
-        imageUrls,
-        userId,
-      );
+        'imageUrls': await _uploadImages(imagePaths),
+      }).then((value) => debugPrint('문의가 성공적으로 저장됨: ${value.id}'));
     } catch (e) {
-      throw CustomerServiceException('문의 제출에 실패했습니다: ${e.toString()}');
+      debugPrint('문의 저장 실패: $e');
+      throw ServerException(message: '문의 제출에 실패했습니다: $e');
     }
+  }
+
+  Future<List<String>> _uploadImages(List<String>? imagePaths) async {
+    if (imagePaths == null || imagePaths.isEmpty) return [];
+
+    List<String> imageUrls = [];
+    for (String path in imagePaths) {
+      final ref = _storage.ref().child(
+          'customer_inquiries/${DateTime.now().millisecondsSinceEpoch}_${path.split('/').last}');
+      await ref.putFile(File(path));
+      final url = await ref.getDownloadURL();
+      imageUrls.add(url);
+    }
+    return imageUrls;
   }
 
   Future<void> _sendConfirmationEmail(
@@ -94,12 +94,5 @@ class CustomerServiceRepositoryImpl implements CustomerServiceRepository {
       debugPrint('메일 전송 요청 중 오류 발생: $e');
       throw CustomerServiceException('메일 전송 요청에 실패했습니다: ${e.toString()}');
     }
-  }
-
-  Future<String> _uploadImage(String path, String documentId) async {
-    final ref = _storage
-        .ref('inquiries/$documentId/${DateTime.now().millisecondsSinceEpoch}');
-    await ref.putFile(File(path));
-    return await ref.getDownloadURL();
   }
 }

@@ -43,7 +43,8 @@ class OCRRemoteDataSourceImpl implements OCRRemoteDataSource {
       );
 
       if (response.statusCode != 200) {
-        throw ServerException('Google Vision API 호출 실패: ${response.body}');
+        throw ServerException(
+            message: 'Google Vision API 호출 실패: ${response.body}');
       }
 
       final jsonResponse = jsonDecode(response.body);
@@ -57,7 +58,7 @@ class OCRRemoteDataSourceImpl implements OCRRemoteDataSource {
       return result;
     } catch (e) {
       debugPrint('OCR 처리 실패: $e');
-      throw ServerException('영수증 처리 실패: ${e.toString()}');
+      throw ServerException(message: '영수증 처리 실패: ${e.toString()}');
     }
   }
 

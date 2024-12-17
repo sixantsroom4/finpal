@@ -42,7 +42,7 @@ class FirebaseStorageRemoteDataSourceImpl
       return downloadUrl;
     } catch (e) {
       debugPrint('이미지 업로드 중 오류 발생: $e');
-      throw ServerException('이미지 업로드 실패: ${e.toString()}');
+      throw ServerException(message: '이미지 업로드 실패: ${e.toString()}');
     }
   }
 
@@ -202,7 +202,7 @@ class FirebaseStorageRemoteDataSourceImpl
             .toList();
 
         final receiptData = doc.data();
-        // items를 Map 리스트로 변환
+        // items를 Map 리스트로 ��환
         final itemsMapList = items.map((item) => item.toJson()).toList();
 
         return ReceiptModel.fromJson({
@@ -373,7 +373,7 @@ class FirebaseStorageRemoteDataSourceImpl
       return expenses;
     } catch (e) {
       debugPrint('Firebase 조회 에러: $e');
-      throw DatabaseException('지출 목록 조회 실패: ${e.toString()}');
+      throw DatabaseException('지출 목록 조회 실��: ${e.toString()}');
     }
   }
 
@@ -646,7 +646,7 @@ class FirebaseStorageRemoteDataSourceImpl
         "items": [
           {
             "name": "상품명",
-            "price": 숫자로된 가격,
+            "price": 숫��로된 가격,
             "quantity": 1
           }
         ]
@@ -691,7 +691,7 @@ class FirebaseStorageRemoteDataSourceImpl
       return await saveReceipt(receipt);
     } catch (e) {
       debugPrint('영수증 처리 실패: $e');
-      throw ServerException('영수증 처리 중 오류가 발생했습니다: ${e.toString()}');
+      throw ServerException(message: '영수증 처리 중 오류가 발생했습니다: ${e.toString()}');
     }
   }
 
@@ -811,7 +811,7 @@ class FirebaseStorageRemoteDataSourceImpl
       final file = File(imagePath);
       final bytes = await file.readAsBytes();
 
-      // 2. 현재 사용자의 통화 설정 가져오기
+      // 2. 현재 사용자의 ��화 설정 가져오기
       final userDoc = await _firestore.collection('users').doc(userId).get();
       if (!userDoc.exists) {
         throw DatabaseException('사용자를 찾을 수 없습니다');
@@ -858,7 +858,7 @@ class FirebaseStorageRemoteDataSourceImpl
       return await saveReceipt(receipt);
     } catch (e) {
       debugPrint('영수증 처리 실패: $e');
-      throw ServerException('영수증 처리 중 오류가 발생했습니다: ${e.toString()}');
+      throw ServerException(message: '영수증 처리 중 오류가 발생했습니다: ${e.toString()}');
     }
   }
 }

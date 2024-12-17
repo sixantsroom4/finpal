@@ -55,7 +55,7 @@ class GeminiRemoteDataSourceImpl implements GeminiRemoteDataSource {
       ]);
 
       if (response.text == null || response.text!.isEmpty) {
-        throw app_exceptions.ServerException('OCR 결과가 비어있습니다.');
+        throw app_exceptions.ServerException(message: 'OCR 결과가 비어있습니다.');
       }
 
       // JSON 문자열 정제
@@ -65,7 +65,8 @@ class GeminiRemoteDataSourceImpl implements GeminiRemoteDataSource {
       return jsonDecode(cleanedJson) as Map<String, dynamic>;
     } catch (e) {
       debugPrint('영수증 처리 실패: $e');
-      throw app_exceptions.ServerException('영수증 처리 실패: ${e.toString()}');
+      throw app_exceptions.ServerException(
+          message: '영수증 처리 실패: ${e.toString()}');
     }
   }
 
@@ -83,12 +84,12 @@ class GeminiRemoteDataSourceImpl implements GeminiRemoteDataSource {
 
       final formattedText = response.text;
       if (formattedText == null || formattedText.isEmpty) {
-        throw app_exceptions.ServerException('포맷팅된 데이터가 비어있습니다.');
+        throw app_exceptions.ServerException(message: '포맷팅된 데이터가 비어있습니다.');
       }
 
       return formattedText;
     } catch (e) {
-      throw app_exceptions.ServerException('데이터 포맷팅 실패: $e');
+      throw app_exceptions.ServerException(message: '데이터 포맷팅 실패: $e');
     }
   }
 }

@@ -59,7 +59,7 @@ class ReceiptRepositoryImpl implements ReceiptRepository {
         }
       }
 
-      throw ServerException('영수증 처리에 실패했습니다.');
+      throw ServerException(message: '영수증 처리에 실패했습니다.');
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

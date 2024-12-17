@@ -125,7 +125,10 @@ Future<void> init() async {
 void initCustomerService() {
   // Bloc
   sl.registerFactory(
-    () => CustomerServiceBloc(notionService: sl()),
+    () => CustomerServiceBloc(
+      repository: sl(),
+      notionService: sl(),
+    ),
   );
 
   // Repository
