@@ -66,19 +66,19 @@ class ExpenseDetailsBottomSheet extends StatelessWidget {
           _buildDetailItem(
             context,
             Icons.description_outlined,
-            '설명',
+            'description',
             expense.description,
           ),
           _buildDetailItem(
             context,
             Icons.category_outlined,
-            '카테고리',
+            'category',
             _getLocalizedCategory(context, expense.category),
           ),
           _buildDetailItem(
             context,
             Icons.calendar_today_outlined,
-            '날짜',
+            'date',
             _getLocalizedDate(context, expense.date),
           ),
 
@@ -165,7 +165,7 @@ class ExpenseDetailsBottomSheet extends StatelessWidget {
   Widget _buildDetailItem(
     BuildContext context,
     IconData icon,
-    String label,
+    String labelKey,
     String value,
   ) {
     return Padding(
@@ -189,7 +189,7 @@ class ExpenseDetailsBottomSheet extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                label,
+                _getLocalizedLabel(context, labelKey),
                 style: TextStyle(
                   color: Colors.grey[600],
                   fontSize: 12,

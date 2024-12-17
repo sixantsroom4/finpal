@@ -21,14 +21,15 @@ import 'package:finpal/core/constants/app_languages.dart';
 import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
 import 'widgets/edit_receipt_info_bottom_sheet.dart';
 import 'package:finpal/core/utils/currency_utils.dart';
+import 'package:collection/collection.dart';
 
 class ReceiptDetailsPage extends StatelessWidget {
-  final Receipt receipt;
+  final String receiptId;
   final _numberFormat = NumberFormat('#,###');
 
   ReceiptDetailsPage({
     super.key,
-    required this.receipt,
+    required this.receiptId,
   });
 
   String _getLocalizedLabel(BuildContext context, String key) {
@@ -110,6 +111,11 @@ class ReceiptDetailsPage extends StatelessWidget {
         AppLanguage.korean: '취소',
         AppLanguage.japanese: 'キャンセル',
       },
+      'view_expense': {
+        AppLanguage.english: 'View Expense',
+        AppLanguage.korean: '지출 내역 보기',
+        AppLanguage.japanese: '支出を確認',
+      },
     };
     return labels[key]?[language] ?? labels[key]?[AppLanguage.korean] ?? key;
   }
@@ -156,100 +162,148 @@ class ReceiptDetailsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(receipt.merchantName),
-        actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              switch (value) {
-                case 'edit':
-                  _showEditReceipt(context, receipt);
-                  break;
-                case 'delete':
-                  _showDeleteConfirmDialog(context, receipt);
-                  break;
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'edit',
-                child: Row(
-                  children: [
-                    const Icon(Icons.edit),
-                    const SizedBox(width: 8),
-                    Text(_getLocalizedLabel(context, 'edit')),
-                  ],
-                ),
+    return BlocBuilder<ReceiptBloc, ReceiptState>(
+      builder: (context, state) {
+        if (state is ReceiptLoading) {
+          return Scaffold(
+            appBar: AppBar(),
+            body: const Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (state is ReceiptError) {
+          return Scaffold(
+            appBar: AppBar(),
+            body: Center(child: Text(state.message)),
+          );
+        }
+
+        // receipt를 찾지 못한 경우를 별도로 처리
+        final receipt = state.receipts.firstWhereOrNull(
+          (r) => r.id == receiptId,
+        );
+
+        if (receipt == null) {
+          return Scaffold(
+            appBar: AppBar(),
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(_getLocalizedLabel(context, 'receipt_not_found')),
+                  const SizedBox(height: 8),
+                  Text(
+                    _getLocalizedLabel(context, 'receipt_not_found_desc'),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => context.go('/receipts'),
+                    child:
+                        Text(_getLocalizedLabel(context, 'back_to_expenses')),
+                  ),
+                ],
               ),
-              PopupMenuItem(
-                value: 'delete',
-                child: Row(
-                  children: [
-                    const Icon(Icons.delete, color: Colors.red),
-                    const SizedBox(width: 8),
-                    Text(
-                      _getLocalizedLabel(context, 'delete'),
-                      style: const TextStyle(color: Colors.red),
+            ),
+          );
+        }
+
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(receipt.merchantName),
+            actions: [
+              PopupMenuButton<String>(
+                onSelected: (value) {
+                  switch (value) {
+                    case 'edit':
+                      _showEditReceipt(context, receipt);
+                      break;
+                    case 'delete':
+                      _showDeleteConfirmDialog(context, receipt);
+                      break;
+                  }
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: 'edit',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.edit),
+                        const SizedBox(width: 8),
+                        Text(_getLocalizedLabel(context, 'edit')),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.delete, color: Colors.red),
+                        const SizedBox(width: 8),
+                        Text(
+                          _getLocalizedLabel(context, 'delete'),
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 영수증 이미지
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: CachedNetworkImage(
-                imageUrl: receipt.imageUrl,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
-            ),
-            const SizedBox(height: 24),
-            // 영수증 정보
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _getLocalizedLabel(context, 'purchase_info'),
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const Divider(height: 32),
-                    _buildInfoRow(_getLocalizedLabel(context, 'store'),
-                        receipt.merchantName),
-                    _buildInfoRow(_getLocalizedLabel(context, 'date'),
-                        _getLocalizedDate(context, receipt.date)),
-                    _buildInfoRow(_getLocalizedLabel(context, 'total'),
-                        '${CurrencyUtils.getCurrencySymbol(receipt.currency)} ${CurrencyUtils.formatAmount(receipt.totalAmount, receipt.currency)}'),
-                    if (receipt.items.isNotEmpty) ...[
-                      const Divider(height: 32),
-                      Text(
-                        _getLocalizedLabel(context, 'items'),
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 16),
-                      ...receipt.items
-                          .map((item) => _buildItemRow(context, item)),
-                    ],
-                  ],
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 영수증 이미지
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: CachedNetworkImage(
+                    imageUrl: receipt.imageUrl,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
                 ),
-              ),
+                const SizedBox(height: 24),
+                // 영수증 정보
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _getLocalizedLabel(context, 'purchase_info'),
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const Divider(height: 32),
+                        _buildInfoRow(_getLocalizedLabel(context, 'store'),
+                            receipt.merchantName),
+                        _buildInfoRow(_getLocalizedLabel(context, 'date'),
+                            _getLocalizedDate(context, receipt.date)),
+                        _buildInfoRow(_getLocalizedLabel(context, 'total'),
+                            '${CurrencyUtils.getCurrencySymbol(receipt.currency)} ${CurrencyUtils.formatAmount(receipt.totalAmount, receipt.currency)}'),
+                        if (receipt.items.isNotEmpty) ...[
+                          const Divider(height: 32),
+                          Text(
+                            _getLocalizedLabel(context, 'items'),
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 16),
+                          ...receipt.items
+                              .map((item) => _buildItemRow(context, item)),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: _buildBottomButton(context, receipt),
+          ),
+          bottomNavigationBar: _buildBottomButton(context, receipt),
+        );
+      },
     );
   }
 
@@ -296,10 +350,24 @@ class ReceiptDetailsPage extends StatelessWidget {
   }
 
   Widget _buildBottomButton(BuildContext context, Receipt receipt) {
+    // 이미 지출이 생성된 경우
     if (receipt.expenseId != null) {
-      return const SizedBox.shrink();
+      return SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: OutlinedButton.icon(
+            onPressed: () => context.go('/expenses/${receipt.expenseId}'),
+            icon: const Icon(Icons.receipt_long),
+            label: Text(_getLocalizedLabel(context, 'view_expense')),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(double.infinity, 48),
+            ),
+          ),
+        ),
+      );
     }
 
+    // 지출이 아직 생성되지 않은 경우
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(16.0),

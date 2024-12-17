@@ -63,12 +63,10 @@ class AppRouter {
               builder: (context, state) => const ReceiptPage(),
               routes: [
                 GoRoute(
-                  path: 'details',
+                  path: ':receiptId',
                   builder: (context, state) {
-                    final receipt = state.extra as Receipt?;
-                    return receipt != null
-                        ? ReceiptDetailsPage(receipt: receipt)
-                        : const ReceiptPage();
+                    final receiptId = state.pathParameters['receiptId'];
+                    return ReceiptDetailsPage(receiptId: receiptId!);
                   },
                 ),
               ],
