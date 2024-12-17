@@ -91,13 +91,11 @@ class AppRouter {
                   path: 'account',
                   builder: (context, state) => const AccountSettingsPage(),
                 ),
+                GoRoute(
+                  path: 'customer-service',
+                  builder: (context, state) => const CustomerServicePage(),
+                ),
               ],
-            ),
-            GoRoute(
-              path: '/customer-service',
-              builder: (context, state) {
-                return CustomerServicePage();
-              },
             ),
           ],
         ),

@@ -2,13 +2,15 @@ import 'package:finpal/domain/repositories/customer_service_repository.dart';
 import 'package:finpal/presentation/bloc/customer_service/customer_service_event.dart';
 import 'package:finpal/presentation/bloc/customer_service/customer_service_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:finpal/core/services/notion_service.dart';
 
 class CustomerServiceBloc
     extends Bloc<CustomerServiceEvent, CustomerServiceState> {
-  final CustomerServiceRepository repository;
+  final NotionService _notionService;
 
-  CustomerServiceBloc({required this.repository})
-      : super(CustomerServiceInitial()) {
+  CustomerServiceBloc({required NotionService notionService})
+      : _notionService = notionService,
+        super(CustomerServiceInitial()) {
     on<SubmitInquiry>(_onSubmitInquiry);
   }
 
@@ -16,19 +18,18 @@ class CustomerServiceBloc
     SubmitInquiry event,
     Emitter<CustomerServiceState> emit,
   ) async {
-    emit(CustomerServiceLoading());
     try {
-      await repository.submitInquiry(
-        userId: event.userId,
+      emit(CustomerServiceLoading());
+      await _notionService.createInquiry(
         title: event.title,
         category: event.category,
         content: event.content,
-        contactEmail: event.contactEmail,
+        email: event.contactEmail,
         imagePaths: event.imagePaths,
       );
       emit(CustomerServiceSuccess());
     } catch (e) {
-      emit(CustomerServiceError(e.toString()));
+      emit(CustomerServiceError(message: e.toString()));
     }
   }
 }

@@ -27,6 +27,8 @@ import 'package:flutter/services.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: '.env');
+  await init();
   debugPrint('Flutter binding initialized');
 
   // 화면 방향을 세로 모드로 고정
@@ -39,9 +41,6 @@ Future<void> main() async {
 
   Bloc.observer = AppBlocObserver();
   debugPrint('BlocObserver registered');
-
-  await dotenv.load(fileName: '.env');
-  debugPrint('Environment variables loaded');
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -80,7 +79,7 @@ Future<void> main() async {
     }
   });
 
-  // 사용자가 로그인된 경우에만 마이그레이션 실행
+  // 사용자가 로그인된 경우에만 마이그레���션 실행
   if (currentUser != null) {
     debugPrint('마이그레이션 시작...');
     await FirebaseMigrationUtils.runMigrations();

@@ -22,7 +22,7 @@ class CustomerServiceSuccess extends CustomerServiceState {
 class CustomerServiceError extends CustomerServiceState {
   final String message;
 
-  const CustomerServiceError(this.message);
+  const CustomerServiceError({required this.message});
 
   @override
   List<Object?> get props => [message];

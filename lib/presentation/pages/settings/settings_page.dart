@@ -2,6 +2,7 @@
 import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
 import 'package:finpal/presentation/bloc/auth/auth_event.dart';
 import 'package:finpal/presentation/bloc/auth/auth_state.dart';
+import 'package:finpal/presentation/pages/customer_service/customer_service_page.dart';
 import 'package:finpal/presentation/pages/settings/widget/preferences_section.dart';
 import 'package:finpal/presentation/pages/settings/widget/profile_section.dart';
 import 'package:finpal/presentation/pages/settings/widget/setting_item.dart';
@@ -50,7 +51,12 @@ class SettingsPage extends StatelessWidget {
               const AppSettingsSection(),
               // const Divider(),
               // const NotificationSettingsSection(),
-              // const Divider(),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.help_outline),
+                title: Text(_getLocalizedLabel(context, 'customer_service')),
+                onTap: () => context.push('/settings/customer-service'),
+              ),
               // const DataManagementSection(),
               // const Divider(),
               Card(
@@ -186,7 +192,7 @@ class SettingsPage extends StatelessWidget {
       },
       'logout_confirmation': {
         AppLanguage.english: 'Are you sure you want to logout?',
-        AppLanguage.korean: '로그아웃 하시겠습니까?',
+        AppLanguage.korean: '로그��웃 하시겠습니까?',
         AppLanguage.japanese: 'ログアウトしますか？',
       },
     };

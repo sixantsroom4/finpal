@@ -22,15 +22,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
 
 Future<void> initMain() async {
-  // Data sources
-  sl.registerLazySingleton<FirebaseAuthRemoteDataSource>(
-    () => FirebaseAuthRemoteDataSourceImpl(
-      firebaseAuth: sl(),
-      googleSignIn: sl(),
-      storage: sl(),
-      firestore: sl(),
-    ),
-  );
+  // Data sources - 중복 등록 방지
+  if (!sl.isRegistered<FirebaseAuthRemoteDataSource>()) {
+    sl.registerLazySingleton<FirebaseAuthRemoteDataSource>(
+      () => FirebaseAuthRemoteDataSourceImpl(
+        firebaseAuth: sl(),
+        googleSignIn: sl(),
+        storage: sl(),
+        firestore: sl(),
+      ),
+    );
+  }
 
   // 이미 등록되어 있지 않은 경우에만 등록
   if (!sl.isRegistered<FirebaseStorageRemoteDataSource>()) {
@@ -43,54 +45,70 @@ Future<void> initMain() async {
     );
   }
 
-  // Repositories
-  sl.registerLazySingleton<AuthRepository>(
-    () => AuthRepositoryImpl(
-      remoteDataSource: sl(),
-      firestore: sl(),
-      storage: sl(),
-    ),
-  );
+  // Repositories - 중복 등록 방지
+  if (!sl.isRegistered<AuthRepository>()) {
+    sl.registerLazySingleton<AuthRepository>(
+      () => AuthRepositoryImpl(
+        remoteDataSource: sl(),
+        firestore: sl(),
+        storage: sl(),
+      ),
+    );
+  }
 
-  sl.registerLazySingleton<ExpenseRepository>(
-    () => ExpenseRepositoryImpl(
-      remoteDataSource: sl(),
-    ),
-  );
+  if (!sl.isRegistered<ExpenseRepository>()) {
+    sl.registerLazySingleton<ExpenseRepository>(
+      () => ExpenseRepositoryImpl(
+        remoteDataSource: sl(),
+      ),
+    );
+  }
 
-  sl.registerLazySingleton<SubscriptionRepository>(
-    () => SubscriptionRepositoryImpl(
-      remoteDataSource: sl(),
-    ),
-  );
+  if (!sl.isRegistered<SubscriptionRepository>()) {
+    sl.registerLazySingleton<SubscriptionRepository>(
+      () => SubscriptionRepositoryImpl(
+        remoteDataSource: sl(),
+      ),
+    );
+  }
 
   // Services
   // final sharedPreferences = await SharedPreferences.getInstance();
   // sl.registerLazySingleton(() => sharedPreferences);
 
-  // Blocs
-  sl.registerFactory(() => AuthBloc(
-        authRepository: sl(),
-        firestore: sl(),
-        storage: sl(),
-      ));
+  // Blocs - 중복 등록 방지
+  if (!sl.isRegistered<AuthBloc>()) {
+    sl.registerFactory(() => AuthBloc(
+          authRepository: sl(),
+          firestore: sl(),
+          storage: sl(),
+        ));
+  }
 
-  sl.registerFactory(() => ExpenseBloc(
-        expenseRepository: sl(),
-        appLanguageBloc: sl(),
-        firestore: sl(),
-      ));
+  if (!sl.isRegistered<ExpenseBloc>()) {
+    sl.registerFactory(() => ExpenseBloc(
+          expenseRepository: sl(),
+          appLanguageBloc: sl(),
+          firestore: sl(),
+        ));
+  }
 
-  sl.registerFactory(() => SubscriptionBloc(
-        subscriptionRepository: sl(),
-      ));
+  if (!sl.isRegistered<SubscriptionBloc>()) {
+    sl.registerFactory(() => SubscriptionBloc(
+          subscriptionRepository: sl(),
+        ));
+  }
 
-  sl.registerFactory(() => UserRegistrationBloc(
-        authRepository: sl(),
-        appLanguageBloc: sl(),
-      ));
+  if (!sl.isRegistered<UserRegistrationBloc>()) {
+    sl.registerFactory(() => UserRegistrationBloc(
+          authRepository: sl(),
+          appLanguageBloc: sl(),
+        ));
+  }
 
-  sl.registerLazySingleton(() => AppLanguageBloc(sl()));
+  if (!sl.isRegistered<AppLanguageBloc>()) {
+    sl.registerLazySingleton(() => AppLanguageBloc(sl()));
+  }
 
   // AppSettingsBloc 등록 전에 중복 검사
   if (!sl.isRegistered<AppSettingsBloc>()) {
