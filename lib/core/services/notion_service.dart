@@ -15,6 +15,7 @@ class NotionService {
     required String category,
     required String content,
     required String email,
+    required String userId,
     List<String>? imagePaths,
   }) async {
     if (_databaseId == null || _notionToken == null) {
@@ -54,6 +55,18 @@ class NotionService {
             'Contact Email': {'email': email},
             'Status': {
               'select': {'name': 'New'}
+            },
+            'Created At': {
+              'date': {
+                'start': DateTime.now().toIso8601String(),
+              }
+            },
+            'User ID': {
+              'rich_text': [
+                {
+                  'text': {'content': userId}
+                }
+              ]
             },
           },
         }),

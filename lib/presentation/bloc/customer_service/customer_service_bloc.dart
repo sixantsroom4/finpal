@@ -43,6 +43,7 @@ class CustomerServiceBloc
         category: event.category,
         content: event.content,
         email: event.contactEmail,
+        userId: event.userId,
         imagePaths: event.imagePaths,
       );
       debugPrint('Notion 저장 성공');
