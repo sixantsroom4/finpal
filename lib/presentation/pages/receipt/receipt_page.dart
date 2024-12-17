@@ -57,6 +57,11 @@ class _ReceiptPageState extends State<ReceiptPage> {
   static const String _sortOptionKey = 'receipt_sort_option';
   static const String _sortAscendingKey = 'receipt_sort_ascending';
 
+  // 선택된 영수증들을 저장할 Set 추가
+  final Set<String> _selectedReceipts = {};
+  // 선택 모드 상태 추가
+  bool _isSelectionMode = false;
+
   @override
   void initState() {
     super.initState();
@@ -142,11 +147,7 @@ class _ReceiptPageState extends State<ReceiptPage> {
                               itemCount: receipts.length,
                               itemBuilder: (context, idx) {
                                 final receipt = receipts[idx];
-                                return ReceiptGridItem(
-                                  receipt: receipt,
-                                  onTap: () => _navigateToReceiptDetails(
-                                      context, receipt),
-                                );
+                                return _buildReceiptItem(receipt);
                               },
                             ),
                           ),
@@ -423,6 +424,27 @@ class _ReceiptPageState extends State<ReceiptPage> {
         AppLanguage.korean: '금액',
         AppLanguage.japanese: '金額',
       },
+      'delete_selected_receipts': {
+        AppLanguage.english: 'Delete Selected Receipts',
+        AppLanguage.korean: '선택한 영수증 삭제',
+        AppLanguage.japanese: '選択したレシートを削除',
+      },
+      'delete_selected_confirm': {
+        AppLanguage.english:
+            'Are you sure you want to delete the selected receipts?\nThis action cannot be undone.',
+        AppLanguage.korean: '선택한 영수증을 삭제하시겠습니까?\n삭제된 영수증은 복구할 수 없습니다.',
+        AppLanguage.japanese: '選択したレシートを削除してもよろしいですか？\n削除されたレシートは復元できません。',
+      },
+      'cancel': {
+        AppLanguage.english: 'Cancel',
+        AppLanguage.korean: '취소',
+        AppLanguage.japanese: 'キャンセル',
+      },
+      'delete': {
+        AppLanguage.english: 'Delete',
+        AppLanguage.korean: '삭제',
+        AppLanguage.japanese: '削除',
+      },
     };
     return labels[key]?[language] ?? labels[key]?[AppLanguage.korean] ?? key;
   }
@@ -591,6 +613,33 @@ class _ReceiptPageState extends State<ReceiptPage> {
 
   // AppBar 수정
   AppBar _buildAppBar() {
+    if (_isSelectionMode) {
+      return AppBar(
+        backgroundColor: const Color(0xFF2C3E50),
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () {
+            setState(() {
+              _isSelectionMode = false;
+              _selectedReceipts.clear();
+            });
+          },
+        ),
+        title: Text(
+          _getLocalizedSelectedCount(context, _selectedReceipts.length),
+          style: const TextStyle(color: Colors.white),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete, color: Colors.white),
+            onPressed: _selectedReceipts.isEmpty
+                ? null
+                : () => _deleteSelected(context),
+          ),
+        ],
+      );
+    }
+
     return AppBar(
       backgroundColor: const Color(0xFF2C3E50),
       elevation: 0,
@@ -654,6 +703,109 @@ class _ReceiptPageState extends State<ReceiptPage> {
         ),
       ),
     );
+  }
+
+  // 영수증 그리드 아이템 수정
+  Widget _buildReceiptItem(Receipt receipt) {
+    return InkWell(
+      onLongPress: () {
+        setState(() {
+          _isSelectionMode = true;
+          _selectedReceipts.add(receipt.id);
+        });
+      },
+      onTap: () {
+        if (_isSelectionMode) {
+          setState(() {
+            if (_selectedReceipts.contains(receipt.id)) {
+              _selectedReceipts.remove(receipt.id);
+              if (_selectedReceipts.isEmpty) {
+                _isSelectionMode = false;
+              }
+            } else {
+              _selectedReceipts.add(receipt.id);
+            }
+          });
+        } else {
+          _navigateToReceiptDetails(context, receipt);
+        }
+      },
+      child: Stack(
+        children: [
+          ReceiptGridItem(receipt: receipt),
+          if (_isSelectionMode)
+            Positioned(
+              top: 8,
+              right: 8,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: _selectedReceipts.contains(receipt.id)
+                      ? Colors.blue
+                      : Colors.grey.withOpacity(0.5),
+                  shape: BoxShape.circle,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Icon(
+                    _selectedReceipts.contains(receipt.id)
+                        ? Icons.check
+                        : Icons.circle_outlined,
+                    size: 20,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  // 선택된 영수증 삭제
+  void _deleteSelected(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(_getLocalizedLabel(context, 'delete_selected_receipts')),
+        content: Text(_getLocalizedLabel(context, 'delete_selected_confirm')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(_getLocalizedLabel(context, 'cancel')),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              for (var id in _selectedReceipts) {
+                context.read<ReceiptBloc>().add(DeleteReceipt(id));
+              }
+              setState(() {
+                _isSelectionMode = false;
+                _selectedReceipts.clear();
+              });
+            },
+            child: Text(
+              _getLocalizedLabel(context, 'delete'),
+              style: const TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 라벨 추가
+  String _getLocalizedSelectedCount(BuildContext context, int count) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    switch (language) {
+      case AppLanguage.english:
+        return '$count selected';
+      case AppLanguage.japanese:
+        return '$count件選択中';
+      case AppLanguage.korean:
+      default:
+        return '$count개 선택됨';
+    }
   }
 }
 

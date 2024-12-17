@@ -10,12 +10,12 @@ import 'package:finpal/core/constants/app_languages.dart';
 
 class ReceiptGridItem extends StatelessWidget {
   final Receipt receipt;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   const ReceiptGridItem({
     super.key,
     required this.receipt,
-    required this.onTap,
+    this.onTap,
   });
 
   @override

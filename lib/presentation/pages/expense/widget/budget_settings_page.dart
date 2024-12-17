@@ -153,6 +153,11 @@ class _BudgetSettingsPageState extends State<BudgetSettingsPage> {
         AppLanguage.korean: '월 예산',
         AppLanguage.japanese: '月予算',
       },
+      'enter_budget': {
+        AppLanguage.english: 'Enter Monthly Budget',
+        AppLanguage.korean: '월 예산 입력',
+        AppLanguage.japanese: '月予算を入力',
+      },
       'save': {
         AppLanguage.english: 'Save',
         AppLanguage.korean: '저장',

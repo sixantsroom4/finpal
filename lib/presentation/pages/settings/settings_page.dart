@@ -88,7 +88,7 @@ class SettingsPage extends StatelessWidget {
                       iconBackgroundColor:
                           const Color(0xFF2C3E50).withOpacity(0.1),
                       title: _getLocalizedLabel(context, 'monthly_budget'),
-                      subtitle: _getLocalizedLabel(context, 'budget_settings'),
+                      // subtitle: _getLocalizedLabel(context, 'budget_settings'),
                       trailing: const Icon(
                         Icons.chevron_right,
                         color: Color(0xFF2C3E50),
