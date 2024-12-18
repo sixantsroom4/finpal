@@ -10,6 +10,10 @@ import 'package:go_router/go_router.dart';
 import 'package:finpal/core/constants/app_languages.dart';
 import 'package:finpal/presentation/services/terms_service.dart';
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
+import 'package:finpal/core/constants/app_languages.dart';
+import 'package:finpal/presentation/data/terms/kr/personal_data_collection.dart';
+import 'package:finpal/presentation/data/terms/en/personal_data_collection_en.dart';
+import 'package:finpal/presentation/data/terms/jp/personal_data_collection_jp.dart';
 
 class TermsPage extends StatefulWidget {
   const TermsPage({super.key});
@@ -28,6 +32,9 @@ class _TermsPageState extends State<TermsPage> {
     return BlocBuilder<AppLanguageBloc, AppLanguageState>(
       builder: (context, state) {
         _terms = TermsService.getTermsByLanguage(state.language);
+
+        final personalDataCollection =
+            _getLocalizedPersonalDataCollection(state.language);
 
         return Scaffold(
           backgroundColor: Colors.white,
@@ -83,6 +90,27 @@ class _TermsPageState extends State<TermsPage> {
                               }
                             });
                           },
+                        ),
+                        ExpansionTile(
+                          title: Text(
+                            personalDataCollection['title']!,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                personalDataCollection['content']!,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Color(0xFF2C3E50),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -199,5 +227,27 @@ class _TermsPageState extends State<TermsPage> {
       AppLanguage.japanese: '同意して続ける',
     };
     return buttons[language] ?? buttons[AppLanguage.korean]!;
+  }
+
+  Map<String, String> _getLocalizedPersonalDataCollection(
+      AppLanguage language) {
+    switch (language) {
+      case AppLanguage.english:
+        return {
+          'title': PersonalDataCollectionEn.title,
+          'content': PersonalDataCollectionEn.content,
+        };
+      case AppLanguage.japanese:
+        return {
+          'title': PersonalDataCollectionJp.title,
+          'content': PersonalDataCollectionJp.content,
+        };
+      case AppLanguage.korean:
+      default:
+        return {
+          'title': PersonalDataCollection.title,
+          'content': PersonalDataCollection.content,
+        };
+    }
   }
 }
