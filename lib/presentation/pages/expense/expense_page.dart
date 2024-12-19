@@ -327,6 +327,16 @@ class _ExpensePageState extends State<ExpensePage> {
         AppLanguage.korean: '교제비',
         AppLanguage.japanese: '交際費',
       },
+      'household': {
+        AppLanguage.english: 'Household',
+        AppLanguage.korean: '일용품',
+        AppLanguage.japanese: '日用品',
+      },
+      'other': {
+        AppLanguage.english: 'Others',
+        AppLanguage.korean: '기타',
+        AppLanguage.japanese: 'その他',
+      },
     };
     return categories[category.toLowerCase()]?[language] ?? category;
   }

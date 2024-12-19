@@ -107,7 +107,7 @@ class MonthlyCategoryPieChart extends StatelessWidget {
 
     final symbol = currencySymbols[currency] ?? currencySymbols['KRW']!;
 
-    // 통화별 표시 형식
+    // 통화별 표��� 형식
     switch (currency) {
       case 'USD':
       case 'EUR':
@@ -235,51 +235,51 @@ class MonthlyCategoryPieChart extends StatelessWidget {
 
     final language = context.read<AppLanguageBloc>().state.language;
 
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: categoryTotals.entries.toList().asMap().entries.map((entry) {
-        final index = entry.key;
-        final category =
-            CategoryConstants.getLocalizedCategory(entry.value.key, language);
-        final amount = entry.value.value;
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: categoryTotals.entries.toList().asMap().entries.map((entry) {
+          final index = entry.key;
+          final category =
+              CategoryConstants.getLocalizedCategory(entry.value.key, language);
+          final amount = entry.value.value;
 
-        // 현재 유저의 통화로 금액 표시
-        final userCurrency = context.read<AppSettingsBloc>().state.currency;
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 2.0),
-          child: Row(
-            children: [
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: colors[index % colors.length],
-                  shape: BoxShape.circle,
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 2.0),
+            child: Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: colors[index % colors.length],
+                    shape: BoxShape.circle,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  category,
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    category,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Text(
+                  _getLocalizedAmount(context, amount),
                   style: const TextStyle(
                     fontSize: 16,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
                   ),
-                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              Text(
-                _getLocalizedAmount(context, amount),
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
+              ],
+            ),
+          );
+        }).toList(),
+      ),
     );
   }
 

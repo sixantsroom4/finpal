@@ -70,6 +70,11 @@ class CategoryConstants {
       AppLanguage.korean: '교제비',
       AppLanguage.japanese: '交際費',
     },
+    'household': {
+      AppLanguage.english: 'Household',
+      AppLanguage.korean: '일용품',
+      AppLanguage.japanese: '日用品',
+    },
     'other': {
       AppLanguage.english: 'Others',
       AppLanguage.korean: '기타',

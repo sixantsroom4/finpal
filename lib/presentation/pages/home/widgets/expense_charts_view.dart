@@ -5,7 +5,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'monthly_category_pie_chart.dart';
 import 'monthly_comparison_bar_chart.dart';
-import 'monthly_trend_line_chart.dart';
+// import 'monthly_trend_line_chart.dart';
 
 class ExpenseChartsView extends StatefulWidget {
   const ExpenseChartsView({super.key});
@@ -37,7 +37,7 @@ class _ExpenseChartsViewState extends State<ExpenseChartsView> {
                 ),
                 Row(
                   children: List.generate(
-                    3,
+                    2,
                     (index) => Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 2.0),
                       child: CircleAvatar(
@@ -64,7 +64,7 @@ class _ExpenseChartsViewState extends State<ExpenseChartsView> {
               children: const [
                 MonthlyCategoryPieChart(),
                 MonthlyComparisonBarChart(),
-                MonthlyTrendLineChart(),
+                // MonthlyTrendLineChart(),
               ],
             ),
           ),
