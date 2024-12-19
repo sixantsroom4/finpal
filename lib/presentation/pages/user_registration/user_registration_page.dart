@@ -112,8 +112,7 @@ class UserRegistrationPage extends StatelessWidget {
     return ElevatedButton(
       onPressed: state is UserRegistrationInProgress &&
               state.location != null &&
-              state.gender != null &&
-              state.birthYear != null
+              state.currency != null
           ? () {
               final authState = context.read<AuthBloc>().state;
               if (authState is AuthRequiresRegistration) {
