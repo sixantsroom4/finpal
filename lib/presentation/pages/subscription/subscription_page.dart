@@ -15,6 +15,7 @@ import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/core/constants/app_languages.dart';
 import 'package:intl/intl.dart';
 import 'widgets/empty_subscription_view.dart';
+import 'package:finpal/core/models/category_item.dart';
 
 class SubscriptionPage extends StatefulWidget {
   const SubscriptionPage({super.key});
@@ -197,7 +198,7 @@ class _SubscriptionPageState extends State<SubscriptionPage>
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: Text(
-                category,
+                CategoryItem.getLocalizedCategory(context, category),
                 style: Theme.of(context).textTheme.titleMedium,
               ),
             ),

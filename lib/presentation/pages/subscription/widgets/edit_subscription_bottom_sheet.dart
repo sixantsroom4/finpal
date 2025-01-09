@@ -7,6 +7,7 @@ import '../../../bloc/subscription/subscription_bloc.dart';
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/core/constants/app_languages.dart';
 import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
+import 'package:finpal/core/models/category_item.dart';
 
 class EditSubscriptionBottomSheet extends StatefulWidget {
   final Subscription subscription;
@@ -119,87 +120,8 @@ class _EditSubscriptionBottomSheetState
     return currencySymbols[currency] ?? currencySymbols['KRW']!;
   }
 
-  Map<String, String> _getLocalizedCategories(BuildContext context) {
-    final language = context.read<AppLanguageBloc>().state.language;
-    final Map<String, Map<AppLanguage, String>> categories = {
-      'OTT': {
-        AppLanguage.english: 'OTT',
-        AppLanguage.korean: 'OTT',
-        AppLanguage.japanese: 'OTT',
-      },
-      'MUSIC': {
-        AppLanguage.english: 'Music',
-        AppLanguage.korean: '음악',
-        AppLanguage.japanese: '音楽',
-      },
-      'GAME': {
-        AppLanguage.english: 'Game',
-        AppLanguage.korean: '게임',
-        AppLanguage.japanese: 'ゲーム',
-      },
-      'FITNESS': {
-        AppLanguage.english: 'Fitness',
-        AppLanguage.korean: '피트니스',
-        AppLanguage.japanese: 'フィットネス',
-      },
-      'PRODUCTIVITY': {
-        AppLanguage.english: 'Productivity',
-        AppLanguage.korean: '생산성',
-        AppLanguage.japanese: '生産性',
-      },
-      'SOFTWARE': {
-        AppLanguage.english: 'Software',
-        AppLanguage.korean: '소프트웨어',
-        AppLanguage.japanese: 'ソフトウェア',
-      },
-      'PET_CARE': {
-        AppLanguage.english: 'Pet Care',
-        AppLanguage.korean: '반려동물 관리',
-        AppLanguage.japanese: 'ペットケア',
-      },
-      'BEAUTY': {
-        AppLanguage.english: 'Beauty',
-        AppLanguage.korean: '뷰티',
-        AppLanguage.japanese: '美容',
-      },
-      'CAR_SERVICES': {
-        AppLanguage.english: 'Car Services',
-        AppLanguage.korean: '자동차 서비스',
-        AppLanguage.japanese: '車サービス',
-      },
-      'STREAMING': {
-        AppLanguage.english: 'Streaming Services',
-        AppLanguage.korean: '스트리밍 서비스',
-        AppLanguage.japanese: 'ストリーミングサービス',
-      },
-      'RENT': {
-        AppLanguage.english: 'Rent',
-        AppLanguage.korean: '월세',
-        AppLanguage.japanese: '家賃',
-      },
-      'DELIVERY': {
-        AppLanguage.english: 'Delivery Services',
-        AppLanguage.korean: '배송 서비스',
-        AppLanguage.japanese: '配送サービス',
-      },
-      'PREMIUM': {
-        AppLanguage.english: 'Premium Memberships',
-        AppLanguage.korean: '프리미엄 멤버십',
-        AppLanguage.japanese: 'プレミアム会員',
-      },
-      'OTHER': {
-        AppLanguage.english: 'Other',
-        AppLanguage.korean: '기타',
-        AppLanguage.japanese: 'その他',
-      },
-    };
-
-    return Map.fromEntries(
-      categories.entries.map(
-        (e) =>
-            MapEntry(e.key, e.value[language] ?? e.value[AppLanguage.korean]!),
-      ),
-    );
+  String _getLocalizedCategory(BuildContext context, String category) {
+    return CategoryItem.getLocalizedCategory(context, category);
   }
 
   Map<String, String> _getLocalizedBillingCycles(BuildContext context) {
@@ -228,6 +150,34 @@ class _EditSubscriptionBottomSheetState
             MapEntry(e.key, e.value[language] ?? e.value[AppLanguage.korean]!),
       ),
     );
+  }
+
+  Future<void> _selectBillingDay(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(DateTime.now().year, DateTime.now().month, 1),
+      lastDate: DateTime(DateTime.now().year, DateTime.now().month, 28),
+    );
+
+    if (picked != null) {
+      setState(() {
+        _selectedBillingDay = picked.day;
+      });
+    }
+  }
+
+  String _getLocalizedDay(BuildContext context, int day) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    switch (language) {
+      case AppLanguage.english:
+        return 'Day $day';
+      case AppLanguage.japanese:
+        return '$day日';
+      case AppLanguage.korean:
+      default:
+        return '${day}일';
+    }
   }
 
   @override
@@ -293,19 +243,32 @@ class _EditSubscriptionBottomSheetState
               value: _selectedCategory,
               decoration: InputDecoration(
                 labelText: _getLocalizedLabel(context, 'category'),
-                border: OutlineInputBorder(),
+                prefixIcon:
+                    const Icon(Icons.category, color: Color(0xFF2C3E50)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
-              items: _getLocalizedCategories(context).entries.map((e) {
-                return DropdownMenuItem(
-                  value: e.key,
-                  child: Text(e.value),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedCategory = value ?? 'OTT';
-                });
-              },
+              items: [
+                'OTT',
+                'MUSIC',
+                'GAME',
+                'FITNESS',
+                'BEAUTY',
+                'CAR_SERVICES',
+                'STREAMING',
+                'RENT',
+                'DELIVERY',
+                'PREMIUM',
+                'OTHER',
+              ]
+                  .map((category) => DropdownMenuItem(
+                        value: category,
+                        child: Text(_getLocalizedCategory(context, category)),
+                      ))
+                  .toList(),
+              onChanged: (value) =>
+                  setState(() => _selectedCategory = value ?? 'OTT'),
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
@@ -327,24 +290,16 @@ class _EditSubscriptionBottomSheetState
               },
             ),
             const SizedBox(height: 16),
-            DropdownButtonFormField<int>(
-              value: _selectedBillingDay,
+            TextFormField(
+              readOnly: true,
               decoration: InputDecoration(
                 labelText: _getLocalizedLabel(context, 'billing_day'),
                 border: OutlineInputBorder(),
               ),
-              items: List.generate(
-                28,
-                (index) => DropdownMenuItem(
-                  value: index + 1,
-                  child: Text('${index + 1}일'),
-                ),
+              onTap: () => _selectBillingDay(context),
+              controller: TextEditingController(
+                text: _getLocalizedDay(context, _selectedBillingDay),
               ),
-              onChanged: (value) {
-                setState(() {
-                  _selectedBillingDay = value ?? 1;
-                });
-              },
             ),
             const SizedBox(height: 24),
             ElevatedButton(

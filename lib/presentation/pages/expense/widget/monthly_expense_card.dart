@@ -70,6 +70,31 @@ class _MonthlyExpenseCardState extends State<MonthlyExpenseCard> {
     _loadMonthlyExpenses();
   }
 
+  Future<void> _showCalendar() async {
+    print('showCalendar called');
+    try {
+      final pickedDate = await showDatePicker(
+        context: context,
+        initialDate: _selectedDate,
+        firstDate: DateTime(2000),
+        lastDate: DateTime.now().add(const Duration(days: 365 * 3)),
+        // locale: locale, // 제거
+      );
+
+      print('Date picked: $pickedDate');
+
+      if (pickedDate != null && pickedDate != _selectedDate) {
+        setState(() {
+          _selectedDate = pickedDate;
+        });
+        _loadMonthlyExpenses();
+      }
+    } catch (e) {
+      // 에러 핸들링
+      print('Error showing date picker: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -107,12 +132,15 @@ class _MonthlyExpenseCardState extends State<MonthlyExpenseCard> {
               children: [
                 Row(
                   children: [
-                    Text(
-                      _getLocalizedDate(context, _selectedDate),
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
+                    GestureDetector(
+                      onTap: _showCalendar, // 달력 열기
+                      child: Text(
+                        _getLocalizedDate(context, _selectedDate),
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),

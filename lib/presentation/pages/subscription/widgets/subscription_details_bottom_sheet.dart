@@ -10,6 +10,7 @@ import '../../../bloc/subscription/subscription_bloc.dart';
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/core/constants/app_languages.dart';
 import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
+import 'package:finpal/core/models/category_item.dart';
 
 class SubscriptionDetailsBottomSheet extends StatelessWidget {
   final Subscription subscription;
@@ -195,6 +196,26 @@ class SubscriptionDetailsBottomSheet extends StatelessWidget {
     }
   }
 
+  String _getLocalizedCategory(BuildContext context, String category) {
+    return CategoryItem.getLocalizedCategory(context, category);
+  }
+
+  IconData _getCategoryIcon(String category) {
+    switch (category.toLowerCase()) {
+      case 'ott':
+        return Icons.movie_outlined;
+      case 'music':
+        return Icons.music_note_outlined;
+      case 'game':
+        return Icons.games_outlined;
+      case 'fitness':
+        return Icons.fitness_center_outlined;
+      // ... 다른 카테고리들 ...
+      default:
+        return Icons.category_outlined;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -228,7 +249,7 @@ class SubscriptionDetailsBottomSheet extends StatelessWidget {
           ),
           _DetailItem(
             title: _getLocalizedLabel(context, 'category'),
-            value: subscription.category,
+            value: _getLocalizedCategory(context, subscription.category),
           ),
           _DetailItem(
             title: _getLocalizedLabel(context, 'billing_cycle'),

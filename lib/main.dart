@@ -24,18 +24,24 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'core/utils/firebase_migration_utils.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/date_symbol_data_local.dart'; // 추가
+import 'package:flutter_localizations/flutter_localizations.dart'; // 추가
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env');
+
+  // intl 로케일 데이터 초기화
+  await initializeDateFormatting(); // 모든 로케일 데이터 초기화
+
   await init();
   debugPrint('Flutter binding initialized');
 
   // 화면 방향을 세로 모드로 고정
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
-    // DeviceOrientation.portraitDown,  // 뒤집힌 세로모드 필요한 경우
-    // DeviceOrientation.landscapeLeft,  // 가로모드 필요한 경우
+    // DeviceOrientation.portraitDown,  // 필요 시
+    // DeviceOrientation.landscapeLeft,  // 필요 시
     // DeviceOrientation.landscapeRight,
   ]);
 
@@ -79,7 +85,7 @@ Future<void> main() async {
     }
   });
 
-  // 사용자가 로그인된 경우에만 마이그레���션 실행
+  // 사용자가 로그인된 경우에만 마이그레이션 실행
   if (currentUser != null) {
     debugPrint('마이그레이션 시작...');
     await FirebaseMigrationUtils.runMigrations();
@@ -138,6 +144,17 @@ class MyApp extends StatelessWidget {
           ),
           routerConfig: AppRouter.router(authBloc),
           debugShowCheckedModeBanner: false,
+          // 로컬라이제이션 설정 추가
+          supportedLocales: const [
+            Locale('en'), // 영어
+            Locale('ja'), // 일본어
+            Locale('ko'), // 한국어
+          ],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
           builder: (context, child) {
             return BlocBuilder<AuthBloc, AuthState>(
               builder: (context, state) {

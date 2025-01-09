@@ -107,7 +107,7 @@ class MonthlyCategoryPieChart extends StatelessWidget {
 
     final symbol = currencySymbols[currency] ?? currencySymbols['KRW']!;
 
-    // 통화별 표��� 형식
+    // 통화별 표시 형식
     switch (currency) {
       case 'USD':
       case 'EUR':
@@ -122,67 +122,81 @@ class MonthlyCategoryPieChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ExpenseBloc, ExpenseState>(
-      builder: (context, state) {
-        if (state is! ExpenseLoaded) {
-          return const Center(child: CircularProgressIndicator());
-        }
+    return Expanded(
+      child: Card(
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: BlocBuilder<ExpenseBloc, ExpenseState>(
+            builder: (context, state) {
+              if (state is! ExpenseLoaded) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-        // 현재 유저의 설정된 통화 가져오기
-        final userCurrency = context.read<AppSettingsBloc>().state.currency;
+              // 현재 유저의 설정된 통화 가져오기
+              final userCurrency =
+                  context.read<AppSettingsBloc>().state.currency;
 
-        final now = DateTime.now();
-        final currentMonthCategoryTotals = <String, double>{};
+              final now = DateTime.now();
+              final currentMonthCategoryTotals = <String, double>{};
 
-        // 현재 달의 지출 중 유저의 통화와 일치하는 것만 필터링
-        for (final expense in state.expenses) {
-          if (expense.date.year == now.year &&
-              expense.date.month == now.month &&
-              expense.currency == userCurrency) {
-            // 통화 체크 추가
-            currentMonthCategoryTotals[expense.category] =
-                (currentMonthCategoryTotals[expense.category] ?? 0) +
-                    expense.amount;
-          }
-        }
+              // 현재 달의 지출 중 유저의 통화와 일치하는 것만 필터링
+              for (final expense in state.expenses) {
+                if (expense.date.year == now.year &&
+                    expense.date.month == now.month &&
+                    expense.currency == userCurrency) {
+                  // 통화 체크 추가
+                  currentMonthCategoryTotals[expense.category] =
+                      (currentMonthCategoryTotals[expense.category] ?? 0) +
+                          expense.amount;
+                }
+              }
 
-        if (currentMonthCategoryTotals.isEmpty) {
-          return Center(
-            child: Text(_getLocalizedLabel(context, 'no_expenses')),
-          );
-        }
+              if (currentMonthCategoryTotals.isEmpty) {
+                return Center(
+                  child: Text(_getLocalizedLabel(context, 'no_expenses')),
+                );
+              }
 
-        return Column(
-          children: [
-            const SizedBox(height: 24),
-            Center(
-              child: SizedBox(
-                height: 200,
-                width: 200,
-                child: PieChart(
-                  PieChartData(
-                    sectionsSpace: 2,
-                    centerSpaceRadius: 40,
-                    sections: _createPieChartSections(
-                        context, currentMonthCategoryTotals),
-                    borderData: FlBorderData(show: false),
+              return Column(
+                children: [
+                  const SizedBox(height: 24),
+                  Center(
+                    child: SizedBox(
+                      height: 200,
+                      width: 200,
+                      child: PieChart(
+                        PieChartData(
+                          sectionsSpace: 2,
+                          centerSpaceRadius: 40,
+                          sections: _createPieChartSections(
+                              context, currentMonthCategoryTotals),
+                          borderData: FlBorderData(show: false),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 32),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: _buildLegend(
-                context,
-                currentMonthCategoryTotals,
-                currentMonthCategoryTotals.values
-                    .fold(0.0, (sum, amount) => sum + amount),
-              ),
-            ),
-          ],
-        );
-      },
+                  const SizedBox(height: 32),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                      child: _buildLegend(
+                        context,
+                        currentMonthCategoryTotals,
+                        currentMonthCategoryTotals.values
+                            .fold(0.0, (sum, amount) => sum + amount),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+      ),
     );
   }
 
@@ -235,50 +249,54 @@ class MonthlyCategoryPieChart extends StatelessWidget {
 
     final language = context.read<AppLanguageBloc>().state.language;
 
-    return SingleChildScrollView(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: categoryTotals.entries.toList().asMap().entries.map((entry) {
-          final index = entry.key;
-          final category =
-              CategoryConstants.getLocalizedCategory(entry.value.key, language);
-          final amount = entry.value.value;
+    return SizedBox(
+      height: 200,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children:
+              categoryTotals.entries.toList().asMap().entries.map((entry) {
+            final index = entry.key;
+            final category = CategoryConstants.getLocalizedCategory(
+                entry.value.key, language);
+            final amount = entry.value.value;
 
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 2.0),
-            child: Row(
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: colors[index % colors.length],
-                    shape: BoxShape.circle,
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2.0),
+              child: Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: colors[index % colors.length],
+                      shape: BoxShape.circle,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    category,
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      category,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Text(
+                    _getLocalizedAmount(context, amount),
                     style: const TextStyle(
                       fontSize: 16,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w600,
                     ),
-                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-                Text(
-                  _getLocalizedAmount(context, amount),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          );
-        }).toList(),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
       ),
     );
   }

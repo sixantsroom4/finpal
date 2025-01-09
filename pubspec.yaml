@@ -67,6 +67,8 @@ dependencies:
   kakao_flutter_sdk_navi: ^1.9.6
   flutter_phoenix: ^1.1.1
   mailer: ^6.3.0
+  flutter_localizations:
+    sdk: flutter
 
 dev_dependencies:
   flutter_test:
