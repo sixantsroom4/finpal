@@ -2,6 +2,8 @@
 import '../../domain/entities/expense.dart';
 
 class ExpenseModel extends Expense {
+  final String? subscriptionId;
+
   ExpenseModel({
     required String id,
     required double amount,
@@ -16,7 +18,7 @@ class ExpenseModel extends Expense {
     List<String>? sharedWith,
     Map<String, double>? splitAmounts,
     bool isSubscription = false,
-    String? subscriptionId,
+    this.subscriptionId,
     DateTime? createdAt,
   }) : super(
           id: id,

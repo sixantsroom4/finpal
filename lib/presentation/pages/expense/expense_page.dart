@@ -1,13 +1,18 @@
 // lib/presentation/pages/expense/expense_page.dart
 import 'package:finpal/core/constants/app_languages.dart';
+import 'package:finpal/core/utils/expense_category_constants.dart';
+import 'package:finpal/core/utils/subscription_category_constants.dart';
 import 'package:finpal/domain/entities/expense.dart';
 import 'package:finpal/presentation/bloc/auth/auth_state.dart';
 import 'package:finpal/presentation/bloc/expense/expense_event.dart';
 import 'package:finpal/presentation/bloc/expense/expense_state.dart';
+import 'package:finpal/presentation/bloc/subscription/subscription_event.dart';
+import 'package:finpal/presentation/bloc/subscription/subscription_state.dart';
 import 'package:finpal/presentation/pages/expense/widget/add_expense_fab.dart';
 import 'package:finpal/presentation/pages/expense/widget/expense_details_bottom_sheet.dart';
 import 'package:finpal/presentation/pages/expense/widget/expense_filter_chip.dart';
 import 'package:finpal/presentation/pages/expense/widget/monthly_expense_card.dart';
+import 'package:finpal/presentation/pages/subscription/widgets/subscription_details_bottom_sheet.dart';
 import 'package:finpal/presentation/widgets/amount_display.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -16,6 +21,11 @@ import '../../bloc/expense/expense_bloc.dart';
 import '../../bloc/auth/auth_bloc.dart';
 import '../../bloc/app_language/app_language_bloc.dart';
 import 'widgets/empty_expense_view.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import '../../../core/utils/subscription_category_constants.dart';
+import '../../../core/utils/expense_category_constants.dart';
+import '../../bloc/subscription/subscription_bloc.dart';
 
 class ExpensePage extends StatefulWidget {
   const ExpensePage({super.key});
@@ -87,6 +97,43 @@ class _ExpensePageState extends State<ExpensePage> {
                 }
 
                 if (state is ExpenseLoaded) {
+                  final filteredExpenses = state.expenses.where((expense) {
+                    final appLanguage =
+                        context.read<AppLanguageBloc>().state.language;
+                    return _selectedCategory ==
+                            _getLocalizedAllCategory(context) ||
+                        (expense.isSubscription == true &&
+                            SubscriptionCategoryConstants.getLocalizedCategory(
+                                    context, expense.category) ==
+                                _selectedCategory) ||
+                        (expense.isSubscription != true &&
+                            ExpenseCategoryConstants.getLocalizedCategory(
+                                    expense.category, appLanguage) ==
+                                _selectedCategory);
+                  }).toList();
+
+                  if (filteredExpenses.isEmpty) {
+                    return const EmptyExpenseView();
+                  }
+
+                  // 현재 지출 내역에 있는 카테고리 목록 생성
+                  final Set<String> availableCategories = {};
+                  availableCategories.add(_getLocalizedAllCategory(context));
+                  for (var expense in state.expenses) {
+                    if (expense.isSubscription == true) {
+                      availableCategories.add(
+                        SubscriptionCategoryConstants.getLocalizedCategory(
+                            context, expense.category),
+                      );
+                    } else {
+                      availableCategories.add(
+                        ExpenseCategoryConstants.getLocalizedCategory(
+                            expense.category,
+                            context.read<AppLanguageBloc>().state.language),
+                      );
+                    }
+                  }
+
                   return Column(
                     children: [
                       SingleChildScrollView(
@@ -95,6 +142,7 @@ class _ExpensePageState extends State<ExpensePage> {
                             horizontal: 16, vertical: 8),
                         child: Row(
                           children: [
+                            // "전체" 카테고리 필터 칩
                             ExpenseFilterChip(
                               label: _getLocalizedAllCategory(context),
                               selected: _selectedCategory ==
@@ -118,12 +166,20 @@ class _ExpensePageState extends State<ExpensePage> {
                                 ),
                               ),
                             ),
-                            ...state.categoryTotals.keys.map(
-                              (category) => ExpenseFilterChip(
-                                label: _getLocalizedCategory(context, category),
+                            // 사용 가능한 구독 카테고리 필터 칩
+                            ...availableCategories
+                                .where((category) =>
+                                    category !=
+                                    _getLocalizedAllCategory(context))
+                                .map((category) {
+                              return ExpenseFilterChip(
+                                label: category,
                                 selected: _selectedCategory == category,
-                                onSelected: (selected) =>
-                                    _updateCategory(category),
+                                onSelected: (selected) {
+                                  if (selected) {
+                                    _updateCategory(category);
+                                  }
+                                },
                                 style: ChipTheme.of(context).copyWith(
                                   backgroundColor:
                                       const Color(0xFF2C3E50).withOpacity(0.05),
@@ -139,8 +195,8 @@ class _ExpensePageState extends State<ExpensePage> {
                                     borderRadius: BorderRadius.circular(20),
                                   ),
                                 ),
-                              ),
-                            ),
+                              );
+                            }),
                           ],
                         ),
                       ),
@@ -152,14 +208,9 @@ class _ExpensePageState extends State<ExpensePage> {
                           ),
                           separatorBuilder: (context, index) =>
                               const SizedBox(height: 12),
-                          itemCount: state.expenses.length,
+                          itemCount: filteredExpenses.length,
                           itemBuilder: (context, index) {
-                            final expense = state.expenses[index];
-                            if (_selectedCategory !=
-                                    _getLocalizedAllCategory(context) &&
-                                expense.category != _selectedCategory) {
-                              return const SizedBox.shrink();
-                            }
+                            final expense = filteredExpenses[index];
                             return ListTile(
                               contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 20,
@@ -169,18 +220,26 @@ class _ExpensePageState extends State<ExpensePage> {
                                 borderRadius: BorderRadius.circular(15),
                               ),
                               leading: CircleAvatar(
-                                backgroundColor:
-                                    const Color(0xFF2C3E50).withOpacity(0.1),
+                                backgroundColor: Theme.of(context).primaryColor,
                                 child: Icon(
-                                  _getCategoryIcon(expense.category),
-                                  color: const Color(0xFF2C3E50),
-                                  size: 20,
+                                  expense.isSubscription == true
+                                      ? SubscriptionCategoryConstants
+                                                  .categoryIcons[
+                                              expense.category.toUpperCase()] ??
+                                          Icons.category_outlined
+                                      : ExpenseCategoryConstants.categoryIcons[
+                                              expense.category] ??
+                                          Icons.category_outlined,
+                                  color: Colors.white,
                                 ),
                               ),
-                              title: Text(expense.description),
-                              subtitle: Text(
-                                _getLocalizedDate(context, expense.date),
+                              title: Text(
+                                '${expense.category} - '
+                                '${expense.isSubscription == true ? SubscriptionCategoryConstants.getLocalizedCategory(context, expense.category) : ExpenseCategoryConstants.getLocalizedCategory(expense.category, context.read<AppLanguageBloc>().state.language)}',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w500),
                               ),
+                              subtitle: Text(expense.description),
                               trailing: AmountDisplay(
                                 amount: expense.amount,
                                 currency: expense.currency,
@@ -195,66 +254,22 @@ class _ExpensePageState extends State<ExpensePage> {
                   );
                 }
 
-                return const EmptyExpenseView();
+                return const SizedBox.shrink();
               },
             ),
           ),
         ],
       ),
-      floatingActionButton: const AddExpenseFab(),
-    );
-  }
-
-  void _updateCategory(String category) {
-    setState(() {
-      _selectedCategory = category;
-    });
-  }
-
-  IconData _getCategoryIcon(String category) {
-    switch (category.toLowerCase()) {
-      case 'food':
-        return Icons.restaurant;
-      case 'transport':
-        return Icons.directions_bus;
-      case 'shopping':
-        return Icons.shopping_bag;
-      case 'entertainment':
-        return Icons.movie;
-      case 'health':
-        return Icons.favorite;
-      case 'beauty':
-        return Icons.face;
-      case 'utilities':
-        return Icons.receipt_long;
-      case 'education':
-        return Icons.school;
-      case 'savings':
-        return Icons.savings;
-      case 'travel':
-        return Icons.flight;
-      case 'social':
-        return Icons.people;
-      default:
-        return Icons.attach_money;
-    }
-  }
-
-  void _showExpenseDetails(BuildContext context, Expense expense) {
-    // 지출 상세 정보 모달 표시
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => ExpenseDetailsBottomSheet(expense: expense),
+      floatingActionButton: AddExpenseFab(),
     );
   }
 
   String _getLocalizedTitle(BuildContext context) {
     final language = context.read<AppLanguageBloc>().state.language;
     const Map<AppLanguage, String> titles = {
-      AppLanguage.english: 'Expense History',
-      AppLanguage.korean: '지출 내역',
-      AppLanguage.japanese: '支出履歴',
+      AppLanguage.english: 'Expenses',
+      AppLanguage.korean: '지출',
+      AppLanguage.japanese: '支出',
     };
     return titles[language] ?? titles[AppLanguage.korean]!;
   }
@@ -264,93 +279,47 @@ class _ExpensePageState extends State<ExpensePage> {
     const Map<AppLanguage, String> categories = {
       AppLanguage.english: 'All',
       AppLanguage.korean: '전체',
-      AppLanguage.japanese: '全て',
+      AppLanguage.japanese: 'すべて',
     };
     return categories[language] ?? categories[AppLanguage.korean]!;
   }
 
-  String _getLocalizedCategory(BuildContext context, String category) {
-    final language = context.read<AppLanguageBloc>().state.language;
-    final Map<String, Map<AppLanguage, String>> categories = {
-      'food': {
-        AppLanguage.english: 'Food',
-        AppLanguage.korean: '',
-        AppLanguage.japanese: '食費',
-      },
-      'transport': {
-        AppLanguage.english: 'Transport',
-        AppLanguage.korean: '교통',
-        AppLanguage.japanese: '交通',
-      },
-      'shopping': {
-        AppLanguage.english: 'Shopping',
-        AppLanguage.korean: '쇼핑',
-        AppLanguage.japanese: '買物',
-      },
-      'entertainment': {
-        AppLanguage.english: 'Entertainment',
-        AppLanguage.korean: '여가',
-        AppLanguage.japanese: '娯楽',
-      },
-      'health': {
-        AppLanguage.english: 'Medical',
-        AppLanguage.korean: '의료',
-        AppLanguage.japanese: '医療',
-      },
-      'beauty': {
-        AppLanguage.english: 'Beauty',
-        AppLanguage.korean: '미용',
-        AppLanguage.japanese: '美容',
-      },
-      'utilities': {
-        AppLanguage.english: 'Utilities',
-        AppLanguage.korean: '공과금',
-        AppLanguage.japanese: '公共料金',
-      },
-      'education': {
-        AppLanguage.english: 'Education',
-        AppLanguage.korean: '교육',
-        AppLanguage.japanese: '教育',
-      },
-      'savings': {
-        AppLanguage.english: 'Savings',
-        AppLanguage.korean: '저축',
-        AppLanguage.japanese: '貯蓄',
-      },
-      'travel': {
-        AppLanguage.english: 'Travel',
-        AppLanguage.korean: '여행',
-        AppLanguage.japanese: '旅行',
-      },
-      'social': {
-        AppLanguage.english: 'Social Expenses',
-        AppLanguage.korean: '교제비',
-        AppLanguage.japanese: '交際費',
-      },
-      'household': {
-        AppLanguage.english: 'Household',
-        AppLanguage.korean: '일용품',
-        AppLanguage.japanese: '日用品',
-      },
-      'other': {
-        AppLanguage.english: 'Others',
-        AppLanguage.korean: '기타',
-        AppLanguage.japanese: 'その他',
-      },
-    };
-    return categories[category.toLowerCase()]?[language] ?? category;
+  void _updateCategory(String category) {
+    setState(() {
+      _selectedCategory = category;
+    });
   }
 
-  String _getLocalizedDate(BuildContext context, DateTime date) {
-    final language = context.read<AppLanguageBloc>().state.language;
-    switch (language) {
-      case AppLanguage.english:
-        return DateFormat('MMM d').format(date);
-      case AppLanguage.japanese:
-        return DateFormat('M月 d日').format(date);
-      case AppLanguage.korean:
-      default:
-        return DateFormat('M월 d일').format(date);
+  void _showExpenseDetails(BuildContext context, Expense expense) {
+    if (expense.isSubscription && expense.subscriptionId != null) {
+      // 구독 상세 정보 조회 및 표시
+      context
+          .read<SubscriptionBloc>()
+          .add(LoadSubscriptionById(expense.subscriptionId!));
+
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        builder: (context) => BlocBuilder<SubscriptionBloc, SubscriptionState>(
+          builder: (context, state) {
+            if (state is SubscriptionLoaded) {
+              return SubscriptionDetailsBottomSheet(
+                subscription: state.subscriptions.first,
+              );
+            }
+            return const Center(child: CircularProgressIndicator());
+          },
+        ),
+      );
+    } else {
+      // 일반 지출 상세 표시
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        builder: (context) => ExpenseDetailsBottomSheet(
+          expense: expense,
+        ),
+      );
     }
   }
 }

@@ -1,3 +1,4 @@
+import 'package:finpal/core/utils/expense_category_constants.dart';
 import 'package:finpal/data/models/expense_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,7 +9,7 @@ import '../../../bloc/expense/expense_bloc.dart';
 import '../../../bloc/expense/expense_event.dart';
 import '../../../bloc/receipt/receipt_bloc.dart';
 import '../../../bloc/receipt/receipt_event.dart';
-import '../../../../core/utils/constants.dart';
+import '../../../../core/utils/expense_category_constants.dart';
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/core/constants/app_languages.dart';
 import 'package:go_router/go_router.dart';
@@ -144,7 +145,7 @@ class _CreateExpenseFromReceiptState extends State<CreateExpenseFromReceipt> {
 
   List<DropdownMenuItem<String>> _getLocalizedCategories(BuildContext context) {
     final language = context.read<AppLanguageBloc>().state.language;
-    return CategoryConstants.categories.entries.map((entry) {
+    return ExpenseCategoryConstants.categories.entries.map((entry) {
       return DropdownMenuItem<String>(
         value: entry.key,
         child: Text(entry.value[language] ?? entry.value[AppLanguage.korean]!),

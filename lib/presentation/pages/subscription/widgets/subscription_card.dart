@@ -1,4 +1,5 @@
 // lib/presentation/pages/subscription/widgets/subscription_card.dart
+import 'package:finpal/core/utils/subscription_category_constants.dart';
 import 'package:finpal/domain/entities/subscription.dart';
 import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
 import 'package:finpal/presentation/pages/subscription/widgets/add_subscription_bottom_sheet.dart';
@@ -99,7 +100,8 @@ class SubscriptionCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
-                    _getSubscriptionIcon(subscription.category),
+                    SubscriptionCategoryConstants
+                        .categoryIcons[subscription.category]!,
                     color: const Color(0xFF2C3E50),
                   ),
                 ),
@@ -173,21 +175,6 @@ class SubscriptionCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  IconData _getSubscriptionIcon(String category) {
-    switch (category.toLowerCase()) {
-      case 'ott':
-        return Icons.movie_outlined;
-      case 'music':
-        return Icons.music_note_outlined;
-      case 'game':
-        return Icons.games_outlined;
-      case 'fitness':
-        return Icons.fitness_center_outlined;
-      default:
-        return Icons.subscriptions_outlined;
-    }
   }
 }
 

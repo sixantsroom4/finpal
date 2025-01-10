@@ -1,5 +1,6 @@
 // data/repositories/subscription_repository_impl.dart
 import 'package:dartz/dartz.dart';
+import 'package:finpal/domain/entities/expense.dart';
 import '../../core/errors/exceptions.dart';
 import '../../core/errors/failures.dart';
 import '../../domain/entities/subscription.dart';
@@ -171,6 +172,33 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
       return Left(ServerFailure(e.message));
     } on NetworkException catch (e) {
       return Left(NetworkFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Expense?>> findExpenseBySubscriptionId(
+      String subscriptionId) async {
+    try {
+      final expense =
+          await remoteDataSource.findExpenseBySubscriptionId(subscriptionId);
+      return Right(expense);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> updateExpenseForSubscription(
+      SubscriptionModel subscription) async {
+    try {
+      await remoteDataSource.updateExpenseForSubscription(subscription);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

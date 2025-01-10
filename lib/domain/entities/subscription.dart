@@ -13,6 +13,7 @@ class Subscription extends Equatable {
   final String category;
   final String userId;
   final bool isActive;
+  final bool isPaused;
 
   const Subscription({
     required this.id,
@@ -26,6 +27,7 @@ class Subscription extends Equatable {
     required this.userId,
     this.endDate,
     this.isActive = true,
+    this.isPaused = false,
   });
 
   @override
@@ -41,6 +43,7 @@ class Subscription extends Equatable {
         category,
         userId,
         isActive,
+        isPaused,
       ];
 
   factory Subscription.create({
@@ -114,5 +117,33 @@ class Subscription extends Equatable {
     }
 
     return nextBilling;
+  }
+
+  Subscription copyWith({
+    String? id,
+    String? name,
+    double? amount,
+    String? currency,
+    DateTime? startDate,
+    DateTime? endDate,
+    String? billingCycle,
+    int? billingDay,
+    String? category,
+    String? userId,
+    bool? isActive,
+  }) {
+    return Subscription(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      amount: amount ?? this.amount,
+      currency: currency ?? this.currency,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      billingCycle: billingCycle ?? this.billingCycle,
+      billingDay: billingDay ?? this.billingDay,
+      category: category ?? this.category,
+      userId: userId ?? this.userId,
+      isActive: isActive ?? this.isActive,
+    );
   }
 }

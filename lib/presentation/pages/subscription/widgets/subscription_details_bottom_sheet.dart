@@ -10,7 +10,7 @@ import '../../../bloc/subscription/subscription_bloc.dart';
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/core/constants/app_languages.dart';
 import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
-import 'package:finpal/core/models/category_item.dart';
+import 'package:finpal/core/utils/subscription_category_constants.dart';
 
 class SubscriptionDetailsBottomSheet extends StatelessWidget {
   final Subscription subscription;
@@ -197,7 +197,8 @@ class SubscriptionDetailsBottomSheet extends StatelessWidget {
   }
 
   String _getLocalizedCategory(BuildContext context, String category) {
-    return CategoryItem.getLocalizedCategory(context, category);
+    return SubscriptionCategoryConstants.getLocalizedCategory(
+        context, category);
   }
 
   IconData _getCategoryIcon(String category) {

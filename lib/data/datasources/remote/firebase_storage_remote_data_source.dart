@@ -62,4 +62,7 @@ abstract class FirebaseStorageRemoteDataSource {
 
   Future<double> getMonthlyBudget(String userId);
   Future<void> updateMonthlyBudget(String userId, double amount);
+
+  Future<ExpenseModel?> findExpenseBySubscriptionId(String subscriptionId);
+  Future<void> updateExpenseForSubscription(SubscriptionModel subscription);
 }

@@ -1,4 +1,5 @@
 // lib/presentation/pages/subscription/widgets/edit_subscription_bottom_sheet.dart
+import 'package:finpal/core/utils/expense_category_constants.dart';
 import 'package:finpal/presentation/bloc/subscription/subscription_event.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -7,7 +8,8 @@ import '../../../bloc/subscription/subscription_bloc.dart';
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/core/constants/app_languages.dart';
 import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
-import 'package:finpal/core/models/category_item.dart';
+import 'package:finpal/core/utils/subscription_category_constants.dart';
+import 'package:finpal/core/utils/subscription_category_constants.dart';
 
 class EditSubscriptionBottomSheet extends StatefulWidget {
   final Subscription subscription;
@@ -38,7 +40,7 @@ class _EditSubscriptionBottomSheetState
     _amountController = TextEditingController(
       text: widget.subscription.amount.toString(),
     );
-    _selectedCategory = widget.subscription.category;
+    _selectedCategory = widget.subscription.category.toLowerCase();
     _selectedBillingCycle = widget.subscription.billingCycle;
     _selectedBillingDay = widget.subscription.billingDay;
   }
@@ -121,7 +123,8 @@ class _EditSubscriptionBottomSheetState
   }
 
   String _getLocalizedCategory(BuildContext context, String category) {
-    return CategoryItem.getLocalizedCategory(context, category);
+    return SubscriptionCategoryConstants.getLocalizedCategory(
+        context, category);
   }
 
   Map<String, String> _getLocalizedBillingCycles(BuildContext context) {
@@ -178,6 +181,18 @@ class _EditSubscriptionBottomSheetState
       default:
         return '${day}일';
     }
+  }
+
+  List<Map<String, String>> _getLocalizedCategories(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    return SubscriptionCategoryConstants.categories.entries.map((entry) {
+      print('Category Key from Constants: ${entry.key}');
+      return {
+        'value': entry.key.toLowerCase(),
+        'label': SubscriptionCategoryConstants.getLocalizedCategory(
+            context, entry.key),
+      };
+    }).toList();
   }
 
   @override
@@ -249,26 +264,18 @@ class _EditSubscriptionBottomSheetState
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              items: [
-                'OTT',
-                'MUSIC',
-                'GAME',
-                'FITNESS',
-                'BEAUTY',
-                'CAR_SERVICES',
-                'STREAMING',
-                'RENT',
-                'DELIVERY',
-                'PREMIUM',
-                'OTHER',
-              ]
-                  .map((category) => DropdownMenuItem(
-                        value: category,
-                        child: Text(_getLocalizedCategory(context, category)),
-                      ))
-                  .toList(),
-              onChanged: (value) =>
-                  setState(() => _selectedCategory = value ?? 'OTT'),
+              items: _getLocalizedCategories(context).map((category) {
+                print('DropdownMenuItem Value: ${category['value']}');
+                return DropdownMenuItem<String>(
+                  value: category['value'],
+                  child: Text(category['label']!),
+                );
+              }).toList(),
+              onChanged: (String? value) {
+                setState(() {
+                  _selectedCategory = value!;
+                });
+              },
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
@@ -315,25 +322,17 @@ class _EditSubscriptionBottomSheetState
 
   void _submit() {
     if (_formKey.currentState?.validate() ?? false) {
-      final currency = context.read<AppSettingsBloc>().state.currency;
-      final updatedSubscription = Subscription(
-        id: widget.subscription.id,
+      final updatedSubscription = widget.subscription.copyWith(
         name: _nameController.text,
-        amount: double.parse(_amountController.text.replaceAll(',', '')),
-        startDate: widget.subscription.startDate,
+        amount: double.parse(_amountController.text),
         billingCycle: _selectedBillingCycle,
         billingDay: _selectedBillingDay,
-        category: _selectedCategory,
-        userId: widget.subscription.userId,
-        endDate: widget.subscription.endDate,
-        isActive: widget.subscription.isActive,
-        currency: currency,
+        category: _selectedCategory.toLowerCase(),
       );
 
-      context.read<SubscriptionBloc>().add(
-            UpdateSubscription(updatedSubscription),
-          );
-
+      context
+          .read<SubscriptionBloc>()
+          .add(UpdateSubscription(updatedSubscription));
       Navigator.pop(context);
     }
   }

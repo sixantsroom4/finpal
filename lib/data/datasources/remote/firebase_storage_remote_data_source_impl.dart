@@ -202,7 +202,7 @@ class FirebaseStorageRemoteDataSourceImpl
             .toList();
 
         final receiptData = doc.data();
-        // items를 Map 리스트로 ��환
+        // items를 Map 리스트로 환환
         final itemsMapList = items.map((item) => item.toJson()).toList();
 
         return ReceiptModel.fromJson({
@@ -373,7 +373,7 @@ class FirebaseStorageRemoteDataSourceImpl
       return expenses;
     } catch (e) {
       debugPrint('Firebase 조회 에러: $e');
-      throw DatabaseException('지출 목록 조회 실��: ${e.toString()}');
+      throw DatabaseException('지출 목록 조회 실패: ${e.toString()}');
     }
   }
 
@@ -453,9 +453,14 @@ class FirebaseStorageRemoteDataSourceImpl
   @override
   Future<void> deleteSubscription(String subscriptionId) async {
     try {
-      await _firestore.collection('subscriptions').doc(subscriptionId).delete();
+      await _firestore.collection('subscriptions').doc(subscriptionId).update({
+        'isActive': false,
+        'cancelledAt': FieldValue.serverTimestamp(),
+      });
+      print('구독 취소 완료: $subscriptionId');
     } catch (e) {
-      throw DatabaseException('구독 삭제 실패: ${e.toString()}');
+      print('구독 취소 중 오류 발생: $e');
+      throw DatabaseException('구독 취소 실패: $e');
     }
   }
 
@@ -646,7 +651,7 @@ class FirebaseStorageRemoteDataSourceImpl
         "items": [
           {
             "name": "상품명",
-            "price": 숫��로된 가격,
+            "price": 숫자로된 가격,
             "quantity": 1
           }
         ]
@@ -725,11 +730,21 @@ class FirebaseStorageRemoteDataSourceImpl
     }
   }
 
+  @override
   Future<void> createExpenseFromSubscription(
       SubscriptionModel subscription) async {
     try {
-      // 다음 결제일 산
+      final now = DateTime.now();
+      final startDate = subscription.startDate;
       final nextBillingDate = subscription.calculateNextBillingDate();
+      DateTime expenseDate;
+
+      // 구독 시작일이 현재 날짜와 같거나 이전이면 구독 시작일을 지출 날짜로 설정
+      if (startDate.isAtSameMomentAs(now) || startDate.isBefore(now)) {
+        expenseDate = startDate;
+      } else {
+        expenseDate = nextBillingDate;
+      }
 
       // 지출 생성
       final expenseRef = _firestore.collection('expenses').doc();
@@ -739,7 +754,7 @@ class FirebaseStorageRemoteDataSourceImpl
         currency: subscription.currency,
         description: '${subscription.name} 구독료',
         category: subscription.category,
-        date: nextBillingDate,
+        date: expenseDate,
         userId: subscription.userId,
         isSubscription: true,
         subscriptionId: subscription.id,
@@ -811,7 +826,7 @@ class FirebaseStorageRemoteDataSourceImpl
       final file = File(imagePath);
       final bytes = await file.readAsBytes();
 
-      // 2. 현재 사용자의 ��화 설정 가져오기
+      // 2. 현재 사용자의 통화 설정 가져오기
       final userDoc = await _firestore.collection('users').doc(userId).get();
       if (!userDoc.exists) {
         throw DatabaseException('사용자를 찾을 수 없습니다');
@@ -859,6 +874,52 @@ class FirebaseStorageRemoteDataSourceImpl
     } catch (e) {
       debugPrint('영수증 처리 실패: $e');
       throw ServerException(message: '영수증 처리 중 오류가 발생했습니다: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<ExpenseModel?> findExpenseBySubscriptionId(
+      String subscriptionId) async {
+    try {
+      final snapshot = await _firestore
+          .collection('expenses')
+          .where('subscriptionId', isEqualTo: subscriptionId)
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isEmpty) return null;
+      return ExpenseModel.fromJson(snapshot.docs.first.data());
+    } catch (e) {
+      throw DatabaseException('구독 관련 지출 조회 실패: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<void> updateExpenseForSubscription(
+      SubscriptionModel subscription) async {
+    try {
+      final nextBillingDate = subscription.calculateNextBillingDate();
+
+      final expenseSnapshot = await _firestore
+          .collection('expenses')
+          .where('subscriptionId', isEqualTo: subscription.id)
+          .limit(1)
+          .get();
+
+      if (expenseSnapshot.docs.isEmpty) {
+        throw DatabaseException('구독 관련 지출을 찾을 수 없습니다');
+      }
+
+      final expenseDoc = expenseSnapshot.docs.first;
+      await expenseDoc.reference.update({
+        'amount': subscription.amount,
+        'currency': subscription.currency,
+        'description': '${subscription.name} 구독료',
+        'category': subscription.category,
+        'date': nextBillingDate,
+      });
+    } catch (e) {
+      throw DatabaseException('구독 지출 업데이트 실패: ${e.toString()}');
     }
   }
 }

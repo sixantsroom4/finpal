@@ -14,6 +14,7 @@ class SubscriptionModel extends Subscription {
     required String category,
     required String userId,
     required bool isActive,
+    required bool isPaused,
   }) : super(
           id: id,
           name: name,
@@ -26,6 +27,7 @@ class SubscriptionModel extends Subscription {
           category: category,
           userId: userId,
           isActive: isActive,
+          isPaused: isPaused,
         );
 
   factory SubscriptionModel.fromJson(Map<String, dynamic> json) {
@@ -41,6 +43,7 @@ class SubscriptionModel extends Subscription {
       category: json['category'],
       userId: json['userId'],
       isActive: json['isActive'] ?? true,
+      isPaused: json['isPaused'] ?? false,
     );
   }
 
@@ -57,6 +60,7 @@ class SubscriptionModel extends Subscription {
       'category': category,
       'userId': userId,
       'isActive': isActive,
+      'isPaused': isPaused,
     };
   }
 
@@ -73,6 +77,7 @@ class SubscriptionModel extends Subscription {
       category: subscription.category,
       userId: subscription.userId,
       isActive: subscription.isActive,
+      isPaused: subscription.isPaused,
     );
   }
 
@@ -150,6 +155,7 @@ class SubscriptionModel extends Subscription {
     int? billingDay,
     String? category,
     bool? isActive,
+    bool? isPaused,
   }) {
     return SubscriptionModel(
       id: id ?? this.id,
@@ -163,6 +169,7 @@ class SubscriptionModel extends Subscription {
       billingDay: billingDay ?? this.billingDay,
       category: category ?? this.category,
       isActive: isActive ?? this.isActive,
+      isPaused: isPaused ?? this.isPaused,
     );
   }
 }

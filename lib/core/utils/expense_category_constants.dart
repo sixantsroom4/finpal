@@ -1,5 +1,6 @@
-// lib/core/utils/constants.dart
+// lib/core/utils/expense_category_constants.dart
 import 'package:finpal/core/constants/app_languages.dart';
+import 'package:flutter/material.dart';
 
 class FirebaseCollections {
   static const String users = 'users';
@@ -13,7 +14,7 @@ class FirebaseStoragePaths {
   static const String profiles = 'profiles';
 }
 
-class CategoryConstants {
+class ExpenseCategoryConstants {
   static const Map<String, Map<AppLanguage, String>> categories = {
     'food': {
       AppLanguage.english: 'Food',
@@ -80,6 +81,22 @@ class CategoryConstants {
       AppLanguage.korean: '기타',
       AppLanguage.japanese: 'その他',
     },
+  };
+
+  static final Map<String, IconData> categoryIcons = {
+    'food': Icons.restaurant_outlined,
+    'transport': Icons.directions_bus_outlined,
+    'shopping': Icons.shopping_cart_outlined,
+    'entertainment': Icons.movie_outlined,
+    'health': Icons.local_hospital_outlined,
+    'beauty': Icons.spa_outlined,
+    'utilities': Icons.power_outlined,
+    'education': Icons.school_outlined,
+    'savings': Icons.savings_outlined,
+    'travel': Icons.flight_outlined,
+    'social': Icons.people_outlined,
+    'household': Icons.home_outlined,
+    'other': Icons.category_outlined,
   };
 
   static List<String> getAll() => categories.keys.toList();

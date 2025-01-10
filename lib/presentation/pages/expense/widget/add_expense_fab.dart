@@ -1,4 +1,5 @@
 // lib/presentation/pages/expense/widgets/add_expense_fab.dart
+import 'package:finpal/core/utils/expense_category_constants.dart';
 import 'package:finpal/data/models/expense_model.dart';
 import 'package:finpal/data/models/user_model.dart';
 import 'package:finpal/domain/entities/expense.dart';
@@ -13,7 +14,7 @@ import '../../../bloc/auth/auth_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/core/constants/app_languages.dart';
-import 'package:finpal/core/utils/constants.dart';
+import 'package:finpal/core/utils/expense_category_constants.dart';
 
 class AddExpenseFab extends StatelessWidget {
   const AddExpenseFab({super.key});
@@ -46,7 +47,6 @@ class AddExpenseFab extends StatelessWidget {
   }
 
   void _showAddExpenseBottomSheet(BuildContext context) {
-    // 지출 추가 다이얼로그 표시
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -252,11 +252,11 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
 
   List<DropdownMenuItem<String>> _getLocalizedCategories(BuildContext context) {
     final language = context.read<AppLanguageBloc>().state.language;
-    return CategoryConstants.categories.entries.map((entry) {
+    return ExpenseCategoryConstants.categories.entries.map((entry) {
       return DropdownMenuItem<String>(
         value: entry.key,
-        child:
-            Text(CategoryConstants.getLocalizedCategory(entry.key, language)),
+        child: Text(
+            ExpenseCategoryConstants.getLocalizedCategory(entry.key, language)),
       );
     }).toList();
   }

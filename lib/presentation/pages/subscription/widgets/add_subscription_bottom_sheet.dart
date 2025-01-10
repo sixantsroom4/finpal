@@ -4,14 +4,13 @@ import 'package:finpal/presentation/bloc/subscription/subscription_event.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
-import '../../../../domain/entities/subscription.dart';
 import '../../../bloc/subscription/subscription_bloc.dart';
 import '../../../bloc/auth/auth_bloc.dart';
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/core/constants/app_languages.dart';
 import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
 import 'package:finpal/data/models/subscription_model.dart';
-import 'package:finpal/core/models/category_item.dart';
+import 'package:finpal/core/utils/subscription_category_constants.dart';
 
 class AddSubscriptionBottomSheet extends StatefulWidget {
   const AddSubscriptionBottomSheet({super.key});
@@ -26,11 +25,25 @@ class _AddSubscriptionBottomSheetState
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _amountController = TextEditingController();
-  String _selectedCategory = 'OTT';
+  String _selectedCategory =
+      SubscriptionCategoryConstants.categories.keys.first;
   String _selectedBillingCycle = 'monthly';
   int _selectedBillingDay = 1;
   String _selectedCurrency = 'KRW';
   DateTime _startDate = DateTime.now();
+
+  List<Map<String, String>> _getLocalizedCategories(BuildContext context) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    final categories = SubscriptionCategoryConstants.categories.keys.map((key) {
+      return {
+        'value': key,
+        'label':
+            SubscriptionCategoryConstants.getLocalizedCategory(context, key),
+      };
+    }).toList();
+    print('Localized Categories: $categories');
+    return categories;
+  }
 
   @override
   void dispose() {
@@ -271,37 +284,30 @@ class _AddSubscriptionBottomSheetState
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                items: [
-                  'OTT',
-                  'MUSIC',
-                  'GAME',
-                  'FITNESS',
-                  'PRODUCTIVITY',
-                  'SOFTWARE',
-                  'PET_CARE',
-                  'BEAUTY',
-                  'CAR_SERVICES',
-                  'STREAMING',
-                  'RENT',
-                  'DELIVERY',
-                  'PREMIUM',
-                  'OTHER',
-                ]
-                    .map((category) => DropdownMenuItem(
-                          value: category,
-                          child: Row(
-                            children: [
-                              Icon(CategoryItem.getCategoryIcon(category),
-                                  size: 20, color: const Color(0xFF2C3E50)),
-                              const SizedBox(width: 12),
-                              Text(CategoryItem.getLocalizedCategory(
-                                  context, category)),
-                            ],
-                          ),
-                        ))
-                    .toList(),
+                items: _getLocalizedCategories(context).map((category) {
+                  print('DropdownMenuItem Value: ${category['value']}');
+                  return DropdownMenuItem<String>(
+                    value: category['value'],
+                    child: Row(
+                      children: [
+                        Icon(
+                          SubscriptionCategoryConstants
+                                      .categories[category['value']] !=
+                                  null
+                              ? SubscriptionCategoryConstants
+                                  .categoryIcons[category['value']!]
+                              : Icons.category_outlined,
+                          size: 20,
+                          color: const Color(0xFF2C3E50),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(category['label']!),
+                      ],
+                    ),
+                  );
+                }).toList(),
                 onChanged: (value) =>
-                    setState(() => _selectedCategory = value ?? 'OTT'),
+                    setState(() => _selectedCategory = value!),
               ),
               const SizedBox(height: 16),
 
@@ -396,9 +402,10 @@ class _AddSubscriptionBottomSheetState
             startDate: DateTime.now(),
             billingCycle: _selectedBillingCycle,
             billingDay: _selectedBillingDay,
-            category: _selectedCategory,
+            category: _selectedCategory.toLowerCase(),
             userId: authState.user.id,
             isActive: true,
+            isPaused: false,
           );
 
           context.read<SubscriptionBloc>().add(AddSubscription(subscription));

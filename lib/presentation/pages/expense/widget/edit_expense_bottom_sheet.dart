@@ -1,12 +1,13 @@
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/core/constants/app_languages.dart';
-import 'package:finpal/core/utils/constants.dart';
+import 'package:finpal/core/utils/expense_category_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../../domain/entities/expense.dart';
 import '../../../bloc/expense/expense_bloc.dart';
 import '../../../bloc/expense/expense_event.dart';
+import 'package:finpal/core/utils/expense_category_constants.dart';
 
 class EditExpenseBottomSheet extends StatefulWidget {
   final Expense expense;
@@ -24,19 +25,19 @@ class _EditExpenseBottomSheetState extends State<EditExpenseBottomSheet> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _descriptionController;
   late TextEditingController _amountController;
-  late String _selectedCategory;
+  String? _selectedCategory;
   late DateTime _selectedDate;
 
   @override
   void initState() {
     super.initState();
     _descriptionController =
-        TextEditingController(text: widget.expense.description);
+        TextEditingController(text: widget.expense?.description ?? '');
     _amountController = TextEditingController(
-      text: NumberFormat('#,###').format(widget.expense.amount),
+      text: widget.expense?.amount.toString() ?? '',
     );
-    _selectedCategory = widget.expense.category;
-    _selectedDate = widget.expense.date;
+    _selectedDate = widget.expense?.date ?? DateTime.now();
+    _selectedCategory = widget.expense?.category?.toLowerCase();
   }
 
   @override
@@ -105,17 +106,21 @@ class _EditExpenseBottomSheetState extends State<EditExpenseBottomSheet> {
                 border: const OutlineInputBorder(),
               ),
               items: _getLocalizedCategories(context)
-                  .map((category) => DropdownMenuItem(
-                        value: category['value'],
+                  .map((category) => DropdownMenuItem<String>(
+                        value: category['value']?.toLowerCase(),
                         child: Text(category['label']!),
                       ))
                   .toList(),
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() {
-                    _selectedCategory = value;
-                  });
+              onChanged: (String? newValue) {
+                setState(() {
+                  _selectedCategory = newValue;
+                });
+              },
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return _getLocalizedError(context, 'category_required');
                 }
+                return null;
               },
             ),
             const SizedBox(height: 16),
@@ -220,10 +225,11 @@ class _EditExpenseBottomSheetState extends State<EditExpenseBottomSheet> {
 
   List<Map<String, String>> _getLocalizedCategories(BuildContext context) {
     final language = context.read<AppLanguageBloc>().state.language;
-    return CategoryConstants.categories.entries.map((entry) {
+    return ExpenseCategoryConstants.categories.entries.map((entry) {
       return {
         'value': entry.key,
-        'label': CategoryConstants.getLocalizedCategory(entry.key, language),
+        'label':
+            ExpenseCategoryConstants.getLocalizedCategory(entry.key, language),
       };
     }).toList();
   }
@@ -248,7 +254,7 @@ class _EditExpenseBottomSheetState extends State<EditExpenseBottomSheet> {
         amount: double.parse(_amountController.text.replaceAll(',', '')),
         currency: widget.expense.currency,
         description: _descriptionController.text.trim(),
-        category: _selectedCategory,
+        category: _selectedCategory ?? '',
         date: _selectedDate,
         userId: widget.expense.userId,
         receiptUrl: widget.expense.receiptUrl,

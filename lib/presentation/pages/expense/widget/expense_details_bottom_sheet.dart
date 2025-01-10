@@ -1,4 +1,5 @@
 // lib/presentation/pages/expense/widgets/expense_details_bottom_sheet.dart
+import 'package:finpal/core/utils/expense_category_constants.dart';
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/core/constants/app_languages.dart';
 import 'package:finpal/presentation/bloc/app_settings/app_settings_bloc.dart';
@@ -12,7 +13,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../../domain/entities/expense.dart';
 import 'package:go_router/go_router.dart';
-import 'package:finpal/core/utils/constants.dart';
+import 'package:finpal/core/utils/expense_category_constants.dart';
 
 class ExpenseDetailsBottomSheet extends StatelessWidget {
   final Expense expense;
@@ -321,7 +322,7 @@ class ExpenseDetailsBottomSheet extends StatelessWidget {
 
   String _getLocalizedCategory(BuildContext context, String category) {
     final language = context.read<AppLanguageBloc>().state.language;
-    return CategoryConstants.getLocalizedCategory(category, language);
+    return ExpenseCategoryConstants.getLocalizedCategory(category, language);
   }
 
   void _showDeleteConfirmDialog(BuildContext context) {

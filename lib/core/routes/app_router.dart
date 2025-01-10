@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:finpal/core/constants/app_languages.dart';
 import 'package:finpal/domain/entities/receipt.dart';
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
+import 'package:finpal/presentation/pages/expense/widget/add_expense_bottom_sheet.dart';
 import 'package:finpal/presentation/pages/expense/widget/budget_settings_page.dart';
 import 'package:finpal/presentation/pages/onboarding/terms_page.dart';
 import 'package:finpal/presentation/pages/receipt/receipt_details_page.dart';
@@ -96,6 +97,10 @@ class AppRouter {
                   builder: (context, state) => const CustomerServicePage(),
                 ),
               ],
+            ),
+            GoRoute(
+              path: '/add-expense',
+              builder: (context, state) => const AddExpenseBottomSheet(),
             ),
           ],
         ),

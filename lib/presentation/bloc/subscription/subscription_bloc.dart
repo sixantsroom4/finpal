@@ -1,9 +1,9 @@
 import 'package:finpal/data/models/subscription_model.dart';
 import 'package:finpal/domain/entities/subscription.dart';
+import 'package:finpal/presentation/bloc/subscription/subscription_event.dart';
+import 'package:finpal/presentation/bloc/subscription/subscription_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../domain/repositories/subscription_repository.dart';
-import 'subscription_event.dart';
-import 'subscription_state.dart';
 
 class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
   final SubscriptionRepository _subscriptionRepository;
@@ -19,6 +19,8 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     on<DeleteSubscription>(_onDeleteSubscription);
     on<LoadSubscriptionsByCategory>(_onLoadSubscriptionsByCategory);
     on<LoadSubscriptionsByBillingDate>(_onLoadSubscriptionsByBillingDate);
+    on<CancelSubscription>(_onCancelSubscription);
+    on<LoadSubscriptionById>(_onLoadSubscriptionById);
   }
 
   Future<void> _onLoadSubscriptions(
@@ -112,14 +114,36 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     Emitter<SubscriptionState> emit,
   ) async {
     emit(SubscriptionLoading());
-    final result =
-        await _subscriptionRepository.updateSubscription(event.subscription);
+    final subscription = event.subscription;
 
-    result.fold(
+    final updateResult =
+        await _subscriptionRepository.updateSubscription(subscription);
+
+    updateResult.fold(
       (failure) => emit(SubscriptionError(failure.message)),
-      (subscription) {
-        emit(const SubscriptionOperationSuccess('구독이 수정되었습니다.'));
-        add(LoadActiveSubscriptions(event.subscription.userId));
+      (updatedSubscription) async {
+        try {
+          // 기존 지출 내역 확인 (subscriptionId를 사용하여 조회)
+          final existingExpense = await _subscriptionRepository
+              .findExpenseBySubscriptionId(subscription.id);
+
+          if (existingExpense != null) {
+            // 기존 지출 내역 업데이트
+            await _subscriptionRepository.updateExpenseForSubscription(
+              updatedSubscription as SubscriptionModel,
+            );
+          } else {
+            // 기존 지출 내역이 없으면 새로 생성 (드문 경우)
+            await _subscriptionRepository.createExpenseFromSubscription(
+              updatedSubscription as SubscriptionModel,
+            );
+          }
+
+          emit(const SubscriptionOperationSuccess('구독이 수정되었습니다.'));
+          add(LoadActiveSubscriptions(subscription.userId));
+        } catch (e) {
+          emit(SubscriptionError('구독 지출 업데이트 실패: ${e.toString()}'));
+        }
       },
     );
   }
@@ -143,6 +167,22 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
             add(LoadActiveSubscriptions(userId));
           }
         }
+      },
+    );
+  }
+
+  Future<void> _onCancelSubscription(
+    CancelSubscription event,
+    Emitter<SubscriptionState> emit,
+  ) async {
+    emit(SubscriptionLoading());
+    final result =
+        await _subscriptionRepository.deleteSubscription(event.subscriptionId);
+    result.fold(
+      (failure) => emit(SubscriptionError(failure.message)),
+      (_) {
+        emit(const SubscriptionOperationSuccess('구독이 취소되었습니다.'));
+        add(LoadActiveSubscriptions(event.userId));
       },
     );
   }
@@ -176,6 +216,26 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     result.fold(
       (failure) => emit(SubscriptionError(failure.message)),
       (subscriptions) => emit(_createLoadedState(subscriptions)),
+    );
+  }
+
+  Future<void> _onLoadSubscriptionById(
+    LoadSubscriptionById event,
+    Emitter<SubscriptionState> emit,
+  ) async {
+    emit(SubscriptionLoading());
+    final result =
+        await _subscriptionRepository.getSubscriptionById(event.subscriptionId);
+
+    result.fold(
+      (failure) => emit(SubscriptionError(failure.message)),
+      (subscription) => emit(SubscriptionLoaded(
+        subscriptions: [subscription],
+        monthlyTotal: 0,
+        yearlyTotal: 0,
+        categoryTotals: {},
+        billingDaySubscriptions: {},
+      )),
     );
   }
 

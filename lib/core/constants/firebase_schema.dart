@@ -47,6 +47,7 @@ class FirebaseSchema {
       'category': 'string',
       'userId': 'string',
       'isActive': 'boolean',
+      'cancelledAt': 'timestamp?',
     },
   };
 }

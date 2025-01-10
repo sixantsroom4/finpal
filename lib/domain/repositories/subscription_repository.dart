@@ -1,6 +1,7 @@
 // domain/repositories/subscription_repository.dart
 import 'package:dartz/dartz.dart';
 import 'package:finpal/data/models/subscription_model.dart';
+import 'package:finpal/domain/entities/expense.dart';
 import '../entities/subscription.dart';
 import '../../core/errors/failures.dart';
 
@@ -40,5 +41,10 @@ abstract class SubscriptionRepository {
   );
 
   Future<Either<Failure, void>> createExpenseFromSubscription(
+      SubscriptionModel subscription);
+
+  Future<Either<Failure, Expense?>> findExpenseBySubscriptionId(
+      String subscriptionId);
+  Future<Either<Failure, void>> updateExpenseForSubscription(
       SubscriptionModel subscription);
 }

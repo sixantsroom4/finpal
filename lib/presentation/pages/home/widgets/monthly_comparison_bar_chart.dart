@@ -1,3 +1,4 @@
+import 'package:finpal/core/utils/expense_category_constants.dart';
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/core/constants/app_languages.dart';
 import 'package:finpal/presentation/bloc/expense/expense_state.dart';
@@ -6,7 +7,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../bloc/expense/expense_bloc.dart';
 import 'package:intl/intl.dart';
-import 'package:finpal/core/utils/constants.dart';
+import 'package:finpal/core/utils/expense_category_constants.dart';
 
 class MonthlyComparisonBarChart extends StatelessWidget {
   const MonthlyComparisonBarChart({super.key});
@@ -124,7 +125,7 @@ class MonthlyComparisonBarChart extends StatelessWidget {
 
   String _getLocalizedCategory(BuildContext context, String category) {
     final language = context.read<AppLanguageBloc>().state.language;
-    return CategoryConstants.getLocalizedCategory(category, language);
+    return ExpenseCategoryConstants.getLocalizedCategory(category, language);
   }
 
   String _getLocalizedAmount(BuildContext context, double amount) {

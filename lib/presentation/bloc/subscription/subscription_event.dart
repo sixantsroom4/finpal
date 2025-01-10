@@ -53,6 +53,16 @@ class DeleteSubscription extends SubscriptionEvent {
   List<Object> get props => [subscriptionId];
 }
 
+class CancelSubscription extends SubscriptionEvent {
+  final String subscriptionId;
+  final String userId;
+
+  const CancelSubscription(this.subscriptionId, this.userId);
+
+  @override
+  List<Object> get props => [subscriptionId, userId];
+}
+
 class LoadSubscriptionsByCategory extends SubscriptionEvent {
   final String userId;
   final String category;
@@ -77,4 +87,13 @@ class LoadSubscriptionsByBillingDate extends SubscriptionEvent {
 
   @override
   List<Object> get props => [userId, billingDay];
+}
+
+class LoadSubscriptionById extends SubscriptionEvent {
+  final String subscriptionId;
+
+  const LoadSubscriptionById(this.subscriptionId);
+
+  @override
+  List<Object> get props => [subscriptionId];
 }
