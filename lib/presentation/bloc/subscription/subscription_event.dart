@@ -44,13 +44,18 @@ class UpdateSubscription extends SubscriptionEvent {
   List<Object> get props => [subscription];
 }
 
+// 수정된 DeleteSubscription: userId 필드 추가
 class DeleteSubscription extends SubscriptionEvent {
   final String subscriptionId;
+  final String userId;
 
-  const DeleteSubscription({required this.subscriptionId});
+  const DeleteSubscription({
+    required this.subscriptionId,
+    required this.userId,
+  });
 
   @override
-  List<Object> get props => [subscriptionId];
+  List<Object> get props => [subscriptionId, userId];
 }
 
 class CancelSubscription extends SubscriptionEvent {

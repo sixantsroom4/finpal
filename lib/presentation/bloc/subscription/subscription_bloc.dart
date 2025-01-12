@@ -1,9 +1,9 @@
 import 'package:finpal/data/models/subscription_model.dart';
 import 'package:finpal/domain/entities/subscription.dart';
+import 'package:finpal/domain/repositories/subscription_repository.dart';
 import 'package:finpal/presentation/bloc/subscription/subscription_event.dart';
 import 'package:finpal/presentation/bloc/subscription/subscription_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../domain/repositories/subscription_repository.dart';
 
 class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
   final SubscriptionRepository _subscriptionRepository;
@@ -29,7 +29,6 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
   ) async {
     emit(SubscriptionLoading());
     final result = await _subscriptionRepository.getSubscriptions(event.userId);
-
     result.fold(
       (failure) => emit(SubscriptionError(failure.message)),
       (subscriptions) => emit(_createLoadedState(subscriptions)),
@@ -41,13 +40,10 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     Emitter<SubscriptionState> emit,
   ) async {
     emit(SubscriptionLoading());
-
     final result = await _subscriptionRepository.getSubscriptions(event.userId);
-
     result.fold(
       (failure) => emit(SubscriptionError(failure.message)),
       (subscriptions) {
-        // 결제일별 구독 그룹화 (활성 구독만)
         final billingDaySubscriptions = <int, List<Subscription>>{};
         for (var subscription in subscriptions.where((s) => s.isActive)) {
           if (!billingDaySubscriptions.containsKey(subscription.billingDay)) {
@@ -85,6 +81,7 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     );
   }
 
+  /// 수정된 AddSubscription 핸들러: 추가 후 최신 데이터를 await 방식으로 불러와 로딩 상태 후에 UI 갱신
   Future<void> _onAddSubscription(
     AddSubscription event,
     Emitter<SubscriptionState> emit,
@@ -92,20 +89,24 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     emit(SubscriptionLoading());
     final result =
         await _subscriptionRepository.addSubscription(event.subscription);
-
     await result.fold(
-      (failure) async => emit(SubscriptionError(failure.message)),
+      (failure) async {
+        emit(SubscriptionError(failure.message));
+      },
       (subscription) async {
         try {
+          // 구독 추가 후 관련 지출 생성 처리 (만약 실패하면 에러 처리)
           await _subscriptionRepository.createExpenseFromSubscription(
             subscription as SubscriptionModel,
           );
-          emit(const SubscriptionOperationSuccess('subscription_added'));
-
-          // 기존 코드: 처리 직후에 바로 active 구독 불러오기
-          // add(LoadActiveSubscriptions(event.subscription.userId));
-          // ----------------------------------------------------
-          // 이제는 UI 쪽에서 `LoadActiveSubscriptions`를 따로 호출하도록 유도
+          // 최신 활성 구독 목록을 불러오기 위해 로딩 상태 후 데이터 재조회
+          final loadResult = await _subscriptionRepository
+              .getSubscriptions(event.subscription.userId);
+          loadResult.fold(
+            (failure) => emit(SubscriptionError(failure.message)),
+            (subscriptions) => emit(_createLoadedState(subscriptions)),
+          );
+          // UI 쪽에서는 BlocListener로 OperationSuccess 메시지(SnackBar 등) 처리 권장
         } catch (e) {
           emit(SubscriptionError('구독 지출 생성 실패: ${e.toString()}'));
         }
@@ -113,42 +114,29 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     );
   }
 
+  /// 수정된 UpdateSubscription 핸들러: 업데이트 후 최신 데이터를 불러오도록 처리
   Future<void> _onUpdateSubscription(
     UpdateSubscription event,
     Emitter<SubscriptionState> emit,
   ) async {
     emit(SubscriptionLoading());
     final subscription = event.subscription;
-
     final updateResult =
         await _subscriptionRepository.updateSubscription(subscription);
-
     await updateResult.fold(
       (failure) async => emit(SubscriptionError(failure.message)),
       (updatedSubscription) async {
         try {
-          // 기존 지출 내역 확인 (subscriptionId를 사용하여 조회)
-          final existingExpense = await _subscriptionRepository
-              .findExpenseBySubscriptionId(subscription.id);
-
-          if (existingExpense != null) {
-            // 기존 지출 내역 업데이트
-            await _subscriptionRepository.updateExpenseForSubscription(
-              updatedSubscription as SubscriptionModel,
-            );
-          } else {
-            // 기존 지출 내역이 없으면 새로 생성
-            await _subscriptionRepository.createExpenseFromSubscription(
-              updatedSubscription as SubscriptionModel,
-            );
-          }
-
-          emit(const SubscriptionOperationSuccess('subscription_updated'));
-
-          // 기존 코드: 처리 직후에 다시 active 구독 불러오기
-          // add(LoadActiveSubscriptions(subscription.userId));
-          // ------------------------------------------------
-          // UI 쪽에서 필요 시 다시 불러오도록 변경
+          await _subscriptionRepository.updateExpenseForSubscription(
+            updatedSubscription as SubscriptionModel,
+          );
+          // 최신 활성 구독 불러오기
+          final loadResult = await _subscriptionRepository
+              .getSubscriptions(subscription.userId);
+          loadResult.fold(
+            (failure) => emit(SubscriptionError(failure.message)),
+            (subscriptions) => emit(_createLoadedState(subscriptions)),
+          );
         } catch (e) {
           emit(SubscriptionError('구독 지출 업데이트 실패: ${e.toString()}'));
         }
@@ -156,6 +144,7 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     );
   }
 
+  /// 수정된 DeleteSubscription 핸들러: 삭제 후 로딩 상태를 표시하고 최신 데이터를 불러오도록 처리
   Future<void> _onDeleteSubscription(
     DeleteSubscription event,
     Emitter<SubscriptionState> emit,
@@ -163,22 +152,18 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     emit(SubscriptionLoading());
     final result =
         await _subscriptionRepository.deleteSubscription(event.subscriptionId);
-
-    result.fold(
-      (failure) => emit(SubscriptionError(failure.message)),
-      (_) {
-        emit(const SubscriptionOperationSuccess('subscription_deleted'));
-
-        // 기존 코드: state가 SubscriptionLoaded면 userId 빼서 다시 로드
-        // if (state is SubscriptionLoaded) {
-        //   final userId =
-        //       (state as SubscriptionLoaded).subscriptions.firstOrNull?.userId;
-        //   if (userId != null) {
-        //     add(LoadActiveSubscriptions(userId));
-        //   }
-        // }
-        // --------------------------------------
-        // UI 쪽에서 필요 시 다시 불러오도록 처리
+    await result.fold(
+      (failure) async {
+        emit(SubscriptionError(failure.message));
+      },
+      (_) async {
+        // 삭제 후 최신 구독 목록을 불러오기
+        final loadResult =
+            await _subscriptionRepository.getSubscriptions(event.userId);
+        loadResult.fold(
+          (failure) => emit(SubscriptionError(failure.message)),
+          (subscriptions) => emit(_createLoadedState(subscriptions)),
+        );
       },
     );
   }
@@ -190,12 +175,16 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     emit(SubscriptionLoading());
     final result =
         await _subscriptionRepository.deleteSubscription(event.subscriptionId);
-    result.fold(
-      (failure) => emit(SubscriptionError(failure.message)),
-      (_) {
-        emit(const SubscriptionOperationSuccess('구독이 취소되었습니다.'));
-        // add(LoadActiveSubscriptions(event.userId));
-        // UI에서 Reload
+    await result.fold(
+      (failure) async => emit(SubscriptionError(failure.message)),
+      (_) async {
+        // 삭제(취소) 후 최신 활성 구독 목록 재조회
+        final loadResult =
+            await _subscriptionRepository.getSubscriptions(event.userId);
+        loadResult.fold(
+          (failure) => emit(SubscriptionError(failure.message)),
+          (subscriptions) => emit(_createLoadedState(subscriptions)),
+        );
       },
     );
   }
@@ -209,7 +198,6 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
       event.userId,
       event.category,
     );
-
     result.fold(
       (failure) => emit(SubscriptionError(failure.message)),
       (subscriptions) => emit(_createLoadedState(subscriptions)),
@@ -225,7 +213,6 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
       event.userId,
       event.billingDay,
     );
-
     result.fold(
       (failure) => emit(SubscriptionError(failure.message)),
       (subscriptions) => emit(_createLoadedState(subscriptions)),
@@ -239,7 +226,6 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     emit(SubscriptionLoading());
     final result =
         await _subscriptionRepository.getSubscriptionById(event.subscriptionId);
-
     result.fold(
       (failure) => emit(SubscriptionError(failure.message)),
       (subscription) => emit(SubscriptionLoaded(
@@ -261,7 +247,6 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
 
     for (var subscription
         in subscriptions.where((sub) => sub.isCurrentlyActive)) {
-      // 월간/연간 총액 계산
       if (subscription.billingCycle.toLowerCase() == 'monthly') {
         monthlyTotal += subscription.amount;
         yearlyTotal += subscription.amount * 12;
@@ -270,14 +255,10 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
         monthlyTotal += subscription.amount / 12;
       }
 
-      // 카테고리별 총액 계산
       categoryTotals[subscription.category] =
           (categoryTotals[subscription.category] ?? 0) + subscription.amount;
 
-      // 다음 결제일 계산
       final nextBillingDate = subscription.calculateNextBillingDate();
-
-      // 결제일별 구독 그룹화 (미래 결제 포함)
       if (nextBillingDate.month == now.month ||
           nextBillingDate.month == now.month + 1 ||
           (now.month == 12 && nextBillingDate.month == 1)) {

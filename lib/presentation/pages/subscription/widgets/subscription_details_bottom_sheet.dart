@@ -431,9 +431,9 @@ class SubscriptionDetailsBottomSheet extends StatelessWidget {
             TextButton(
               child: Text(_getLocalizedLabel(context, 'delete')),
               onPressed: () {
-                context
-                    .read<SubscriptionBloc>()
-                    .add(DeleteSubscription(subscriptionId: subscription.id));
+                context.read<SubscriptionBloc>().add(DeleteSubscription(
+                    subscriptionId: subscription.id,
+                    userId: subscription.userId));
                 Navigator.of(context).pop(); // 다이얼로그 닫기
               },
             ),
