@@ -140,6 +140,7 @@ class MyApp extends StatelessWidget {
           title: 'FinPal',
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+            scaffoldBackgroundColor: Colors.white,
             useMaterial3: true,
           ),
           routerConfig: AppRouter.router(authBloc),

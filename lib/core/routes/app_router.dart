@@ -205,6 +205,7 @@ class ScaffoldWithNavigationBar extends StatelessWidget {
     return Scaffold(
       body: child,
       bottomNavigationBar: NavigationBar(
+        backgroundColor: Colors.white,
         onDestinationSelected: (index) {
           switch (index) {
             case 0:
