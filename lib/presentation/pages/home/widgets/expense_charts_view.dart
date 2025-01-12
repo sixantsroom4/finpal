@@ -20,56 +20,52 @@ class _ExpenseChartsViewState extends State<ExpenseChartsView> {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  _getLocalizedTitle(context),
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-                Row(
-                  children: List.generate(
-                    2,
-                    (index) => Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 2.0),
-                      child: CircleAvatar(
-                        radius: 4,
-                        backgroundColor: _currentPage == index
-                            ? Theme.of(context).colorScheme.primary
-                            : Colors.grey[300],
-                      ),
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                _getLocalizedTitle(context),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              Row(
+                children: List.generate(
+                  2,
+                  (index) => Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                    child: CircleAvatar(
+                      radius: 4,
+                      backgroundColor: _currentPage == index
+                          ? Theme.of(context).colorScheme.primary
+                          : Colors.grey[300],
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          SizedBox(
-            height: 380,
-            child: PageView(
-              controller: _pageController,
-              onPageChanged: (index) {
-                setState(() {
-                  _currentPage = index;
-                });
-              },
-              children: const [
-                MonthlyCategoryPieChart(),
-                MonthlyComparisonBarChart(),
-                // MonthlyTrendLineChart(),
-              ],
-            ),
+        ),
+        SizedBox(
+          height: 400,
+          child: PageView(
+            controller: _pageController,
+            onPageChanged: (index) {
+              setState(() {
+                _currentPage = index;
+              });
+            },
+            children: const [
+              MonthlyCategoryPieChart(),
+              MonthlyComparisonBarChart(),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
