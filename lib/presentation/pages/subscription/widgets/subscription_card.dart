@@ -84,6 +84,7 @@ class SubscriptionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print('Subscription Category: ${subscription.category}');
     return Opacity(
       opacity: subscription.isActive ? 1.0 : 0.6,
       child: Card(
@@ -109,7 +110,7 @@ class SubscriptionCard extends StatelessWidget {
                   child: Icon(
                     subscription.category != null
                         ? SubscriptionCategoryConstants
-                            .categoryIcons[subscription.category]
+                            .categoryIcons[subscription.category!.toUpperCase()]
                         : Icons.category,
                     color: const Color(0xFF2C3E50),
                   ),

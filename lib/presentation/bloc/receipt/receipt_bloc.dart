@@ -1,5 +1,7 @@
+import 'package:finpal/core/constants/app_languages.dart';
 import 'package:finpal/data/models/receipt_model.dart';
 import 'package:finpal/domain/usecases/receipt/scan_receipt_usecase.dart';
+import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/presentation/bloc/auth/auth_bloc.dart';
 import 'package:finpal/presentation/bloc/auth/auth_state.dart';
 import 'package:flutter/material.dart';
@@ -137,7 +139,7 @@ class ReceiptBloc extends Bloc<ReceiptEvent, ReceiptState> {
         },
         (savedReceipt) async {
           _receiptController.add(null);
-          emit(const ReceiptOperationSuccess('영수증이 저장되었습니다.'));
+          emit(const ReceiptOperationSuccess('receipt_saved_success'));
           add(LoadReceipts(event.receipt.userId));
         },
       );
@@ -160,7 +162,7 @@ class ReceiptBloc extends Bloc<ReceiptEvent, ReceiptState> {
     result.fold(
       (failure) => emit(ReceiptError(failure.message)),
       (receipt) {
-        emit(const ReceiptOperationSuccess('영수증이 수정되었습니다.'));
+        emit(const ReceiptOperationSuccess('receipt_updated_success'));
         add(LoadReceipts(event.receipt.userId));
       },
     );
@@ -170,21 +172,78 @@ class ReceiptBloc extends Bloc<ReceiptEvent, ReceiptState> {
     DeleteReceipt event,
     Emitter<ReceiptState> emit,
   ) async {
-    emit(ReceiptLoading());
-    final result = await _receiptRepository.deleteReceipt(event.receiptId);
+    try {
+      if (state is ReceiptLoaded) {
+        final currentState = state as ReceiptLoaded;
+        emit(ReceiptLoading(
+          currentState.receipts,
+          currentState.merchantTotals,
+          currentState.totalAmount,
+        ));
+      } else {
+        emit(ReceiptLoading());
+      }
 
-    result.fold(
-      (failure) => emit(ReceiptError(failure.message)),
-      (_) {
-        emit(const ReceiptOperationSuccess('영수증이 삭제되었습니다.'));
-        if (state is ReceiptLoaded) {
-          final userId = (state as ReceiptLoaded).receipts.firstOrNull?.userId;
-          if (userId != null) {
-            add(LoadReceipts(userId));
+      final result = await _receiptRepository.deleteReceipt(event.receiptId);
+
+      await result.fold(
+        (failure) async {
+          emit(ReceiptError(failure.message));
+        },
+        (_) async {
+          if (state is ReceiptLoading) {
+            final currentState = state as ReceiptLoading;
+            final updatedReceipts = currentState.receipts
+                .where((r) => r.id != event.receiptId)
+                .toList();
+
+            if (updatedReceipts.isEmpty) {
+              emit(const ReceiptEmpty());
+            } else {
+              final merchantTotals = _calculateMerchantTotals(updatedReceipts);
+              final totalAmount = updatedReceipts.fold(
+                0.0,
+                (sum, receipt) => sum + receipt.totalAmount,
+              );
+
+              emit(ReceiptOperationSuccess(
+                'receipt_deleted_success',
+                receipts: updatedReceipts,
+                merchantTotals: merchantTotals,
+                totalAmount: totalAmount,
+              ));
+            }
           }
-        }
-      },
-    );
+
+          _receiptController.add(null);
+
+          final reloadResult =
+              await _receiptRepository.getReceipts(event.userId);
+
+          await reloadResult.fold(
+            (failure) async {
+              emit(ReceiptError(failure.message));
+            },
+            (receipts) async {
+              final merchantTotals = _calculateMerchantTotals(receipts);
+              final totalAmount = receipts.fold(
+                0.0,
+                (sum, receipt) => sum + receipt.totalAmount,
+              );
+
+              emit(ReceiptLoaded(
+                receipts: receipts,
+                merchantTotals: merchantTotals,
+                totalAmount: totalAmount,
+              ));
+            },
+          );
+        },
+      );
+    } catch (e) {
+      debugPrint('영수증 삭제 중 오류 발생: $e');
+      emit(ReceiptError(e.toString()));
+    }
   }
 
   Future<void> _onLoadReceipts(
@@ -324,5 +383,22 @@ class ReceiptBloc extends Bloc<ReceiptEvent, ReceiptState> {
           (merchantTotals[receipt.merchantName] ?? 0.0) + receipt.totalAmount;
     }
     return merchantTotals;
+  }
+
+  String _getLocalizedLabel(BuildContext context, String key) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    final Map<String, Map<AppLanguage, String>> labels = {
+      'receipt_saved_success': {
+        AppLanguage.english: 'Receipt saved successfully',
+        AppLanguage.korean: '영수증이 성공적으로 저장되었습니다.',
+        AppLanguage.japanese: '領収書が正常に保存されました。',
+      },
+      'receipt_deleted_success': {
+        AppLanguage.english: 'Receipt deleted successfully',
+        AppLanguage.korean: '영수증이 성공적으로 삭제되었습니다.',
+        AppLanguage.japanese: '領収書が正常に削除されました。',
+      },
+    };
+    return labels[key]?[language] ?? labels[key]?[AppLanguage.korean] ?? key;
   }
 }

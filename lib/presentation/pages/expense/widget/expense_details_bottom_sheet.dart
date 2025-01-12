@@ -1,4 +1,3 @@
-// lib/presentation/pages/expense/widgets/expense_details_bottom_sheet.dart
 import 'package:finpal/core/utils/expense_category_constants.dart';
 import 'package:finpal/presentation/bloc/app_language/app_language_bloc.dart';
 import 'package:finpal/core/constants/app_languages.dart';
@@ -19,9 +18,9 @@ class ExpenseDetailsBottomSheet extends StatelessWidget {
   final Expense expense;
 
   const ExpenseDetailsBottomSheet({
-    super.key,
+    Key? key,
     required this.expense,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +36,6 @@ class ExpenseDetailsBottomSheet extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 드래그 핸들
           Center(
             child: Container(
               width: 40,
@@ -49,8 +47,6 @@ class ExpenseDetailsBottomSheet extends StatelessWidget {
               ),
             ),
           ),
-
-          // 금액 표시
           Center(
             child: Text(
               _getLocalizedAmount(context, expense.amount),
@@ -62,8 +58,6 @@ class ExpenseDetailsBottomSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-
-          // 상세 정보 리스트
           _buildDetailItem(
             context,
             Icons.description_outlined,
@@ -82,10 +76,7 @@ class ExpenseDetailsBottomSheet extends StatelessWidget {
             'date',
             _getLocalizedDate(context, expense.date),
           ),
-
           const SizedBox(height: 24),
-
-          // 영수증 버튼 (영수증이 있는 경우에만 표시)
           if (expense.receiptId != null) ...[
             OutlinedButton.icon(
               onPressed: () => context.push('/receipts/${expense.receiptId}'),
@@ -110,8 +101,6 @@ class ExpenseDetailsBottomSheet extends StatelessWidget {
             ),
             const SizedBox(height: 12),
           ],
-
-          // 수정/삭제 버튼 Row
           Row(
             children: [
               Expanded(
@@ -210,14 +199,27 @@ class ExpenseDetailsBottomSheet extends StatelessWidget {
     );
   }
 
-  String _getLocalizedTitle(BuildContext context) {
-    final language = context.read<AppLanguageBloc>().state.language;
-    const Map<AppLanguage, String> titles = {
-      AppLanguage.english: 'Expense Details',
-      AppLanguage.korean: '지출 상세',
-      AppLanguage.japanese: '支出詳細',
+  String _getLocalizedAmount(BuildContext context, double amount) {
+    final currency = context.read<AppSettingsBloc>().state.currency;
+    final formatter = NumberFormat('#,###');
+    final formattedAmount = formatter.format(amount);
+    final currencySymbols = {
+      'KRW': '원',
+      'JPY': '¥',
+      'USD': '\$',
+      'EUR': '€',
     };
-    return titles[language] ?? titles[AppLanguage.korean]!;
+    final symbol = currencySymbols[currency] ?? currencySymbols['KRW']!;
+    switch (currency) {
+      case 'USD':
+      case 'EUR':
+        return '$symbol$formattedAmount';
+      case 'JPY':
+        return '¥$formattedAmount';
+      case 'KRW':
+      default:
+        return '$formattedAmount$symbol';
+    }
   }
 
   String _getLocalizedLabel(BuildContext context, String key) {
@@ -243,11 +245,6 @@ class ExpenseDetailsBottomSheet extends StatelessWidget {
         AppLanguage.korean: '날짜',
         AppLanguage.japanese: '日付',
       },
-      'shared': {
-        AppLanguage.english: 'Shared',
-        AppLanguage.korean: '공유',
-        AppLanguage.japanese: '共有',
-      },
       'view_receipt': {
         AppLanguage.english: 'View Receipt',
         AppLanguage.korean: '영수증 보기',
@@ -263,11 +260,6 @@ class ExpenseDetailsBottomSheet extends StatelessWidget {
         AppLanguage.korean: '삭제',
         AppLanguage.japanese: '削除',
       },
-      'expense_details': {
-        AppLanguage.english: 'Expense Details',
-        AppLanguage.korean: '지출 상세',
-        AppLanguage.japanese: '支出詳細',
-      },
       'delete_expense': {
         AppLanguage.english: 'Delete Expense',
         AppLanguage.korean: '지출 삭제',
@@ -282,31 +274,9 @@ class ExpenseDetailsBottomSheet extends StatelessWidget {
     return labels[key]?[language] ?? labels[key]?[AppLanguage.korean] ?? key;
   }
 
-  String _getLocalizedAmount(BuildContext context, double amount) {
-    final currency = context.read<AppSettingsBloc>().state.currency;
-    final formatter = NumberFormat('#,###');
-    final formattedAmount = formatter.format(amount);
-
-    final currencySymbols = {
-      'KRW': '원',
-      'JPY': '¥',
-      'USD': '\$',
-      'EUR': '€',
-    };
-
-    final symbol = currencySymbols[currency] ?? currencySymbols['KRW']!;
-
-    // 통화별 표시 형식
-    switch (currency) {
-      case 'USD':
-      case 'EUR':
-        return '$symbol$formattedAmount';
-      case 'JPY':
-        return '¥$formattedAmount';
-      case 'KRW':
-      default:
-        return '$formattedAmount$symbol';
-    }
+  String _getLocalizedCategory(BuildContext context, String category) {
+    final language = context.read<AppLanguageBloc>().state.language;
+    return ExpenseCategoryConstants.getLocalizedCategory(category, language);
   }
 
   String _getLocalizedDate(BuildContext context, DateTime date) {
@@ -322,22 +292,18 @@ class ExpenseDetailsBottomSheet extends StatelessWidget {
     }
   }
 
-  String _getLocalizedSharedText(BuildContext context, int count) {
-    final language = context.read<AppLanguageBloc>().state.language;
-    switch (language) {
-      case AppLanguage.english:
-        return 'Shared with $count people';
-      case AppLanguage.japanese:
-        return '$count人と共有中';
-      case AppLanguage.korean:
-      default:
-        return '${count}명과 공유됨';
-    }
+  void _editExpense(BuildContext context) {
+    Navigator.pop(context);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => EditExpenseBottomSheet(expense: expense),
+    );
   }
 
-  String _getLocalizedCategory(BuildContext context, String category) {
-    final language = context.read<AppLanguageBloc>().state.language;
-    return ExpenseCategoryConstants.getLocalizedCategory(category, language);
+  void _deleteExpense(BuildContext context) {
+    Navigator.pop(context);
+    _showDeleteConfirmDialog(context);
   }
 
   void _showDeleteConfirmDialog(BuildContext context) {
@@ -353,13 +319,12 @@ class ExpenseDetailsBottomSheet extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
-              context.go('/expenses');
+              Navigator.pop(context); // 삭제 다이얼로그 닫기
+              // 삭제 이벤트 호출 (라우팅은 별도 처리하거나 BlocListener에서 이동 처리)
               context.read<ExpenseBloc>().add(DeleteExpense(
                   expenseId: expense.id,
                   id: expense.id,
                   userId: expense.userId));
-
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                     content: Text(_getLocalizedDeleteSuccessMessage(context))),
@@ -380,7 +345,7 @@ class ExpenseDetailsBottomSheet extends StatelessWidget {
     const Map<AppLanguage, String> messages = {
       AppLanguage.english:
           'Are you sure you want to delete this expense?\nDeleted expenses cannot be recovered.',
-      AppLanguage.korean: '이 지출을 삭하시겠습니까?\n삭제된 지출은 복구할 수 없습니다.',
+      AppLanguage.korean: '이 지출을 삭제하시겠습니까?\n삭제된 지출은 복구할 수 없습니다.',
       AppLanguage.japanese: 'この支出を削除しますか？\n削除された支出は復元できません。',
     };
     return messages[language] ?? messages[AppLanguage.korean]!;
@@ -394,27 +359,5 @@ class ExpenseDetailsBottomSheet extends StatelessWidget {
       AppLanguage.japanese: '支出が削除されました。',
     };
     return messages[language] ?? messages[AppLanguage.korean]!;
-  }
-
-  void _showEditExpenseBottomSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => EditExpenseBottomSheet(expense: expense),
-    );
-  }
-
-  void _editExpense(BuildContext context) {
-    Navigator.pop(context);
-    _showEditExpenseBottomSheet(context);
-  }
-
-  void _deleteExpense(BuildContext context) {
-    Navigator.pop(context);
-    _showDeleteConfirmDialog(context);
-  }
-
-  String _getLocalizedText(BuildContext context, String key) {
-    return _getLocalizedLabel(context, key);
   }
 }

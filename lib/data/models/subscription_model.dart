@@ -1,4 +1,6 @@
 // data/models/subscription_model.dart
+
+import 'package:cloud_firestore/cloud_firestore.dart'; // Timestamp 처리를 위해 필요
 import '../../domain/entities/subscription.dart';
 
 class SubscriptionModel extends Subscription {
@@ -31,13 +33,42 @@ class SubscriptionModel extends Subscription {
         );
 
   factory SubscriptionModel.fromJson(Map<String, dynamic> json) {
+    // ─────────────────────────────────────
+    // Firestore에서 startDate, endDate가 Timestamp로 들어올 수 있으므로 안전 처리
+    // ─────────────────────────────────────
+
+    // 1) startDate
+    final dynamic startDateRaw = json['startDate'];
+    late DateTime parsedStartDate;
+    if (startDateRaw is Timestamp) {
+      parsedStartDate = startDateRaw.toDate();
+    } else if (startDateRaw is String) {
+      parsedStartDate = DateTime.parse(startDateRaw);
+    } else {
+      throw FormatException("Invalid or missing 'startDate': $startDateRaw");
+    }
+
+    // 2) endDate (nullable)
+    final dynamic endDateRaw = json['endDate'];
+    DateTime? parsedEndDate;
+    if (endDateRaw == null) {
+      parsedEndDate = null;
+    } else if (endDateRaw is Timestamp) {
+      parsedEndDate = endDateRaw.toDate();
+    } else if (endDateRaw is String) {
+      parsedEndDate = DateTime.parse(endDateRaw);
+    } else {
+      // endDate가 이상한 타입이면 null 처리 or 예외
+      parsedEndDate = null;
+    }
+
     return SubscriptionModel(
       id: json['id'],
       name: json['name'],
       amount: (json['amount'] as num).toDouble(),
       currency: json['currency'] ?? 'KRW',
-      startDate: DateTime.parse(json['startDate']),
-      endDate: json['endDate'] != null ? DateTime.parse(json['endDate']) : null,
+      startDate: parsedStartDate,
+      endDate: parsedEndDate,
       billingCycle: json['billingCycle'],
       billingDay: json['billingDay'],
       category: json['category'],
@@ -139,7 +170,6 @@ class SubscriptionModel extends Subscription {
       now.month,
       billingDay,
     );
-
     return now.isAfter(currentBillingDate);
   }
 

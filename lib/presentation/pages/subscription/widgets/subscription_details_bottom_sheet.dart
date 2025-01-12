@@ -1,5 +1,7 @@
 // lib/presentation/pages/subscription/widgets/subscription_details_bottom_sheet.dart
+
 import 'package:finpal/presentation/bloc/subscription/subscription_event.dart';
+import 'package:finpal/presentation/bloc/subscription/subscription_state.dart';
 import 'package:finpal/presentation/pages/subscription/widgets/edit_subscription_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -74,6 +76,7 @@ class SubscriptionDetailsBottomSheet extends StatelessWidget {
         AppLanguage.korean: '사용중',
         AppLanguage.japanese: '利用中',
       },
+      // 여기서 'paused' key를 추가하거나 'inactive'를 그대로 쓸 수도 있음
       'inactive': {
         AppLanguage.english: 'Inactive',
         AppLanguage.korean: '해지됨',
@@ -170,7 +173,6 @@ class SubscriptionDetailsBottomSheet extends StatelessWidget {
 
     final symbol = currencySymbols[currency] ?? currencySymbols['KRW']!;
 
-    // 통화별 표시 형식
     switch (currency) {
       case 'USD':
       case 'EUR':
@@ -211,7 +213,6 @@ class SubscriptionDetailsBottomSheet extends StatelessWidget {
         return Icons.games_outlined;
       case 'fitness':
         return Icons.fitness_center_outlined;
-      // ... 다른 카테고리들 ...
       default:
         return Icons.category_outlined;
     }
@@ -219,133 +220,148 @@ class SubscriptionDetailsBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                _getLocalizedLabel(context, 'subscription_details'),
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: () => Navigator.pop(context),
-              ),
-            ],
-          ),
-          const Divider(),
-
-          _DetailItem(
-            title: _getLocalizedLabel(context, 'service'),
-            value: subscription.name,
-          ),
-          _DetailItem(
-            title: _getLocalizedLabel(context, 'amount'),
-            value: _getLocalizedAmount(context, subscription.amount),
-          ),
-          _DetailItem(
-            title: _getLocalizedLabel(context, 'category'),
-            value: _getLocalizedCategory(context, subscription.category),
-          ),
-          _DetailItem(
-            title: _getLocalizedLabel(context, 'billing_cycle'),
-            value:
-                _getLocalizedBillingCycle(context, subscription.billingCycle),
-          ),
-          _DetailItem(
-            title: _getLocalizedLabel(context, 'billing_day'),
-            value: _getLocalizedBillingDay(context, subscription.billingDay),
-          ),
-          _DetailItem(
-            title: _getLocalizedLabel(context, 'start_date'),
-            value: _getLocalizedDate(context, subscription.startDate),
-          ),
-          if (subscription.endDate != null)
-            _DetailItem(
-              title: _getLocalizedLabel(context, 'end_date'),
-              value: _getLocalizedDate(context, subscription.endDate!),
-            ),
-          _DetailItem(
-            title: _getLocalizedLabel(context, 'status'),
-            value: subscription.isActive
-                ? _getLocalizedLabel(context, 'active')
-                : _getLocalizedLabel(context, 'inactive'),
-            valueColor: subscription.isActive ? Colors.blue : Colors.grey,
-          ),
-
-          const SizedBox(height: 24),
-
-          // 상태 표시 섹션
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Row(
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 헤더 영역
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Icon(
-                  subscription.isActive
-                      ? Icons.check_circle
-                      : Icons.pause_circle,
-                  color: subscription.isActive ? Colors.green : Colors.orange,
-                ),
-                const SizedBox(width: 8),
                 Text(
-                  subscription.isActive
-                      ? _getLocalizedLabel(context, 'active')
-                      : _getLocalizedLabel(context, 'paused'),
-                  style: TextStyle(
-                    color: subscription.isActive ? Colors.green : Colors.orange,
-                    fontWeight: FontWeight.bold,
+                  _getLocalizedLabel(context, 'subscription_details'),
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 16.0),
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: subscription.isActive
+                          ? Colors.green.withOpacity(0.2)
+                          : Colors.orange.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          subscription.isActive
+                              ? Icons.check_circle
+                              : Icons.pause_circle,
+                          color: subscription.isActive
+                              ? Colors.green
+                              : Colors.orange,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          subscription.isActive
+                              ? _getLocalizedLabel(context, 'active')
+                              : _getLocalizedLabel(context, 'inactive'),
+                          style: TextStyle(
+                            color: subscription.isActive
+                                ? Colors.green
+                                : Colors.orange,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
             ),
-          ),
-
-          // 액션 버튼들
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => _showEditSubscriptionDialog(context),
-                  icon: const Icon(Icons.edit),
-                  label: Text(_getLocalizedLabel(context, 'edit')),
-                ),
+            const SizedBox(height: 8),
+            const Divider(),
+            // 상세 정보 표시
+            _DetailItem(
+              title: _getLocalizedLabel(context, 'amount'),
+              value: _getLocalizedAmount(context, subscription.amount),
+            ),
+            _DetailItem(
+              title: _getLocalizedLabel(context, 'category'),
+              value: _getLocalizedCategory(context, subscription.category),
+            ),
+            _DetailItem(
+              title: _getLocalizedLabel(context, 'billing_cycle'),
+              value:
+                  _getLocalizedBillingCycle(context, subscription.billingCycle),
+            ),
+            _DetailItem(
+              title: _getLocalizedLabel(context, 'billing_day'),
+              value: _getLocalizedBillingDay(context, subscription.billingDay),
+            ),
+            _DetailItem(
+              title: _getLocalizedLabel(context, 'start_date'),
+              value: _getLocalizedDate(context, subscription.startDate),
+            ),
+            if (subscription.endDate != null)
+              _DetailItem(
+                title: _getLocalizedLabel(context, 'end_date'),
+                value: _getLocalizedDate(context, subscription.endDate!),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () => _toggleSubscriptionStatus(context),
-                  icon: Icon(
-                      subscription.isActive ? Icons.pause : Icons.play_arrow),
-                  label: Text(subscription.isActive
-                      ? _getLocalizedLabel(context, 'pause')
-                      : _getLocalizedLabel(context, 'resume')),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        subscription.isActive ? Colors.orange : Colors.green,
+            _DetailItem(
+              title: _getLocalizedLabel(context, 'status'),
+              value: subscription.isActive
+                  ? _getLocalizedLabel(context, 'active')
+                  : _getLocalizedLabel(context, 'inactive'),
+              valueColor: subscription.isActive ? Colors.blue : Colors.grey,
+            ),
+            const SizedBox(height: 24),
+
+            // 액션 버튼들
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _showEditSubscriptionDialog(context),
+                    icon: const Icon(Icons.edit),
+                    label: Text(_getLocalizedLabel(context, 'edit')),
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () => _showDeleteConfirmation(context),
-              icon: const Icon(Icons.delete, color: Colors.red),
-              label: Text(_getLocalizedLabel(context, 'delete')),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.red,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => _toggleSubscriptionStatus(context),
+                    icon: Icon(
+                      subscription.isActive ? Icons.pause : Icons.play_arrow,
+                    ),
+                    label: Text(
+                      subscription.isActive
+                          ? _getLocalizedLabel(context, 'pause')
+                          : _getLocalizedLabel(context, 'resume'),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor:
+                          subscription.isActive ? Colors.orange : Colors.green,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => _showDeleteConfirmation(context),
+                icon: const Icon(Icons.delete, color: Colors.red),
+                label: Text(_getLocalizedLabel(context, 'delete')),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.red,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -360,25 +376,41 @@ class SubscriptionDetailsBottomSheet extends StatelessWidget {
     );
   }
 
-  void _toggleSubscriptionStatus(BuildContext context) {
-    final updatedSubscription = Subscription(
-      id: subscription.id,
-      name: subscription.name,
-      amount: subscription.amount,
-      currency: subscription.currency,
-      startDate: subscription.startDate,
-      endDate: subscription.endDate,
-      billingCycle: subscription.billingCycle,
-      billingDay: subscription.billingDay,
-      category: subscription.category,
-      userId: subscription.userId,
-      isActive: !subscription.isActive,
+  /// 핵심 변경: async/await로 순차 처리
+  Future<void> _toggleSubscriptionStatus(BuildContext context) async {
+    final bloc = context.read<SubscriptionBloc>();
+    final updatedSubscription =
+        subscription.copyWith(isActive: !subscription.isActive);
+
+    // 1) UpdateSubscription 이벤트 전송
+    bloc.add(UpdateSubscription(updatedSubscription));
+
+    // 2) 해당 이벤트 처리(성공 또는 에러) 완료 대기
+    final firstState = await bloc.stream.firstWhere(
+      (state) =>
+          state is SubscriptionOperationSuccess || state is SubscriptionError,
     );
 
-    context
-        .read<SubscriptionBloc>()
-        .add(UpdateSubscription(updatedSubscription));
-    Navigator.pop(context);
+    // 3) 성공 시 => LoadActiveSubscriptions 이벤트 전송
+    if (firstState is SubscriptionOperationSuccess) {
+      bloc.add(LoadActiveSubscriptions(updatedSubscription.userId));
+
+      // 다시 로드된 상태(Loaded or Error) 대기
+      final secondState = await bloc.stream.firstWhere(
+        (state) => state is SubscriptionLoaded || state is SubscriptionError,
+      );
+
+      // 4) 구독 목록이 성공적으로 로드되었다면 창 닫기
+      if (secondState is SubscriptionLoaded) {
+        Navigator.pop(context);
+      }
+      // 혹시 에러라면, SnackBar 등을 띄워주는 로직을 넣어도 좋습니다.
+    } else if (firstState is SubscriptionError) {
+      // 업데이트 실패 시, 에러 메시지를 띄우는 등 UI 처리
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(firstState.message)),
+      );
+    }
   }
 
   void _showDeleteConfirmation(BuildContext context) {

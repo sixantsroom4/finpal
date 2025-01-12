@@ -16,6 +16,7 @@ import 'package:finpal/core/constants/app_languages.dart';
 import 'package:intl/intl.dart';
 import 'widgets/empty_subscription_view.dart';
 import 'package:finpal/core/utils/subscription_category_constants.dart';
+import 'package:finpal/core/constants/app_strings.dart';
 
 class SubscriptionPage extends StatefulWidget {
   const SubscriptionPage({super.key});
@@ -120,8 +121,13 @@ class _SubscriptionPageState extends State<SubscriptionPage>
             );
           }
           if (state is SubscriptionOperationSuccess) {
+            final language = context.read<AppLanguageBloc>().state.language;
+            final message = AppStrings.labels[state.message]?[language] ??
+                AppStrings.labels[state.message]?[AppLanguage.korean] ??
+                state.message;
+
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
+              SnackBar(content: Text(message)),
             );
           }
         },
@@ -172,10 +178,12 @@ class _SubscriptionPageState extends State<SubscriptionPage>
 
     // 활성 및 일시정지된 모든 구독을 포함
     for (var subscription in state.subscriptions) {
-      if (!subscriptionsByCategory.containsKey(subscription.category)) {
-        subscriptionsByCategory[subscription.category] = [];
+      final categoryKey =
+          subscription.category?.toUpperCase() ?? 'OTHER'; // 카테고리 이름을 대문자로 변환
+      if (!subscriptionsByCategory.containsKey(categoryKey)) {
+        subscriptionsByCategory[categoryKey] = [];
       }
-      subscriptionsByCategory[subscription.category]!.add(subscription);
+      subscriptionsByCategory[categoryKey]!.add(subscription);
     }
 
     // 각 카테고리 내에서 활성 구독을 먼저 보여주도록 정렬

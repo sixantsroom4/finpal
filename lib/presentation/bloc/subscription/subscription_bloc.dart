@@ -100,8 +100,12 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
           await _subscriptionRepository.createExpenseFromSubscription(
             subscription as SubscriptionModel,
           );
-          emit(const SubscriptionOperationSuccess('구독이 추가되었습니다.'));
-          add(LoadActiveSubscriptions(event.subscription.userId));
+          emit(const SubscriptionOperationSuccess('subscription_added'));
+
+          // 기존 코드: 처리 직후에 바로 active 구독 불러오기
+          // add(LoadActiveSubscriptions(event.subscription.userId));
+          // ----------------------------------------------------
+          // 이제는 UI 쪽에서 `LoadActiveSubscriptions`를 따로 호출하도록 유도
         } catch (e) {
           emit(SubscriptionError('구독 지출 생성 실패: ${e.toString()}'));
         }
@@ -119,8 +123,8 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     final updateResult =
         await _subscriptionRepository.updateSubscription(subscription);
 
-    updateResult.fold(
-      (failure) => emit(SubscriptionError(failure.message)),
+    await updateResult.fold(
+      (failure) async => emit(SubscriptionError(failure.message)),
       (updatedSubscription) async {
         try {
           // 기존 지출 내역 확인 (subscriptionId를 사용하여 조회)
@@ -133,14 +137,18 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
               updatedSubscription as SubscriptionModel,
             );
           } else {
-            // 기존 지출 내역이 없으면 새로 생성 (드문 경우)
+            // 기존 지출 내역이 없으면 새로 생성
             await _subscriptionRepository.createExpenseFromSubscription(
               updatedSubscription as SubscriptionModel,
             );
           }
 
-          emit(const SubscriptionOperationSuccess('구독이 수정되었습니다.'));
-          add(LoadActiveSubscriptions(subscription.userId));
+          emit(const SubscriptionOperationSuccess('subscription_updated'));
+
+          // 기존 코드: 처리 직후에 다시 active 구독 불러오기
+          // add(LoadActiveSubscriptions(subscription.userId));
+          // ------------------------------------------------
+          // UI 쪽에서 필요 시 다시 불러오도록 변경
         } catch (e) {
           emit(SubscriptionError('구독 지출 업데이트 실패: ${e.toString()}'));
         }
@@ -159,14 +167,18 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     result.fold(
       (failure) => emit(SubscriptionError(failure.message)),
       (_) {
-        emit(const SubscriptionOperationSuccess('구독이 삭제되었습니다.'));
-        if (state is SubscriptionLoaded) {
-          final userId =
-              (state as SubscriptionLoaded).subscriptions.firstOrNull?.userId;
-          if (userId != null) {
-            add(LoadActiveSubscriptions(userId));
-          }
-        }
+        emit(const SubscriptionOperationSuccess('subscription_deleted'));
+
+        // 기존 코드: state가 SubscriptionLoaded면 userId 빼서 다시 로드
+        // if (state is SubscriptionLoaded) {
+        //   final userId =
+        //       (state as SubscriptionLoaded).subscriptions.firstOrNull?.userId;
+        //   if (userId != null) {
+        //     add(LoadActiveSubscriptions(userId));
+        //   }
+        // }
+        // --------------------------------------
+        // UI 쪽에서 필요 시 다시 불러오도록 처리
       },
     );
   }
@@ -182,7 +194,8 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
       (failure) => emit(SubscriptionError(failure.message)),
       (_) {
         emit(const SubscriptionOperationSuccess('구독이 취소되었습니다.'));
-        add(LoadActiveSubscriptions(event.userId));
+        // add(LoadActiveSubscriptions(event.userId));
+        // UI에서 Reload
       },
     );
   }

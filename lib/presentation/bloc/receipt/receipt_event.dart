@@ -43,11 +43,12 @@ class UpdateReceipt extends ReceiptEvent {
 
 class DeleteReceipt extends ReceiptEvent {
   final String receiptId;
+  final String userId;
 
-  const DeleteReceipt(this.receiptId);
+  const DeleteReceipt(this.receiptId, this.userId);
 
   @override
-  List<Object> get props => [receiptId];
+  List<Object> get props => [receiptId, userId];
 }
 
 class LoadReceipts extends ReceiptEvent {

@@ -1,4 +1,6 @@
 // data/models/expense_model.dart
+
+import 'package:cloud_firestore/cloud_firestore.dart'; // Timestamp 처리를 위해 필요
 import '../../domain/entities/expense.dart';
 
 class ExpenseModel extends Expense {
@@ -39,12 +41,44 @@ class ExpenseModel extends Expense {
         );
 
   factory ExpenseModel.fromJson(Map<String, dynamic> json) {
+    // ─────────────────────────────────────
+    // Firestore에선 date/createdAt이 Timestamp로 들어올 수 있으므로 안전 처리
+    // ─────────────────────────────────────
+
+    // 1) date 필드 처리
+    final dynamic dateRaw = json['date'];
+    late DateTime parsedDate;
+    if (dateRaw is Timestamp) {
+      // Firestore Timestamp → DateTime
+      parsedDate = dateRaw.toDate();
+    } else if (dateRaw is String) {
+      // String → DateTime
+      parsedDate = DateTime.parse(dateRaw);
+    } else {
+      // null 또는 다른 타입이면 에러처리 or 기본값 사용
+      throw FormatException("Invalid or missing 'date' field: $dateRaw");
+    }
+
+    // 2) createdAt 필드 처리 (nullable)
+    final dynamic createdAtRaw = json['createdAt'];
+    DateTime? parsedCreatedAt;
+    if (createdAtRaw == null) {
+      parsedCreatedAt = null;
+    } else if (createdAtRaw is Timestamp) {
+      parsedCreatedAt = createdAtRaw.toDate();
+    } else if (createdAtRaw is String) {
+      parsedCreatedAt = DateTime.parse(createdAtRaw);
+    } else {
+      // createdAt이 이상한 타입이면 null 처리 or 예외
+      parsedCreatedAt = null;
+    }
+
     return ExpenseModel(
       id: json['id'],
       amount: (json['amount'] as num).toDouble(),
       currency: json['currency'] ?? 'KRW',
       description: json['description'],
-      date: DateTime.parse(json['date']),
+      date: parsedDate,
       category: json['category'],
       userId: json['userId'],
       receiptUrl: json['receiptUrl'],
@@ -58,8 +92,7 @@ class ExpenseModel extends Expense {
           : null,
       isSubscription: json['isSubscription'] ?? false,
       subscriptionId: json['subscriptionId'],
-      createdAt:
-          json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
+      createdAt: parsedCreatedAt,
     );
   }
 

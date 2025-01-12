@@ -192,4 +192,25 @@ class ReceiptRepositoryImpl implements ReceiptRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, void>> updateReceiptExpenseId(
+    String receiptId,
+    String? expenseId,
+  ) async {
+    try {
+      final receipt = await storageDataSource.getReceiptById(receiptId);
+      if (receipt == null) {
+        return Left(ServerFailure('영수증을 찾을 수 없습니다.'));
+      }
+
+      final updatedReceipt = receipt.copyWith(expenseId: expenseId);
+      await storageDataSource.updateReceipt(updatedReceipt);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }

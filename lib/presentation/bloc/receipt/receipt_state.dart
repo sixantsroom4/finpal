@@ -95,11 +95,9 @@ class ReceiptError extends ReceiptState {
 
 class ReceiptOperationSuccess extends ReceiptState {
   final String message;
-  final bool showSuccessAnimation;
 
   const ReceiptOperationSuccess(
     this.message, {
-    this.showSuccessAnimation = true,
     List<Receipt> receipts = const [],
     Map<String, double> merchantTotals = const {},
     double totalAmount = 0,
@@ -108,18 +106,7 @@ class ReceiptOperationSuccess extends ReceiptState {
           merchantTotals: merchantTotals,
           totalAmount: totalAmount,
           message: message,
-          isAnalysisComplete: true,
         );
-
-  @override
-  List<Object> get props => [
-        receipts,
-        merchantTotals,
-        totalAmount,
-        message,
-        isAnalysisComplete,
-        showSuccessAnimation
-      ];
 }
 
 class ReceiptEmpty extends ReceiptState {

@@ -1,4 +1,5 @@
 // lib/presentation/pages/receipt/receipt_page.dart
+import 'package:finpal/core/constants/app_strings.dart';
 import 'package:finpal/domain/entities/receipt.dart';
 import 'package:finpal/presentation/bloc/auth/auth_state.dart';
 import 'package:finpal/presentation/bloc/receipt/receipt_event.dart';
@@ -100,7 +101,24 @@ class _ReceiptPageState extends State<ReceiptPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _buildAppBar(),
-      body: BlocBuilder<ReceiptBloc, ReceiptState>(
+      body: BlocConsumer<ReceiptBloc, ReceiptState>(
+        listener: (context, state) {
+          if (state is ReceiptError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message)),
+            );
+          }
+          if (state is ReceiptOperationSuccess) {
+            final language = context.read<AppLanguageBloc>().state.language;
+            final message = AppStrings.labels[state.message]?[language] ??
+                AppStrings.labels[state.message]?[AppLanguage.korean] ??
+                state.message;
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(message)),
+            );
+          }
+        },
         builder: (context, state) {
           // 초기 상태나 데이터가 없을 때는 EmptyReceiptView 표시
           if (state is ReceiptInitial ||
@@ -777,7 +795,12 @@ class _ReceiptPageState extends State<ReceiptPage> {
             onPressed: () {
               Navigator.pop(context);
               for (var id in _selectedReceipts) {
-                context.read<ReceiptBloc>().add(DeleteReceipt(id));
+                final authState = context.read<AuthBloc>().state;
+                if (authState is Authenticated) {
+                  context
+                      .read<ReceiptBloc>()
+                      .add(DeleteReceipt(id, authState.user.id));
+                }
               }
               setState(() {
                 _isSelectionMode = false;
