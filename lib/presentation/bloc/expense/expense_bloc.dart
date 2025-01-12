@@ -36,6 +36,16 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
     on<UpdateExpenseList>(_onUpdateExpenseList);
   }
 
+  void _subscribeToExpenses(String userId) {
+    _expenseSubscription?.cancel();
+    if (userId != null) {
+      _expenseSubscription =
+          _expenseRepository.watchExpenses(userId).listen((expenses) {
+        add(UpdateExpenseList(expenses));
+      });
+    }
+  }
+
   Future<void> _onLoadExpenses(
     LoadExpenses event,
     Emitter<ExpenseState> emit,
@@ -120,6 +130,7 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
               ? (state as ExpenseLoaded).monthlyTotals
               : {},
         ));
+        _subscribeToExpenses(event.userId);
       },
     );
   }
@@ -200,7 +211,13 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
       (failure) => emit(ExpenseError(failure.message)),
       (_) {
         emit(ExpenseOperationSuccess(_getLocalizedMessage('expense_deleted')));
-        add(LoadExpenses(event.userId));
+        if (state is ExpenseLoaded) {
+          final currentState = state as ExpenseLoaded;
+          final updatedExpenses = currentState.expenses
+              .where((expense) => expense.id != event.id)
+              .toList();
+          emit(currentState.copyWith(expenses: updatedExpenses));
+        }
       },
     );
   }
@@ -376,14 +393,6 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
   Future<void> close() {
     _expenseSubscription?.cancel();
     return super.close();
-  }
-
-  void _subscribeToExpenses(String userId) {
-    _expenseSubscription?.cancel();
-    _expenseSubscription =
-        _expenseRepository.watchExpenses(userId).listen((expenses) {
-      add(UpdateExpenseList(expenses));
-    });
   }
 
   String _getLocalizedMessage(String key) {

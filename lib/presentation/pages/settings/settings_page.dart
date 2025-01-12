@@ -192,8 +192,13 @@ class SettingsPage extends StatelessWidget {
       },
       'logout_confirmation': {
         AppLanguage.english: 'Are you sure you want to logout?',
-        AppLanguage.korean: '로그��웃 하시겠습니까?',
+        AppLanguage.korean: '로그아웃 하시겠습니까?',
         AppLanguage.japanese: 'ログアウトしますか？',
+      },
+      'customer_service': {
+        AppLanguage.english: 'Customer Service',
+        AppLanguage.korean: '고객 지원',
+        AppLanguage.japanese: 'カスタマーサービス',
       },
     };
     return labels[key]?[language] ?? labels[key]?[AppLanguage.korean] ?? key;

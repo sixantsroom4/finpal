@@ -26,6 +26,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import '../../../core/utils/subscription_category_constants.dart';
 import '../../../core/utils/expense_category_constants.dart';
 import '../../bloc/subscription/subscription_bloc.dart';
+import 'widget/subscription_expense_details_bottom_sheet.dart';
 
 class ExpensePage extends StatefulWidget {
   const ExpensePage({super.key});
@@ -234,12 +235,16 @@ class _ExpensePageState extends State<ExpensePage> {
                                 ),
                               ),
                               title: Text(
-                                '${expense.category} - '
                                 '${expense.isSubscription == true ? SubscriptionCategoryConstants.getLocalizedCategory(context, expense.category) : ExpenseCategoryConstants.getLocalizedCategory(expense.category, context.read<AppLanguageBloc>().state.language)}',
                                 style: const TextStyle(
                                     fontWeight: FontWeight.w500),
                               ),
-                              subtitle: Text(expense.description),
+                              subtitle: Text(
+                                '${expense.description}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                               trailing: AmountDisplay(
                                 amount: expense.amount,
                                 currency: expense.currency,
@@ -292,23 +297,12 @@ class _ExpensePageState extends State<ExpensePage> {
 
   void _showExpenseDetails(BuildContext context, Expense expense) {
     if (expense.isSubscription && expense.subscriptionId != null) {
-      // 구독 상세 정보 조회 및 표시
-      context
-          .read<SubscriptionBloc>()
-          .add(LoadSubscriptionById(expense.subscriptionId!));
-
+      // 구독 지출 상세 정보 표시
       showModalBottomSheet(
         context: context,
         isScrollControlled: true,
-        builder: (context) => BlocBuilder<SubscriptionBloc, SubscriptionState>(
-          builder: (context, state) {
-            if (state is SubscriptionLoaded) {
-              return SubscriptionDetailsBottomSheet(
-                subscription: state.subscriptions.first,
-              );
-            }
-            return const Center(child: CircularProgressIndicator());
-          },
+        builder: (context) => SubscriptionExpenseDetailsBottomSheet(
+          expense: expense,
         ),
       );
     } else {

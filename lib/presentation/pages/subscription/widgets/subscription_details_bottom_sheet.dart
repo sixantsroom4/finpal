@@ -384,38 +384,30 @@ class SubscriptionDetailsBottomSheet extends StatelessWidget {
   void _showDeleteConfirmation(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          _getLocalizedLabel(context, 'delete_confirmation_title'),
-        ),
-        content: Text(
-          _getLocalizedLabel(context, 'delete_confirmation_message'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              _getLocalizedLabel(context, 'cancel'),
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(_getLocalizedLabel(context, 'delete_confirmation_title')),
+          content:
+              Text(_getLocalizedLabel(context, 'delete_confirmation_message')),
+          actions: <Widget>[
+            TextButton(
+              child: Text(_getLocalizedLabel(context, 'cancel')),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
             ),
-          ),
-          TextButton(
-            onPressed: () {
-              context.read<SubscriptionBloc>().add(
-                    DeleteSubscription(subscription.id),
-                  );
-              // 다이얼로그와 바텀시트를 닫고 구독 페이지로 이동
-              if (context.mounted) {
-                Navigator.pop(context); // 다이얼로그 닫기
-                context.pop(); // 바텀시트 닫기 (GoRouter 사용)
-              }
-            },
-            child: Text(
-              _getLocalizedLabel(context, 'delete'),
-              style: TextStyle(color: Colors.red),
+            TextButton(
+              child: Text(_getLocalizedLabel(context, 'delete')),
+              onPressed: () {
+                context
+                    .read<SubscriptionBloc>()
+                    .add(DeleteSubscription(subscriptionId: subscription.id));
+                Navigator.of(context).pop(); // 다이얼로그 닫기
+              },
             ),
-          ),
-        ],
-      ),
+          ],
+        );
+      },
     );
   }
 }

@@ -263,6 +263,21 @@ class ExpenseDetailsBottomSheet extends StatelessWidget {
         AppLanguage.korean: '삭제',
         AppLanguage.japanese: '削除',
       },
+      'expense_details': {
+        AppLanguage.english: 'Expense Details',
+        AppLanguage.korean: '지출 상세',
+        AppLanguage.japanese: '支出詳細',
+      },
+      'delete_expense': {
+        AppLanguage.english: 'Delete Expense',
+        AppLanguage.korean: '지출 삭제',
+        AppLanguage.japanese: '支出を削除',
+      },
+      'cancel': {
+        AppLanguage.english: 'Cancel',
+        AppLanguage.korean: '취소',
+        AppLanguage.japanese: 'キャンセル',
+      },
     };
     return labels[key]?[language] ?? labels[key]?[AppLanguage.korean] ?? key;
   }
@@ -340,8 +355,11 @@ class ExpenseDetailsBottomSheet extends StatelessWidget {
             onPressed: () {
               Navigator.pop(context);
               context.go('/expenses');
-              context.read<ExpenseBloc>()
-                ..add(DeleteExpense(expense.id, expense.userId));
+              context.read<ExpenseBloc>().add(DeleteExpense(
+                  expenseId: expense.id,
+                  id: expense.id,
+                  userId: expense.userId));
+
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                     content: Text(_getLocalizedDeleteSuccessMessage(context))),

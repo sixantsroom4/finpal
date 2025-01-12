@@ -100,7 +100,7 @@ async function generateExpenseForSubscription(subscription: any) {
       subscriptionId: subscription.id,
       amount: subscription.amount,
       currency: subscription.currency,
-      description: `${subscription.name} 구독료`,
+      description: `${subscription.name} `,
       category: subscription.category,
       date: billingDate,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),

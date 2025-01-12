@@ -8,6 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../bloc/expense/expense_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:finpal/core/utils/expense_category_constants.dart';
+import '../../../../core/utils/subscription_category_constants.dart';
 
 class MonthlyComparisonBarChart extends StatelessWidget {
   const MonthlyComparisonBarChart({super.key});
@@ -125,7 +126,15 @@ class MonthlyComparisonBarChart extends StatelessWidget {
 
   String _getLocalizedCategory(BuildContext context, String category) {
     final language = context.read<AppLanguageBloc>().state.language;
-    return ExpenseCategoryConstants.getLocalizedCategory(category, language);
+    if (ExpenseCategoryConstants.categories.containsKey(category)) {
+      return ExpenseCategoryConstants.getLocalizedCategory(category, language);
+    } else if (SubscriptionCategoryConstants.categories
+        .containsKey(category.toUpperCase())) {
+      return SubscriptionCategoryConstants.getLocalizedCategory(
+          context, category);
+    } else {
+      return category;
+    }
   }
 
   String _getLocalizedAmount(BuildContext context, double amount) {

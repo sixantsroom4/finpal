@@ -15,7 +15,7 @@ abstract class SubscriptionRepository {
       Subscription subscription);
 
   /// 구독 삭제
-  Future<Either<Failure, void>> deleteSubscription(String subscriptionId);
+  Future<Either<Failure, void>> deleteSubscription(String id);
 
   /// 특정 사용자의 모든 구독 목록 조회
   Future<Either<Failure, List<Subscription>>> getSubscriptions(String userId);

@@ -453,14 +453,9 @@ class FirebaseStorageRemoteDataSourceImpl
   @override
   Future<void> deleteSubscription(String subscriptionId) async {
     try {
-      await _firestore.collection('subscriptions').doc(subscriptionId).update({
-        'isActive': false,
-        'cancelledAt': FieldValue.serverTimestamp(),
-      });
-      print('구독 취소 완료: $subscriptionId');
+      await _firestore.collection('subscriptions').doc(subscriptionId).delete();
     } catch (e) {
-      print('구독 취소 중 오류 발생: $e');
-      throw DatabaseException('구독 취소 실패: $e');
+      throw DatabaseException('구독 삭제 실패: ${e.toString()}');
     }
   }
 
@@ -752,7 +747,7 @@ class FirebaseStorageRemoteDataSourceImpl
         id: expenseRef.id,
         amount: subscription.amount,
         currency: subscription.currency,
-        description: '${subscription.name} 구독료',
+        description: subscription.name,
         category: subscription.category,
         date: expenseDate,
         userId: subscription.userId,
@@ -914,7 +909,7 @@ class FirebaseStorageRemoteDataSourceImpl
       await expenseDoc.reference.update({
         'amount': subscription.amount,
         'currency': subscription.currency,
-        'description': '${subscription.name} 구독료',
+        'description': '${subscription.name} ',
         'category': subscription.category,
         'date': nextBillingDate,
       });

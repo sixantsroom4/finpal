@@ -47,7 +47,7 @@ class UpdateSubscription extends SubscriptionEvent {
 class DeleteSubscription extends SubscriptionEvent {
   final String subscriptionId;
 
-  const DeleteSubscription(this.subscriptionId);
+  const DeleteSubscription({required this.subscriptionId});
 
   @override
   List<Object> get props => [subscriptionId];

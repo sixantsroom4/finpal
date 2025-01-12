@@ -259,9 +259,18 @@ class MonthlyCategoryPieChart extends StatelessWidget {
           children:
               categoryTotals.entries.toList().asMap().entries.map((entry) {
             final index = entry.key;
-            final category = ExpenseCategoryConstants.getLocalizedCategory(
-                entry.value.key, language);
+            final categoryKey = entry.value.key;
             final amount = entry.value.value;
+
+            // 카테고리가 ExpenseCategoryConstants에 있는지 확인
+            String localizedCategory;
+            if (ExpenseCategoryConstants.categories.containsKey(categoryKey)) {
+              localizedCategory = ExpenseCategoryConstants.getLocalizedCategory(
+                  categoryKey, language);
+            } else {
+              // ExpenseCategoryConstants에 없으면 _getLocalizedLabel 함수 사용 (구독 카테고리 처리)
+              localizedCategory = _getLocalizedLabel(context, categoryKey);
+            }
 
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 2.0),
@@ -278,7 +287,7 @@ class MonthlyCategoryPieChart extends StatelessWidget {
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
-                      category,
+                      localizedCategory,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,

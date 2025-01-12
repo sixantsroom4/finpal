@@ -25,9 +25,10 @@ class SubscriptionCard extends StatelessWidget {
     final language = context.read<AppLanguageBloc>().state.language;
     final Map<String, Map<AppLanguage, String>> labels = {
       'billing_day_format': {
-        AppLanguage.english: 'Day ${subscription.billingDay} of every month',
-        AppLanguage.korean: '매월 ${subscription.billingDay}일',
-        AppLanguage.japanese: '毎月${subscription.billingDay}日',
+        AppLanguage.english:
+            'Day ${subscription.billingDay ?? ''} of every month',
+        AppLanguage.korean: '매월 ${subscription.billingDay ?? ''}일',
+        AppLanguage.japanese: '毎月${subscription.billingDay ?? ''}日',
       },
       'billing_today': {
         AppLanguage.english: 'Payment due today',
@@ -45,6 +46,12 @@ class SubscriptionCard extends StatelessWidget {
         AppLanguage.japanese: '一時停止',
       },
     };
+    if (key == null) {
+      return 'Unknown Key';
+    }
+    if (!labels.containsKey(key)) {
+      return key;
+    }
     return labels[key]?[language] ?? labels[key]?[AppLanguage.korean] ?? key;
   }
 
@@ -100,8 +107,10 @@ class SubscriptionCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
-                    SubscriptionCategoryConstants
-                        .categoryIcons[subscription.category]!,
+                    subscription.category != null
+                        ? SubscriptionCategoryConstants
+                            .categoryIcons[subscription.category]
+                        : Icons.category,
                     color: const Color(0xFF2C3E50),
                   ),
                 ),

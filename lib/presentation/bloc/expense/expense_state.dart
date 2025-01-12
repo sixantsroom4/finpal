@@ -33,6 +33,29 @@ class ExpenseLoaded extends ExpenseState {
     required this.userId,
   });
 
+  ExpenseLoaded copyWith({
+    List<Expense>? expenses,
+    double? totalAmount,
+    double? monthlyBudget,
+    double? previousMonthTotal,
+    Map<String, double>? categoryTotals,
+    Map<String, double>? previousMonthCategoryTotals,
+    Map<String, double>? monthlyTotals,
+    String? userId,
+  }) {
+    return ExpenseLoaded(
+      expenses: expenses ?? this.expenses,
+      totalAmount: totalAmount ?? this.totalAmount,
+      monthlyBudget: monthlyBudget ?? this.monthlyBudget,
+      previousMonthTotal: previousMonthTotal ?? this.previousMonthTotal,
+      categoryTotals: categoryTotals ?? this.categoryTotals,
+      previousMonthCategoryTotals:
+          previousMonthCategoryTotals ?? this.previousMonthCategoryTotals,
+      monthlyTotals: monthlyTotals ?? this.monthlyTotals,
+      userId: userId ?? this.userId,
+    );
+  }
+
   @override
   List<Object> get props => [
         expenses,
