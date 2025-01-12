@@ -124,6 +124,7 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
           },
         );
 
+        // 최종적으로 ExpenseLoaded 상태 emit
         emit(ExpenseLoaded(
           expenses: filteredExpenses,
           totalAmount:
@@ -176,8 +177,9 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
         emit(ExpenseError(failure.message));
       },
       (expense) async {
-        emit(const ExpenseOperationSuccess('지출이 추가되었습니다.'));
+        // 추가 후 최신 데이터 로드를 통해 UI 갱신
         await _loadFilteredExpenses(event.expenseModel.userId, emit);
+        // 추가 메시지는 SnackBar 등으로 별도 UI 처리 (BlocListener 활용 권장)
       },
     );
   }
@@ -204,22 +206,22 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
     );
   }
 
-  /// 수정된 DeleteExpense 핸들러: 이벤트 호출 후 추가 라우팅 없이 처리하도록 수정
+  /// 수정된 DeleteExpense 핸들러: 삭제 직후 로딩 상태를 먼저 emit하고, 최신 데이터를 await 한 뒤에 최종적으로 성공 상태로 전환
   Future<void> _onDeleteExpense(
     DeleteExpense event,
     Emitter<ExpenseState> emit,
   ) async {
     emit(ExpenseLoading());
     final result = await _expenseRepository.deleteExpense(event.expenseId);
-    result.fold(
-      (failure) => emit(ExpenseError(failure.message)),
-      (_) {
-        // 삭제 후 상태 갱신을 위해 다시 데이터 로드 (UI 단에서 BlocListener 활용 시 별도 화면 이동 처리 가능)
-        if (state is ExpenseLoaded) {
-          final currentState = state as ExpenseLoaded;
-          _loadFilteredExpenses(currentState.userId, emit);
-        }
-        emit(ExpenseOperationSuccess('지출이 삭제되었습니다.'));
+    await result.fold(
+      (failure) async {
+        emit(ExpenseError(failure.message));
+      },
+      (_) async {
+        // 삭제 직후 로딩 상태 후 최신 데이터를 불러오기
+        await _loadFilteredExpenses(event.userId!, emit);
+        // 최종적으로 성공 상태를 따로 emit하지 않고, 최신 데이터를 반영한 ExpenseLoaded 상태가 나오도록 함
+        // (SnackBar 등은 UI 단 BlocListener에서 처리 권장)
       },
     );
   }
