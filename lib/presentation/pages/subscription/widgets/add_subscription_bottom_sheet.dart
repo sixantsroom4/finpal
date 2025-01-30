@@ -182,201 +182,307 @@ class _AddSubscriptionBottomSheetState
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.fromLTRB(
-          24, 16, 24, MediaQuery.of(context).viewInsets.bottom + 24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(25),
-        ),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
       child: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 드래그 핸들
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 20),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-
-              // 제목
-              Text(
-                _getLocalizedLabel(context, 'add_subscription'),
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF2C3E50),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // 서비스명 입력
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(
-                  labelText: _getLocalizedLabel(context, 'service_name'),
-                  prefixIcon:
-                      const Icon(Icons.subscriptions, color: Color(0xFF2C3E50)),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide:
-                        const BorderSide(color: Color(0xFF2C3E50), width: 2),
-                  ),
-                ),
-                validator: (value) => value?.isEmpty ?? true
-                    ? _getLocalizedError(context, 'service_name_required')
-                    : null,
-              ),
-              const SizedBox(height: 16),
-
-              // 금액 입력
-              TextFormField(
-                controller: _amountController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: _getLocalizedLabel(context, 'amount'),
-                  prefixIcon:
-                      const Icon(Icons.attach_money, color: Color(0xFF2C3E50)),
-                  suffixText: _getCurrencySymbol(context),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide:
-                        const BorderSide(color: Color(0xFF2C3E50), width: 2),
-                  ),
-                ),
-                validator: (value) {
-                  if (value?.isEmpty ?? true) {
-                    return _getLocalizedError(context, 'amount_required');
-                  }
-                  if (double.tryParse(value!.replaceAll(',', '')) == null) {
-                    return _getLocalizedError(context, 'invalid_amount');
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // 카테고리 선택
-              DropdownButtonFormField<String>(
-                value: _selectedCategory,
-                decoration: InputDecoration(
-                  labelText: _getLocalizedLabel(context, 'category'),
-                  prefixIcon:
-                      const Icon(Icons.category, color: Color(0xFF2C3E50)),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                items: _getLocalizedCategories(context).map((category) {
-                  print('DropdownMenuItem Value: ${category['value']}');
-                  return DropdownMenuItem<String>(
-                    value: category['value'],
-                    child: Row(
-                      children: [
-                        Icon(
-                          SubscriptionCategoryConstants
-                                      .categories[category['value']] !=
-                                  null
-                              ? SubscriptionCategoryConstants
-                                  .categoryIcons[category['value']!]
-                              : Icons.category_outlined,
-                          size: 20,
-                          color: const Color(0xFF2C3E50),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(category['label']!),
-                      ],
+        physics: const ClampingScrollPhysics(),
+        child: Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+          ),
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 드래그 핸들
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
                     ),
-                  );
-                }).toList(),
-                onChanged: (value) =>
-                    setState(() => _selectedCategory = value!),
-              ),
-              const SizedBox(height: 16),
-
-              // 결제 주기 선택
-              DropdownButtonFormField<String>(
-                value: _selectedBillingCycle,
-                decoration: InputDecoration(
-                  labelText: _getLocalizedLabel(context, 'billing_cycle'),
-                  prefixIcon:
-                      const Icon(Icons.repeat, color: Color(0xFF2C3E50)),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                items: ['monthly', 'yearly', 'weekly']
-                    .map((cycle) => DropdownMenuItem(
-                          value: cycle,
-                          child:
-                              Text(_getLocalizedBillingCycle(context, cycle)),
-                        ))
-                    .toList(),
-                onChanged: (value) =>
-                    setState(() => _selectedBillingCycle = value ?? 'monthly'),
-              ),
-              const SizedBox(height: 16),
 
-              // 결제일 선택
-              TextFormField(
-                readOnly: true,
-                decoration: InputDecoration(
-                  labelText: _getLocalizedLabel(context, 'billing_day'),
-                  prefixIcon: const Icon(Icons.calendar_today,
-                      color: Color(0xFF2C3E50)),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                // 제목
+                Text(
+                  _getLocalizedLabel(context, 'add_subscription'),
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF2C3E50),
                   ),
                 ),
-                onTap: () => _selectBillingDay(context),
-                controller: TextEditingController(
-                  text: _getLocalizedDay(context, _selectedBillingDay),
-                ),
-              ),
-              const SizedBox(height: 24),
+                const SizedBox(height: 12),
 
-              // 추가 버튼
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
+                // 서비스명과 금액을 가로로 배치
+                Row(
+                  children: [
+                    // 서비스명 입력
+                    Expanded(
+                      flex: 3,
+                      child: _buildDetailField(
+                        context: context,
+                        icon: Icons.subscriptions,
+                        label: _getLocalizedLabel(context, 'service_name'),
+                        child: TextFormField(
+                          controller: _nameController,
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          validator: (value) => value?.isEmpty ?? true
+                              ? _getLocalizedError(
+                                  context, 'service_name_required')
+                              : null,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // 금액 입력
+                    Expanded(
+                      flex: 2,
+                      child: _buildDetailField(
+                        context: context,
+                        icon: Icons.attach_money,
+                        label: _getLocalizedLabel(context, 'amount'),
+                        child: TextFormField(
+                          controller: _amountController,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            suffix: Text(_getCurrencySymbol(context)),
+                            contentPadding:
+                                const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          validator: (value) {
+                            if (value?.isEmpty ?? true) {
+                              return _getLocalizedError(
+                                  context, 'amount_required');
+                            }
+                            if (double.tryParse(value!.replaceAll(',', '')) ==
+                                null) {
+                              return _getLocalizedError(
+                                  context, 'invalid_amount');
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                // 카테고리와 결제 주기를 가로로 배치
+                Row(
+                  children: [
+                    // 카테고리 선택
+                    Expanded(
+                      flex: 1,
+                      child: _buildDetailField(
+                        context: context,
+                        icon: Icons.category,
+                        label: _getLocalizedLabel(context, 'category'),
+                        child: Theme(
+                          data: Theme.of(context).copyWith(
+                            inputDecorationTheme: const InputDecorationTheme(
+                              border: InputBorder.none,
+                            ),
+                          ),
+                          child: DropdownButtonFormField<String>(
+                            value: _selectedCategory,
+                            icon: const Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              color: Color(0xFF2C3E50),
+                              size: 20,
+                            ),
+                            isExpanded: true,
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              contentPadding:
+                                  EdgeInsets.symmetric(vertical: 12),
+                            ),
+                            style: const TextStyle(
+                              fontSize: 15,
+                              color: Color(0xFF2C3E50),
+                              fontWeight: FontWeight.w500,
+                            ),
+                            items: _getLocalizedCategories(context)
+                                .map((category) {
+                              return DropdownMenuItem<String>(
+                                value: category['value'],
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      SubscriptionCategoryConstants
+                                                  .categoryIcons[
+                                              category['value']] ??
+                                          Icons.category_outlined,
+                                      size: 20,
+                                      color: const Color(0xFF2C3E50),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        category['label']!,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontSize: 15,
+                                          color: Color(0xFF2C3E50),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
+                            onChanged: (value) =>
+                                setState(() => _selectedCategory = value!),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // 결제 주기 선택
+                    Expanded(
+                      flex: 1,
+                      child: _buildDetailField(
+                        context: context,
+                        icon: Icons.repeat,
+                        label: _getLocalizedLabel(context, 'billing_cycle'),
+                        child: Theme(
+                          data: Theme.of(context).copyWith(
+                            inputDecorationTheme: const InputDecorationTheme(
+                              border: InputBorder.none,
+                            ),
+                          ),
+                          child: DropdownButtonFormField<String>(
+                            value: _selectedBillingCycle,
+                            icon: const Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              color: Color(0xFF2C3E50),
+                              size: 20,
+                            ),
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              contentPadding:
+                                  EdgeInsets.symmetric(vertical: 12),
+                            ),
+                            style: const TextStyle(
+                              fontSize: 15,
+                              color: Color(0xFF2C3E50),
+                              fontWeight: FontWeight.w500,
+                            ),
+                            items: ['monthly', 'yearly', 'weekly'].map((cycle) {
+                              return DropdownMenuItem(
+                                value: cycle,
+                                child: Text(
+                                    _getLocalizedBillingCycle(context, cycle)),
+                              );
+                            }).toList(),
+                            onChanged: (value) => setState(() =>
+                                _selectedBillingCycle = value ?? 'monthly'),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                // 결제일 선택
+                _buildDetailField(
+                  context: context,
+                  icon: Icons.calendar_today,
+                  label: _getLocalizedLabel(context, 'billing_day'),
+                  child: InkWell(
+                    onTap: () => _selectBillingDay(context),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Text(
+                        _getLocalizedDay(context, _selectedBillingDay),
+                        style: const TextStyle(
+                          fontSize: 15,
+                          color: Color(0xFF2C3E50),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // 추가 버튼
+                TextButton(
                   onPressed: _addSubscription,
-                  style: ElevatedButton.styleFrom(
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.white,
                     backgroundColor: const Color(0xFF2C3E50),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
+                    minimumSize: const Size(double.infinity, 48),
                   ),
                   child: Text(
                     _getLocalizedLabel(context, 'add'),
                     style: const TextStyle(
                       fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailField({
+    required BuildContext context,
+    required IconData icon,
+    required String label,
+    required Widget child,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF2C3E50).withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                icon,
+                size: 20,
+                color: const Color(0xFF2C3E50),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
                 ),
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 2),
+          child,
+        ],
       ),
     );
   }

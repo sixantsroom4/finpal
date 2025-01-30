@@ -220,34 +220,55 @@ class SubscriptionDetailsBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return Container(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // 헤더 영역
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  _getLocalizedLabel(context, 'subscription_details'),
-                  style: Theme.of(context).textTheme.headlineSmall,
+      child: SingleChildScrollView(
+        physics: const ClampingScrollPhysics(),
+        child: Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+          ),
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 드래그 핸들
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 16.0),
-                  child: Container(
+              ),
+
+              // 제목과 상태 표시
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    subscription.name,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF2C3E50),
+                    ),
+                  ),
+                  Container(
                     padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: subscription.isActive
-                          ? Colors.green.withOpacity(0.2)
-                          : Colors.orange.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(10),
+                          ? Colors.green.withOpacity(0.1)
+                          : Colors.orange.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -255,113 +276,184 @@ class SubscriptionDetailsBottomSheet extends StatelessWidget {
                         Icon(
                           subscription.isActive
                               ? Icons.check_circle
-                              : Icons.pause_circle,
+                              : Icons.pause_circle_filled,
                           color: subscription.isActive
                               ? Colors.green
                               : Colors.orange,
                           size: 16,
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 6),
                         Text(
                           subscription.isActive
                               ? _getLocalizedLabel(context, 'active')
                               : _getLocalizedLabel(context, 'inactive'),
                           style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
                             color: subscription.isActive
                                 ? Colors.green
                                 : Colors.orange,
-                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            const Divider(),
-            // 상세 정보 표시
-            _DetailItem(
-              title: _getLocalizedLabel(context, 'amount'),
-              value: _getLocalizedAmount(context, subscription.amount),
-            ),
-            _DetailItem(
-              title: _getLocalizedLabel(context, 'category'),
-              value: _getLocalizedCategory(context, subscription.category),
-            ),
-            _DetailItem(
-              title: _getLocalizedLabel(context, 'billing_cycle'),
-              value:
-                  _getLocalizedBillingCycle(context, subscription.billingCycle),
-            ),
-            _DetailItem(
-              title: _getLocalizedLabel(context, 'billing_day'),
-              value: _getLocalizedBillingDay(context, subscription.billingDay),
-            ),
-            _DetailItem(
-              title: _getLocalizedLabel(context, 'start_date'),
-              value: _getLocalizedDate(context, subscription.startDate),
-            ),
-            if (subscription.endDate != null)
-              _DetailItem(
-                title: _getLocalizedLabel(context, 'end_date'),
-                value: _getLocalizedDate(context, subscription.endDate!),
+                ],
               ),
-            _DetailItem(
-              title: _getLocalizedLabel(context, 'status'),
-              value: subscription.isActive
-                  ? _getLocalizedLabel(context, 'active')
-                  : _getLocalizedLabel(context, 'inactive'),
-              valueColor: subscription.isActive ? Colors.blue : Colors.grey,
-            ),
-            const SizedBox(height: 24),
+              const SizedBox(height: 24),
 
-            // 액션 버튼들
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _showEditSubscriptionDialog(context),
-                    icon: const Icon(Icons.edit),
-                    label: Text(_getLocalizedLabel(context, 'edit')),
+              // 상세 정보 필드들
+              _buildDetailField(
+                context: context,
+                icon: Icons.attach_money,
+                label: _getLocalizedLabel(context, 'amount'),
+                value: _getLocalizedAmount(context, subscription.amount),
+              ),
+              _buildDetailField(
+                context: context,
+                icon: Icons.category,
+                label: _getLocalizedLabel(context, 'category'),
+                value: _getLocalizedCategory(context, subscription.category),
+              ),
+              _buildDetailField(
+                context: context,
+                icon: Icons.repeat,
+                label: _getLocalizedLabel(context, 'billing_cycle'),
+                value: _getLocalizedBillingCycle(
+                    context, subscription.billingCycle),
+              ),
+              _buildDetailField(
+                context: context,
+                icon: Icons.calendar_today,
+                label: _getLocalizedLabel(context, 'billing_day'),
+                value:
+                    _getLocalizedBillingDay(context, subscription.billingDay),
+              ),
+              _buildDetailField(
+                context: context,
+                icon: Icons.play_circle,
+                label: _getLocalizedLabel(context, 'start_date'),
+                value: _getLocalizedDate(context, subscription.startDate),
+              ),
+              const SizedBox(height: 24),
+
+              // 버튼들
+              Row(
+                children: [
+                  // 수정 버튼
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => _showEditSubscriptionDialog(context),
+                      style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFF2C3E50),
+                        backgroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        side: const BorderSide(
+                          color: Color(0xFF2C3E50),
+                          width: 1.5,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(_getLocalizedLabel(context, 'edit')),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _toggleSubscriptionStatus(context),
-                    icon: Icon(
-                      subscription.isActive ? Icons.pause : Icons.play_arrow,
-                    ),
-                    label: Text(
-                      subscription.isActive
-                          ? _getLocalizedLabel(context, 'pause')
-                          : _getLocalizedLabel(context, 'resume'),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          subscription.isActive ? Colors.orange : Colors.green,
+                  const SizedBox(width: 12),
+                  // 일시정지/재시작 버튼
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => _toggleSubscriptionStatus(context),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        backgroundColor: subscription.isActive
+                            ? Colors.orange
+                            : Colors.green,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        subscription.isActive
+                            ? _getLocalizedLabel(context, 'pause')
+                            : _getLocalizedLabel(context, 'resume'),
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () => _showDeleteConfirmation(context),
-                icon: const Icon(Icons.delete, color: Colors.red),
-                label: Text(_getLocalizedLabel(context, 'delete')),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.red,
+                ],
+              ),
+              const SizedBox(height: 12),
+              // 삭제 버튼
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () => _showDeleteConfirmation(context),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.red,
+                    backgroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    side: const BorderSide(
+                      color: Colors.red,
+                      width: 1.5,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(_getLocalizedLabel(context, 'delete')),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildDetailField({
+    required BuildContext context,
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF2C3E50).withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            size: 20,
+            color: const Color(0xFF2C3E50),
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF2C3E50),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -440,50 +532,6 @@ class SubscriptionDetailsBottomSheet extends StatelessWidget {
           ],
         );
       },
-    );
-  }
-}
-
-class _DetailItem extends StatelessWidget {
-  final String title;
-  final String value;
-  final Color? valueColor;
-
-  const _DetailItem({
-    required this.title,
-    required this.value,
-    this.valueColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 80,
-            child: Text(
-              title,
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 14,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: valueColor,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

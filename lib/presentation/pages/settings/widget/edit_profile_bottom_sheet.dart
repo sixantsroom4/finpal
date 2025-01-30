@@ -96,85 +96,179 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> {
       child: Container(
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
-          left: 16,
-          right: 16,
-          top: 16,
         ),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: SingleChildScrollView(
+          physics: const ClampingScrollPhysics(),
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+            ),
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // 드래그 핸들
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 20),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+
+                  // 제목
                   Text(
                     _getLocalizedLabel(context, 'edit_profile'),
-                    style: Theme.of(context).textTheme.titleLarge,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF2C3E50),
+                    ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
+                  const SizedBox(height: 24),
+
+                  // 프로필 이미지
+                  Center(
+                    child: Stack(
+                      children: [
+                        Container(
+                          width: 100,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: const Color(0xFF2C3E50).withOpacity(0.05),
+                            border: Border.all(
+                              color: const Color(0xFF2C3E50).withOpacity(0.1),
+                              width: 1,
+                            ),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(50),
+                            child: _selectedImagePath != null
+                                ? Image.file(
+                                    File(_selectedImagePath!),
+                                    fit: BoxFit.cover,
+                                  )
+                                : widget.user.photoUrl != null
+                                    ? Image.network(
+                                        widget.user.photoUrl!,
+                                        fit: BoxFit.cover,
+                                      )
+                                    : Center(
+                                        child: Text(
+                                          widget.user.displayName[0]
+                                              .toUpperCase(),
+                                          style: const TextStyle(
+                                            fontSize: 36,
+                                            fontWeight: FontWeight.w600,
+                                            color: Color(0xFF2C3E50),
+                                          ),
+                                        ),
+                                      ),
+                          ),
+                        ),
+                        Positioned(
+                          right: 0,
+                          bottom: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF2C3E50),
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white,
+                                width: 2,
+                              ),
+                            ),
+                            child: InkWell(
+                              onTap: _pickImage,
+                              child: const Icon(
+                                Icons.camera_alt,
+                                size: 20,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+
+                  // 이름 입력 필드
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2C3E50).withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _getLocalizedLabel(context, 'display_name'),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        TextFormField(
+                          controller: _displayNameController,
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(vertical: 8),
+                          ),
+                          validator: (value) => value?.isEmpty ?? true
+                              ? _getLocalizedLabel(context, 'name_required')
+                              : null,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+
+                  // 저장 버튼
+                  TextButton(
+                    onPressed: _isSaving ? null : _updateProfile,
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: const Color(0xFF2C3E50),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      minimumSize: const Size(double.infinity, 48),
+                    ),
+                    child: _isSaving
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                        : Text(
+                            _getLocalizedLabel(context, 'save'),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              Center(
-                child: Stack(
-                  children: [
-                    CircleAvatar(
-                      radius: 40,
-                      backgroundImage: _selectedImagePath != null
-                          ? FileImage(File(_selectedImagePath!))
-                          : widget.user.photoUrl != null
-                              ? NetworkImage(widget.user.photoUrl!)
-                              : null,
-                      child: (_selectedImagePath == null &&
-                              widget.user.photoUrl == null)
-                          ? Text(
-                              widget.user.displayName[0].toUpperCase(),
-                              style: const TextStyle(fontSize: 32),
-                            )
-                          : null,
-                    ),
-                    Positioned(
-                      right: -12,
-                      bottom: -12,
-                      child: IconButton(
-                        icon: const Icon(Icons.camera_alt),
-                        onPressed: _pickImage,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _displayNameController,
-                decoration: InputDecoration(
-                  labelText: _getLocalizedLabel(context, 'display_name'),
-                  border: const OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value?.isEmpty ?? true) {
-                    return _getLocalizedLabel(context, 'name_required');
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _isSaving ? null : _updateProfile,
-                child: _isSaving
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(_getLocalizedLabel(context, 'save')),
-              ),
-            ],
+            ),
           ),
         ),
       ),

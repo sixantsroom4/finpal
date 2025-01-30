@@ -84,103 +84,135 @@ class SubscriptionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('Subscription Category: ${subscription.category}');
-    return Opacity(
-      opacity: subscription.isActive ? 1.0 : 0.6,
-      child: Card(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                // 아이콘 부분
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF2C3E50).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    subscription.category != null
-                        ? SubscriptionCategoryConstants
-                            .categoryIcons[subscription.category!.toUpperCase()]
-                        : Icons.category,
-                    color: const Color(0xFF2C3E50),
-                  ),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 6),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF2C3E50).withOpacity(0.08),
+                offset: const Offset(0, 2),
+                blurRadius: 8,
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              // 아이콘 부분
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2C3E50),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                const SizedBox(width: 16),
-                // 정보 부분
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
+                child: Icon(
+                  subscription.category != null
+                      ? SubscriptionCategoryConstants
+                          .categoryIcons[subscription.category!.toUpperCase()]
+                      : Icons.category,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              // 정보 부분
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
                             subscription.name,
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                               color: Color(0xFF2C3E50),
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          if (!subscription.isActive)
-                            Container(
-                              margin: const EdgeInsets.only(left: 8),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.grey[200],
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                _getLocalizedLabel(context, 'paused'),
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _getLocalizedAmount(context, subscription.amount),
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF2C3E50),
                         ),
+                        if (!subscription.isActive)
+                          Container(
+                            margin: const EdgeInsets.only(left: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.pause_circle_filled,
+                                  size: 14,
+                                  color: Colors.orange,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  _getLocalizedLabel(context, 'paused'),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.orange,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _getLocalizedAmount(context, subscription.amount),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF2C3E50),
                       ),
-                      if (daysUntilBilling != null) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          daysUntilBilling == 0
-                              ? _getLocalizedLabel(context, 'billing_today')
-                              : _getLocalizedLabel(
-                                  context, 'billing_days_left'),
-                          style: TextStyle(
-                            fontSize: 12,
+                    ),
+                    if (daysUntilBilling != null) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.access_time,
+                            size: 14,
                             color: daysUntilBilling == 0
                                 ? Colors.red
                                 : Colors.grey[600],
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 4),
+                          Text(
+                            daysUntilBilling == 0
+                                ? _getLocalizedLabel(context, 'billing_today')
+                                : _getLocalizedLabel(
+                                    context, 'billing_days_left'),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: daysUntilBilling == 0
+                                  ? Colors.red
+                                  : Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

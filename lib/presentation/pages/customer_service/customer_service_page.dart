@@ -55,7 +55,11 @@ class _CustomerServiceViewState extends State<CustomerServiceView> {
         elevation: 0,
         title: Text(
           _getLocalizedLabel(context, 'customer_service'),
-          style: const TextStyle(color: Colors.white70),
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
       body: BlocConsumer<CustomerServiceBloc, CustomerServiceState>(
@@ -65,16 +69,20 @@ class _CustomerServiceViewState extends State<CustomerServiceView> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          return CustomScrollView(
-            slivers: [
-              // 상단 안내 섹션
-              SliverToBoxAdapter(
-                child: Container(
-                  padding: const EdgeInsets.all(16),
+          return SingleChildScrollView(
+            child: Column(
+              children: [
+                // 상단 안내 섹션
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2C3E50).withOpacity(0.05),
+                    color: Colors.white,
                     border: Border(
-                      bottom: BorderSide(color: Colors.grey.shade200),
+                      bottom: BorderSide(
+                        color: const Color(0xFF2C3E50).withOpacity(0.1),
+                        width: 1,
+                      ),
                     ),
                   ),
                   child: Column(
@@ -83,7 +91,7 @@ class _CustomerServiceViewState extends State<CustomerServiceView> {
                       Text(
                         _getLocalizedLabel(context, 'inquiry_guide_title'),
                         style: const TextStyle(
-                          fontSize: 18,
+                          fontSize: 24,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF2C3E50),
                         ),
@@ -92,28 +100,27 @@ class _CustomerServiceViewState extends State<CustomerServiceView> {
                       Text(
                         _getLocalizedLabel(context, 'inquiry_guide'),
                         style: TextStyle(
-                          color: Colors.grey[600],
+                          color: const Color(0xFF2C3E50).withOpacity(0.6),
                           height: 1.5,
+                          fontSize: 15,
                         ),
                       ),
                     ],
                   ),
                 ),
-              ),
 
-              // 문의 폼
-              SliverPadding(
-                padding: const EdgeInsets.all(16),
-                sliver: SliverToBoxAdapter(
+                // 문의 폼
+                Container(
+                  padding: const EdgeInsets.all(24),
                   child: Form(
                     key: _formKey,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildCategorySection(),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 32),
                         _buildInquiryFormSection(),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 32),
                         _buildImageAttachmentSection(),
                         const SizedBox(height: 32),
                         _buildSubmitButton(),
@@ -121,8 +128,8 @@ class _CustomerServiceViewState extends State<CustomerServiceView> {
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           );
         },
       ),
@@ -283,8 +290,13 @@ class _CustomerServiceViewState extends State<CustomerServiceView> {
       selected: isSelected,
       onSelected: (selected) => setState(() => _selectedCategory = category),
       selectedColor: const Color(0xFF2C3E50),
+      backgroundColor: const Color(0xFF2C3E50).withOpacity(0.05),
       labelStyle: TextStyle(
-        color: isSelected ? Colors.white : Colors.black87,
+        color: isSelected ? Colors.white : const Color(0xFF2C3E50),
+        fontWeight: FontWeight.w500,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
       ),
     );
   }
@@ -293,58 +305,81 @@ class _CustomerServiceViewState extends State<CustomerServiceView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        TextFormField(
+        _buildTextField(
           controller: _titleController,
-          decoration: InputDecoration(
-            labelText: _getLocalizedLabel(context, 'title'),
-            border: const OutlineInputBorder(),
-            floatingLabelBehavior: FloatingLabelBehavior.always,
-            hintText: _getLocalizedLabel(context, 'inquiry_title_hint'),
-          ),
+          label: _getLocalizedLabel(context, 'title'),
+          hint: _getLocalizedLabel(context, 'inquiry_title_hint'),
           validator: (value) => value?.isEmpty ?? true
               ? _getLocalizedLabel(context, 'title_required')
               : null,
         ),
         const SizedBox(height: 16),
-        TextFormField(
+        _buildTextField(
           controller: _contentController,
-          decoration: InputDecoration(
-            labelText: _getLocalizedLabel(context, 'content'),
-            border: const OutlineInputBorder(),
-            floatingLabelBehavior: FloatingLabelBehavior.always,
-            hintText: _getLocalizedLabel(context, 'inquiry_content_hint'),
-            alignLabelWithHint: true,
-          ),
+          label: _getLocalizedLabel(context, 'content'),
+          hint: _getLocalizedLabel(context, 'inquiry_content_hint'),
           maxLines: 8,
           validator: (value) => value?.isEmpty ?? true
               ? _getLocalizedLabel(context, 'content_required')
               : null,
         ),
         const SizedBox(height: 16),
-        TextFormField(
+        _buildTextField(
           controller: _emailController,
+          label: _getLocalizedLabel(context, 'contact_email'),
+          hint: _getLocalizedLabel(context, 'contact_email_hint'),
           keyboardType: TextInputType.emailAddress,
-          decoration: InputDecoration(
-            labelText: _getLocalizedLabel(context, 'contact_email'),
-            border: const OutlineInputBorder(),
-            floatingLabelBehavior: FloatingLabelBehavior.always,
-            hintText: _getLocalizedLabel(context, 'contact_email_hint'),
-          ),
           validator: _validateEmail,
         ),
         const SizedBox(height: 16),
-        TextFormField(
+        _buildTextField(
           controller: _confirmEmailController,
+          label: _getLocalizedLabel(context, 'confirm_email'),
+          hint: _getLocalizedLabel(context, 'confirm_email_hint'),
           keyboardType: TextInputType.emailAddress,
-          decoration: InputDecoration(
-            labelText: _getLocalizedLabel(context, 'confirm_email'),
-            border: const OutlineInputBorder(),
-            floatingLabelBehavior: FloatingLabelBehavior.always,
-            hintText: _getLocalizedLabel(context, 'confirm_email_hint'),
-          ),
           validator: _validateConfirmEmail,
         ),
       ],
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    TextInputType? keyboardType,
+    int? maxLines,
+    String? Function(String?)? validator,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF2C3E50).withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[600],
+            ),
+          ),
+          TextFormField(
+            controller: controller,
+            keyboardType: keyboardType,
+            maxLines: maxLines ?? 1,
+            decoration: InputDecoration(
+              hintText: hint,
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(vertical: 8),
+            ),
+            validator: validator,
+          ),
+        ],
+      ),
     );
   }
 
@@ -424,14 +459,23 @@ class _CustomerServiceViewState extends State<CustomerServiceView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(_getLocalizedLabel(context, 'attach_images')),
-        const SizedBox(height: 8),
+        Text(
+          _getLocalizedLabel(context, 'attach_images'),
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF2C3E50),
+          ),
+        ),
+        const SizedBox(height: 12),
         Wrap(
           spacing: 8,
           runSpacing: 8,
           children: [
-            ...List.generate(
-                _imagePaths.length, (index) => _buildImagePreview(index)),
+            ..._imagePaths
+                .asMap()
+                .entries
+                .map((e) => _buildImagePreview(e.key)),
             if (_imagePaths.length < 4) _buildAddImageButton(),
           ],
         ),
@@ -503,6 +547,4 @@ class _CustomerServiceViewState extends State<CustomerServiceView> {
       });
     }
   }
-
-  // ... (나머지 구현)
 }
