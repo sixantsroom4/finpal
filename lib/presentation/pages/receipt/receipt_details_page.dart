@@ -219,10 +219,21 @@ class ReceiptDetailsPage extends StatelessWidget {
           }
 
           return Scaffold(
+            backgroundColor: Colors.white,
             appBar: AppBar(
-              title: Text(receipt.merchantName),
+              backgroundColor: const Color(0xFF2C3E50),
+              elevation: 0,
+              title: Text(
+                receipt.merchantName,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               actions: [
                 PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert, color: Colors.white),
                   onSelected: (value) {
                     switch (value) {
                       case 'edit':
@@ -238,9 +249,19 @@ class ReceiptDetailsPage extends StatelessWidget {
                       value: 'edit',
                       child: Row(
                         children: [
-                          const Icon(Icons.edit),
+                          const Icon(
+                            Icons.edit,
+                            color: Color(0xFF2C3E50),
+                            size: 20,
+                          ),
                           const SizedBox(width: 8),
-                          Text(_getLocalizedLabel(context, 'edit')),
+                          Text(
+                            _getLocalizedLabel(context, 'edit'),
+                            style: const TextStyle(
+                              color: Color(0xFF2C3E50),
+                              fontSize: 15,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -248,11 +269,18 @@ class ReceiptDetailsPage extends StatelessWidget {
                       value: 'delete',
                       child: Row(
                         children: [
-                          const Icon(Icons.delete, color: Colors.red),
+                          const Icon(
+                            Icons.delete,
+                            color: Colors.red,
+                            size: 20,
+                          ),
                           const SizedBox(width: 8),
                           Text(
                             _getLocalizedLabel(context, 'delete'),
-                            style: const TextStyle(color: Colors.red),
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontSize: 15,
+                            ),
                           ),
                         ],
                       ),
@@ -262,79 +290,70 @@ class ReceiptDetailsPage extends StatelessWidget {
               ],
             ),
             body: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // 영수증 이미지
-                  GestureDetector(
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => Dialog(
-                          backgroundColor: Colors.transparent,
-                          insetPadding: EdgeInsets.zero,
-                          child: Stack(
-                            children: [
-                              InteractiveViewer(
-                                minScale: 0.5,
-                                maxScale: 4.0,
-                                child: CachedNetworkImage(
-                                  imageUrl: receipt.imageUrl,
-                                  fit: BoxFit.contain,
-                                  width: MediaQuery.of(context).size.width,
-                                  height: MediaQuery.of(context).size.height,
-                                ),
-                              ),
-                              Positioned(
-                                top: 40,
-                                right: 20,
-                                child: IconButton(
-                                  icon: const Icon(Icons.close,
-                                      color: Colors.white),
-                                  onPressed: () => Navigator.pop(context),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: CachedNetworkImage(
-                        imageUrl: receipt.imageUrl,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                      ),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: CachedNetworkImage(
+                      imageUrl: receipt.imageUrl,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
                     ),
                   ),
                   const SizedBox(height: 24),
                   // 영수증 정보
                   Card(
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(
+                        color: const Color(0xFF2C3E50).withOpacity(0.1),
+                        width: 1,
+                      ),
+                    ),
                     child: Padding(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(20),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             _getLocalizedLabel(context, 'purchase_info'),
-                            style: Theme.of(context).textTheme.titleLarge,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF2C3E50),
+                            ),
                           ),
-                          const Divider(height: 32),
-                          _buildInfoRow(_getLocalizedLabel(context, 'store'),
-                              receipt.merchantName),
-                          _buildInfoRow(_getLocalizedLabel(context, 'date'),
-                              _getLocalizedDate(context, receipt.date)),
-                          _buildInfoRow(_getLocalizedLabel(context, 'total'),
-                              '${CurrencyUtils.getCurrencySymbol(receipt.currency)} ${CurrencyUtils.formatAmount(receipt.totalAmount, receipt.currency)}'),
+                          const SizedBox(height: 20),
+                          _buildInfoRow(
+                            context,
+                            _getLocalizedLabel(context, 'store'),
+                            receipt.merchantName,
+                          ),
+                          _buildInfoRow(
+                            context,
+                            _getLocalizedLabel(context, 'date'),
+                            _getLocalizedDate(context, receipt.date),
+                          ),
+                          _buildInfoRow(
+                            context,
+                            _getLocalizedLabel(context, 'total'),
+                            '${CurrencyUtils.getCurrencySymbol(receipt.currency)} ${CurrencyUtils.formatAmount(receipt.totalAmount, receipt.currency)}',
+                          ),
                           if (receipt.items.isNotEmpty) ...[
-                            const Divider(height: 32),
+                            const SizedBox(height: 20),
                             Text(
                               _getLocalizedLabel(context, 'items'),
-                              style: Theme.of(context).textTheme.titleMedium,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF2C3E50),
+                              ),
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 12),
                             ...receipt.items
                                 .map((item) => _buildItemRow(context, item)),
                           ],
@@ -352,41 +371,94 @@ class ReceiptDetailsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+  Widget _buildInfoRow(BuildContext context, String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: const Color(0xFF2C3E50).withOpacity(0.1),
+            width: 1,
+          ),
+        ),
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label),
-          Text(value),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 15,
+              color: Colors.grey[600],
+            ),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF2C3E50),
+            ),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildItemRow(BuildContext context, ReceiptItem item) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: const Color(0xFF2C3E50).withOpacity(0.1),
+            width: 1,
+          ),
+        ),
+      ),
       child: Row(
         children: [
-          Expanded(flex: 2, child: Text(item.name)),
+          Expanded(
+            flex: 2,
+            child: Text(
+              item.name,
+              style: const TextStyle(
+                fontSize: 15,
+                color: Color(0xFF2C3E50),
+              ),
+            ),
+          ),
           Expanded(
             child: Text(
               '${CurrencyUtils.getCurrencySymbol(item.currency)} ${CurrencyUtils.formatAmount(item.price, item.currency)}',
               textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 15,
+                color: Colors.grey[600],
+              ),
             ),
           ),
           const SizedBox(width: 8),
           SizedBox(
             width: 40,
-            child: Text('x${item.quantity}', textAlign: TextAlign.center),
+            child: Text(
+              'x${item.quantity}',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 15,
+                color: Colors.grey[600],
+              ),
+            ),
           ),
           Expanded(
             child: Text(
               '${CurrencyUtils.getCurrencySymbol(item.currency)} ${CurrencyUtils.formatAmount(item.totalPrice, item.currency)}',
               textAlign: TextAlign.right,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF2C3E50),
+              ),
             ),
           ),
         ],
@@ -395,35 +467,62 @@ class ReceiptDetailsPage extends StatelessWidget {
   }
 
   Widget _buildBottomButton(BuildContext context, Receipt receipt) {
-    // 이미 지출이 생성된 경우
-    if (receipt.expenseId != null) {
-      return SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: OutlinedButton.icon(
-            onPressed: () => context.go('/expenses/${receipt.expenseId}'),
-            icon: const Icon(Icons.receipt_long),
-            label: Text(_getLocalizedLabel(context, 'view_expense')),
-            style: OutlinedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 48),
-            ),
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
           ),
-        ),
-      );
-    }
-
-    // 지출이 아직 생성되지 않은 경우
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ElevatedButton.icon(
-          onPressed: () => _createExpense(context, receipt),
-          icon: const Icon(Icons.add_card),
-          label: Text(_getLocalizedLabel(context, 'create_expense')),
-          style: ElevatedButton.styleFrom(
-            minimumSize: const Size(double.infinity, 48),
-          ),
-        ),
+        ],
+      ),
+      child: SafeArea(
+        child: receipt.expenseId != null
+            ? TextButton(
+                onPressed: () => context.go('/expenses/${receipt.expenseId}'),
+                style: TextButton.styleFrom(
+                  foregroundColor: const Color(0xFF2C3E50),
+                  backgroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  side: const BorderSide(
+                    color: Color(0xFF2C3E50),
+                    width: 1.5,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  minimumSize: const Size(double.infinity, 48),
+                ),
+                child: Text(
+                  _getLocalizedLabel(context, 'view_expense'),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              )
+            : TextButton(
+                onPressed: () => _createExpense(context, receipt),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: const Color(0xFF2C3E50),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  minimumSize: const Size(double.infinity, 48),
+                ),
+                child: Text(
+                  _getLocalizedLabel(context, 'create_expense'),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
       ),
     );
   }
@@ -448,30 +547,53 @@ class ReceiptDetailsPage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(_getLocalizedLabel(context, 'delete_receipt')),
-        content: Text(_getLocalizedLabel(context, 'delete_confirm')),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        title: Text(
+          _getLocalizedLabel(context, 'delete_receipt'),
+          style: const TextStyle(
+            color: Color(0xFF2C3E50),
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Text(
+          _getLocalizedLabel(context, 'delete_confirm'),
+          style: const TextStyle(
+            color: Color(0xFF2C3E50),
+            fontSize: 15,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(_getLocalizedLabel(context, 'cancel')),
+            child: Text(
+              _getLocalizedLabel(context, 'cancel'),
+              style: const TextStyle(
+                color: Color(0xFF2C3E50),
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
           TextButton(
             onPressed: () {
-              Navigator.pop(context); // 다이얼로그 닫기
-
-              // DeleteReceipt 이벤트만 발생시키고, LoadReceipts는 bloc 내부에서 처리하도록 수정
+              Navigator.pop(context);
               context.read<ReceiptBloc>().add(
                     DeleteReceipt(receipt.id, receipt.userId),
                   );
-
-              // ExpenseBloc 업데이트
               if (receipt.expenseId != null) {
                 context.read<ExpenseBloc>().add(LoadExpenses(receipt.userId));
               }
             },
             child: Text(
               _getLocalizedLabel(context, 'delete'),
-              style: const TextStyle(color: Colors.red),
+              style: const TextStyle(
+                color: Colors.red,
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],

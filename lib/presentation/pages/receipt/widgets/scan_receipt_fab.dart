@@ -20,11 +20,13 @@ class ScanReceiptFab extends StatelessWidget {
       icon: const Icon(
         Icons.document_scanner,
         color: Colors.white,
+        size: 20,
       ),
       label: Text(
         _getLocalizedLabel(context, 'scan_receipt'),
         style: const TextStyle(
           color: Colors.white,
+          fontSize: 15,
           fontWeight: FontWeight.w500,
         ),
       ),
@@ -40,21 +42,70 @@ class ScanReceiptFab extends StatelessWidget {
   void _showScanOptions(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: Text(_getLocalizedLabel(context, 'scan_with_camera')),
-              onTap: () => _pickImage(ImageSource.camera, context),
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: Text(_getLocalizedLabel(context, 'select_from_gallery')),
-              onTap: () => _pickImage(ImageSource.gallery, context),
-            ),
-          ],
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(25),
+        ),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(25),
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.camera_alt,
+                  color: Color(0xFF2C3E50),
+                  size: 24,
+                ),
+                title: Text(
+                  _getLocalizedLabel(context, 'scan_with_camera'),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF2C3E50),
+                  ),
+                ),
+                onTap: () => _pickImage(ImageSource.camera, context),
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.photo_library,
+                  color: Color(0xFF2C3E50),
+                  size: 24,
+                ),
+                title: Text(
+                  _getLocalizedLabel(context, 'select_from_gallery'),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF2C3E50),
+                  ),
+                ),
+                onTap: () => _pickImage(ImageSource.gallery, context),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
       ),
     );

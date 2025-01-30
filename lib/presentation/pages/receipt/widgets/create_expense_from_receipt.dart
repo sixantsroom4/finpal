@@ -122,17 +122,54 @@ class _CreateExpenseFromReceiptState extends State<CreateExpenseFromReceipt> {
             // 버튼
             Row(
               children: [
+                // 취소 버튼
                 Expanded(
-                  child: OutlinedButton(
+                  child: TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: Text(_getLocalizedLabel(context, 'cancel')),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.red, // 텍스트 색상
+                      backgroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      side: const BorderSide(
+                        // 테두리
+                        color: Colors.red,
+                        width: 1.5,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      minimumSize: const Size(double.infinity, 48),
+                    ),
+                    child: Text(
+                      _getLocalizedLabel(context, 'cancel'),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 16),
+                // 생성 버튼
                 Expanded(
-                  child: ElevatedButton(
+                  child: TextButton(
                     onPressed: _createExpense,
-                    child: Text(_getLocalizedLabel(context, 'create')),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: const Color(0xFF2C3E50),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      minimumSize: const Size(double.infinity, 48),
+                    ),
+                    child: Text(
+                      _getLocalizedLabel(context, 'create'),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ),
               ],
