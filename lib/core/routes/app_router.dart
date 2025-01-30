@@ -98,10 +98,6 @@ class AppRouter {
                 ),
               ],
             ),
-            GoRoute(
-              path: '/add-expense',
-              builder: (context, state) => const AddExpenseBottomSheet(),
-            ),
           ],
         ),
       ],

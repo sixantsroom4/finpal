@@ -42,120 +42,261 @@ class _EditExpenseBottomSheetState extends State<EditExpenseBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final appLanguage = context.read<AppLanguageBloc>().state.language;
+    final currency = widget.expense.currency;
+
     return Container(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
-        left: 16,
-        right: 16,
-        top: 16,
       ),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  _getLocalizedTitle(context),
-                  style: Theme.of(context).textTheme.titleLarge,
+      child: SingleChildScrollView(
+        physics: const ClampingScrollPhysics(),
+        child: Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+          ),
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 드래그 핸들
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.pop(context),
+              ),
+
+              // 제목
+              Text(
+                _getLocalizedTitle(appLanguage),
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF2C3E50),
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _descriptionController,
-              decoration: InputDecoration(
-                labelText: _getLocalizedLabel(context, 'description'),
-                border: const OutlineInputBorder(),
               ),
-              validator: (value) {
-                if (value?.isEmpty ?? true) {
-                  return _getLocalizedError(context, 'description_required');
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _amountController,
-              decoration: InputDecoration(
-                labelText: _getLocalizedLabel(context, 'amount'),
-                border: const OutlineInputBorder(),
-                suffix: Text(_getLocalizedCurrency(context)),
+              const SizedBox(height: 12),
+
+              Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    // 금액과 설명을 가로로 배치
+                    Row(
+                      children: [
+                        // 금액 입력
+                        Expanded(
+                          flex: 2,
+                          child: _buildDetailField(
+                            context: context,
+                            icon: Icons.attach_money,
+                            label: _getLocalizedLabel(appLanguage, 'amount'),
+                            child: TextFormField(
+                              controller: _amountController,
+                              keyboardType: TextInputType.number,
+                              decoration: InputDecoration(
+                                border: InputBorder.none,
+                                suffix: Text(currency),
+                                contentPadding:
+                                    const EdgeInsets.symmetric(vertical: 12),
+                              ),
+                              validator: (value) => value?.isEmpty ?? true
+                                  ? _getLocalizedError(
+                                      appLanguage, 'amount_required')
+                                  : null,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        // 설명 입력
+                        Expanded(
+                          flex: 3,
+                          child: _buildDetailField(
+                            context: context,
+                            icon: Icons.description_outlined,
+                            label:
+                                _getLocalizedLabel(appLanguage, 'description'),
+                            child: TextFormField(
+                              controller: _descriptionController,
+                              decoration: const InputDecoration(
+                                border: InputBorder.none,
+                                contentPadding:
+                                    EdgeInsets.symmetric(vertical: 12),
+                              ),
+                              validator: (value) => value?.isEmpty ?? true
+                                  ? _getLocalizedError(
+                                      appLanguage, 'description_required')
+                                  : null,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    // 카테고리와 날짜를 가로로 배치
+                    Row(
+                      children: [
+                        // 카테고리 선택
+                        Expanded(
+                          flex: 3,
+                          child: _buildDetailField(
+                            context: context,
+                            icon: Icons.category_outlined,
+                            label: _getLocalizedLabel(appLanguage, 'category'),
+                            child: Theme(
+                              data: Theme.of(context).copyWith(
+                                inputDecorationTheme:
+                                    const InputDecorationTheme(
+                                  border: InputBorder.none,
+                                ),
+                              ),
+                              child: DropdownButtonFormField<String>(
+                                value: _selectedCategory,
+                                icon: const Icon(
+                                  Icons.keyboard_arrow_down_rounded,
+                                  color: Color(0xFF2C3E50),
+                                  size: 20,
+                                ),
+                                decoration: const InputDecoration(
+                                  border: InputBorder.none,
+                                  contentPadding:
+                                      EdgeInsets.symmetric(vertical: 12),
+                                ),
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  color: Color(0xFF2C3E50),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                dropdownColor: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                menuMaxHeight: 300,
+                                items: _getLocalizedCategories(appLanguage)
+                                    .map((item) => DropdownMenuItem<String>(
+                                          value: item['value'],
+                                          child: Text(item['label'] ?? ''),
+                                        ))
+                                    .toList(),
+                                onChanged: (value) =>
+                                    setState(() => _selectedCategory = value),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        // 날짜 선택
+                        Expanded(
+                          flex: 2,
+                          child: _buildDetailField(
+                            context: context,
+                            icon: Icons.calendar_today_outlined,
+                            label: _getLocalizedLabel(appLanguage, 'date'),
+                            child: InkWell(
+                              onTap: () => _selectDate(context),
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 12),
+                                child: Text(
+                                  _getLocalizedDate(appLanguage, _selectedDate),
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    // 저장 버튼
+                    SizedBox(
+                      width: double.infinity,
+                      child: TextButton(
+                        onPressed: _submit,
+                        style: TextButton.styleFrom(
+                          foregroundColor: const Color(0xFF2C3E50),
+                          backgroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          side: const BorderSide(
+                            color: Color(0xFF2C3E50),
+                            width: 1.5,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          minimumSize: const Size(double.infinity, 48),
+                        ),
+                        child: Text(
+                          _getLocalizedLabel(appLanguage, 'save'),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF2C3E50),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              keyboardType: TextInputType.number,
-              validator: (value) {
-                if (value?.isEmpty ?? true) {
-                  return _getLocalizedError(context, 'amount_required');
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              value: _selectedCategory,
-              decoration: InputDecoration(
-                labelText: _getLocalizedLabel(context, 'category'),
-                border: const OutlineInputBorder(),
-              ),
-              items: _getLocalizedCategories(context)
-                  .map((category) => DropdownMenuItem<String>(
-                        value: category['value']?.toLowerCase(),
-                        child: Text(category['label']!),
-                      ))
-                  .toList(),
-              onChanged: (String? newValue) {
-                setState(() {
-                  _selectedCategory = newValue;
-                });
-              },
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return _getLocalizedError(context, 'category_required');
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            ListTile(
-              title: Text(_getLocalizedLabel(context, 'date')),
-              subtitle: Text(_getLocalizedDate(context, _selectedDate)),
-              trailing: const Icon(Icons.calendar_today),
-              onTap: () async {
-                final picked = await showDatePicker(
-                  context: context,
-                  initialDate: _selectedDate,
-                  firstDate: DateTime(2000),
-                  lastDate: DateTime(2100),
-                );
-                if (picked != null) {
-                  setState(() {
-                    _selectedDate = picked;
-                  });
-                }
-              },
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _submit,
-              child: Text(_getLocalizedLabel(context, 'save')),
-            ),
-            const SizedBox(height: 16),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  String _getLocalizedTitle(BuildContext context) {
-    final language = context.read<AppLanguageBloc>().state.language;
+  Widget _buildDetailField({
+    required BuildContext context,
+    required IconData icon,
+    required String label,
+    required Widget child,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF2C3E50).withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                icon,
+                size: 20,
+                color: const Color(0xFF2C3E50),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          child,
+        ],
+      ),
+    );
+  }
+
+  String _getLocalizedTitle(AppLanguage language) {
     const Map<AppLanguage, String> titles = {
       AppLanguage.english: 'Edit Expense',
       AppLanguage.korean: '지출 수정',
@@ -164,8 +305,7 @@ class _EditExpenseBottomSheetState extends State<EditExpenseBottomSheet> {
     return titles[language] ?? titles[AppLanguage.korean]!;
   }
 
-  String _getLocalizedLabel(BuildContext context, String key) {
-    final language = context.read<AppLanguageBloc>().state.language;
+  String _getLocalizedLabel(AppLanguage language, String key) {
     final Map<String, Map<AppLanguage, String>> labels = {
       'description': {
         AppLanguage.english: 'Description',
@@ -196,8 +336,7 @@ class _EditExpenseBottomSheetState extends State<EditExpenseBottomSheet> {
     return labels[key]?[language] ?? labels[key]?[AppLanguage.korean] ?? key;
   }
 
-  String _getLocalizedError(BuildContext context, String key) {
-    final language = context.read<AppLanguageBloc>().state.language;
+  String _getLocalizedError(AppLanguage language, String key) {
     final Map<String, Map<AppLanguage, String>> errors = {
       'description_required': {
         AppLanguage.english: 'Please enter a description',
@@ -213,18 +352,7 @@ class _EditExpenseBottomSheetState extends State<EditExpenseBottomSheet> {
     return errors[key]?[language] ?? errors[key]?[AppLanguage.korean] ?? key;
   }
 
-  String _getLocalizedCurrency(BuildContext context) {
-    final language = context.read<AppLanguageBloc>().state.language;
-    const Map<AppLanguage, String> currencies = {
-      AppLanguage.english: '\$',
-      AppLanguage.korean: '원',
-      AppLanguage.japanese: '¥',
-    };
-    return currencies[language] ?? currencies[AppLanguage.korean]!;
-  }
-
-  List<Map<String, String>> _getLocalizedCategories(BuildContext context) {
-    final language = context.read<AppLanguageBloc>().state.language;
+  List<Map<String, String>> _getLocalizedCategories(AppLanguage language) {
     return ExpenseCategoryConstants.categories.entries.map((entry) {
       return {
         'value': entry.key,
@@ -234,8 +362,7 @@ class _EditExpenseBottomSheetState extends State<EditExpenseBottomSheet> {
     }).toList();
   }
 
-  String _getLocalizedDate(BuildContext context, DateTime date) {
-    final language = context.read<AppLanguageBloc>().state.language;
+  String _getLocalizedDate(AppLanguage language, DateTime date) {
     switch (language) {
       case AppLanguage.english:
         return DateFormat('MMM d, yyyy').format(date);
@@ -277,6 +404,20 @@ class _EditExpenseBottomSheetState extends State<EditExpenseBottomSheet> {
         ));
 
       Navigator.pop(context);
+    }
+  }
+
+  void _selectDate(BuildContext context) async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null) {
+      setState(() {
+        _selectedDate = picked;
+      });
     }
   }
 }

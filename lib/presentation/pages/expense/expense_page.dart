@@ -62,7 +62,7 @@ class _ExpensePageState extends State<ExpensePage> {
           style: const TextStyle(
             color: Colors.white70,
             fontSize: 20,
-            fontWeight: FontWeight.w500,
+            fontWeight: FontWeight.bold,
           ),
         ),
         bottom: PreferredSize(
